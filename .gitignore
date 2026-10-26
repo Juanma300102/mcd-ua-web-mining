@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Environments
+.env
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Dataset (Parquet files produced by the pipeline)
+data/
+*.parquet
+
+# Dagster home runtime state (keep dagster.yaml tracked)
+src/news_politica/dagster_home/*
+!src/news_politica/dagster_home/dagster.yaml
+
+# Local tooling
+.atl/
+.dg/
