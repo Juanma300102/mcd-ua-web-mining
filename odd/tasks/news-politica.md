@@ -28,10 +28,9 @@ The repo is empty. The course project needs a reproducible dataset plus a sentim
 - Sentiment model (pysentimiento baseline vs a multilingual model or zero-shot LLM).
 - Analyze body text, or only title + summary.
 - Keep Parquet, or also load into a Postgres table.
-- Cut-off date value (e.g. 2026-10-31).
-- MisionesOnline is blocked (open risk): since 2026-10 the whole site, robots.txt included, returns 403 with a Cloudflare challenge (`cf-mitigated: challenge`). It was reachable on 2026-10-01. Fallback, in order: retry later / from another network, ask the outlet for access, swap to another provincial outlet (redo T2.1 for it), or drop the provincial outlet (loses the provincial vs national question). Decided in T2.4.
-- MisionesOnline agency (syndicated national) notes: exclude, or keep with an `es_agencia` flag (decided in T2.4 from T2.1's numbers).
-- Infobae live blogs ("en vivo", thousands of words): exclude, or keep with a flag (decided in T2.4).
+- La Nación paywall truncation: unverified (only the free codes `comun` and `abierta` showed up in 186 notes); check body length per `content_code` in T4.4.
+
+Decided in T2.4 (`docs/decision-fuentes.md`): cut-off 2026-10-31 23:59 ART by publish date; MisionesOnline stays (the 2026-10-27 Cloudflare block lifted the same day; its client stops on a challenge); agency notes and rewrites kept with a `fuente_externa` column, provincial vs national reported with and without them; live blogs kept with `es_en_vivo` and left out of tone aggregates by default.
 
 ## Process
 - Branch: `feat/news-politica-base` (Phase 1, T1.1–T1.4); `feat/harden-dagster-infra` (T1.5 and Phase 2, decided 2026-10-27: Phase 2 stays on this branch, so one PR covers both).
@@ -50,23 +49,23 @@ The repo is empty. The course project needs a reproducible dataset plus a sentim
 - [x] T1.5 Harden infra (OpenSpec change `harden-dagster-infra`): bind Postgres to `127.0.0.1` in compose; readiness over TCP (`pg_isready -h localhost` healthcheck + `docker compose up --wait`, replacing the script's loop); one `storage: postgres:` block with `scheme: postgresql+psycopg2`; host connection check on psycopg2; `psycopg[binary]` dropped; test that `dagster.yaml` resolves to the psycopg2 driver; `code_location_name = "news-politica"` and `dg check defs` / `dg dev` in the start script. Commits `314c576`, `4e29bb3` (driver revision).
 
 ### Phase 2 — Source exploration (notebooks; can be split between team members)
-Do T2.1 first: after the 2026-10-27 probe MisionesOnline is the riskiest source (blocked) and T2.4 is a go/no-go on it. La Nación's go/no-go questions are mostly answered (see Progress).
-- [ ] T2.1 MisionesOnline: check whether the Cloudflare block persists (another day / network; no challenge bypass). If it lifts: paginate `/wp-json/wp/v2/posts?categories=7&after=2023-12-10`; fields; monthly counts (`X-WP-Total`); share of agency notes (author/byline). If not: evaluate the fallback (see Open decisions).
-- [ ] T2.2 Infobae: sample daily sitemaps across the period for monthly Política volume; map `Fusion.globalContent` fields to the dataset schema; measure the share of live blogs ("en vivo").
-- [ ] T2.3 La Nación: same as T2.2; find notes with a `content_code` other than `comun` and confirm their body is not truncated; check whether a daily sitemap groups by publish date or by last modification.
-- [ ] T2.4 Volume estimate and decision note: rate limit, backfill duration, cut-off date, MisionesOnline fallback, agency notes and live blogs handling.
+Done through the OpenSpec change `explore-news-sources`; notebooks in `notebooks/`, decisions in `docs/decision-fuentes.md`.
+- [x] T2.1 MisionesOnline: check whether the Cloudflare block persists (another day / network; no challenge bypass). If it lifts: paginate `/wp-json/wp/v2/posts?categories=7&after=2023-12-10`; fields; monthly counts (`X-WP-Total`); share of agency notes (author/byline). If not: evaluate the fallback (see Open decisions). Commits `b77ffcd` (probe helper), `e508e16`.
+- [x] T2.2 Infobae: sample daily sitemaps across the period for monthly Política volume; map `Fusion.globalContent` fields to the dataset schema; measure the share of live blogs ("en vivo"). Commit `e508e16`.
+- [x] T2.3 La Nación: same as T2.2; find notes with a `content_code` other than `comun` and confirm their body is not truncated; check whether a daily sitemap groups by publish date or by last modification. Commit `e508e16`.
+- [x] T2.4 Volume estimate and decision note: rate limit, backfill duration, cut-off date, MisionesOnline fallback, agency notes and live blogs handling. Commit `5cc85e5`.
 
 ### Phase 3 — Scraping clients (`src/news_politica/sources/`)
-- [ ] T3.1 Shared HTTP client (rate limit, retries/backoff, User-Agent) and a common `Article` model matching the dataset schema.
-- [ ] T3.2 `misionesonline.py` + tests with saved responses.
-- [ ] T3.3 `infobae.py` + tests with saved responses.
-- [ ] T3.4 `lanacion.py` + tests with saved responses.
+- [ ] T3.1 Shared HTTP client (robots.txt check, 1 request / 2 s per host, retries/backoff, User-Agent, stop on an anti-bot challenge; `notebooks/probe.py` is the reference) and a common `Article` model matching the dataset schema (now with `fuente_externa` and `es_en_vivo`).
+- [ ] T3.2 `misionesonline.py` + tests with saved responses: posts by day or month from the REST API with `_embed=author,wp:term`; `bajada` only when the excerpt is not the start of the body; `fuente_externa` from a closing "Fuente: X".
+- [ ] T3.3 `infobae.py` + tests with saved responses: daily sitemaps up to the scraping day, filtered by `first_publish_date`; body from `text`, `header` and `list` blocks; `es_en_vivo` from `subtype == "live-blogging"`.
+- [ ] T3.4 `lanacion.py` + tests with saved responses: same as T3.3 with La Nación's sitemap URL; `es_en_vivo` from "en vivo" in the URL or headline; `subtype` 9 notes keep an empty body.
 
 ### Phase 4 — Dagster assets
-- [ ] T4.1 Monthly partitions from 2023-12; `raw_misionesonline`, `raw_infobae`, `raw_lanacion` (Parquet per partition, retry policy).
+- [ ] T4.1 Monthly partitions from 2023-12; `raw_misionesonline`, `raw_infobae`, `raw_lanacion` (Parquet per partition, retry policy; store the story JSON or schema fields, not the HTML: ~15 GB of pages in the full backfill).
 - [ ] T4.2 `noticias_politica`: common schema, HTML → plain text, id = hash of canonical URL, dedupe, Argentina timezone.
 - [ ] T4.3 Backfill job from 2023-12 to the cut-off date (no daily schedule).
-- [ ] T4.4 EDA notebook (volume per outlet and week, note length, share with bajada). Moved from Phase 6: it feeds the Phase 5 decisions (body vs title + summary, minimum notes per week).
+- [ ] T4.4 EDA notebook (volume per outlet and week, note length, share with bajada, La Nación body length per `content_code` to settle paywall truncation). Moved from Phase 6: it feeds the Phase 5 decisions (body vs title + summary, minimum notes per week).
 
 ### Phase 5 — Sentiment
 - [ ] T5.1 Short labeling guide (what counts as positive/neutral/negative, with examples), then hand-label a sample (~300 notes, 100 per outlet) + labeling helper.
@@ -97,5 +96,7 @@ Do T2.1 first: after the 2026-10-27 probe MisionesOnline is the riskiest source 
 - 2026-10-27: T1.5 revised (`4e29bb3`). Checking the UI over HTTP showed nothing listens on :3000 even though the log prints "Serving dagster-webserver": with psycopg 3 the webserver fails `get_run_storage_id` with `psycopg.OperationalError: the connection is closed`. A plain `DagsterInstance` works with both drivers; the webserver serves HTTP 200 only with psycopg2. This predates T1.5 (a bare `postgresql://` already resolved to psycopg 3), so T1.2's "served the UI" was based on the log line. Root cause not investigated. Fix: pin `postgresql+psycopg2`, drop psycopg 3. Also set `code_location_name` and switched to `dg dev` (`dagster dev` cannot rename the location and is superseded). Check: `uv run pytest` 2 passed (the test fails with `postgresql+psycopg`); `dg check defs` OK; `scripts/dagster-up.sh` → HTTP 200, GraphQL location `news-politica` LOADED, no location-name / supersession / `OperationalError` lines. Note: from Claude Code's sandboxed shell the webserver never binds a port, so this check ran outside the sandbox. OpenSpec change updated and archived (`0424e1d`, spec in `openspec/specs/dagster-local-infra/`). `docs/def.md` updated to the current plan (no daily schedule, new phase order, milestones, out of scope).
 - 2026-10-27: Phase 2 pre-exploration (read-only probe, identifiable User-Agent, a few spaced requests; no notebooks yet). La Nación: robots.txt disallows `/pf/api/` and `/buscador` for `User-agent: *` (not only bots); a `/pf/api/` request with a browser User-Agent was refused by Claude Code's safety classifier and not retried. The historical sitemap index lists only ~2 years (730 days, from 2024-10-26), but daily files outside it still answer: 2023-12-11 → 364 URLs, 41 `/politica/`. 10 Política notes from 2024-10-27: all `content_code: comun`, full body in the HTML (477–1483 words), story JSON in `Fusion.globalContent`. Infobae: `/arc/outboundfeeds/sitemap/2023-12-11/` → 1375 URLs, 23 `/politica/`; same `Fusion.globalContent` pattern; the first note was a ~2000-word live blog; the category sitemap only returns the latest 100 and ignores `from`. MisionesOnline: 403 Cloudflare challenge on every path, robots.txt included. Rough volume: 20–40 Política notes/day per national outlet → 25k–40k notes each, ~15–22 h of backfill per outlet at 1 request / 2 s. `docs/def.md` updated (sources table, phase 2, risks).
 
+- 2026-10-27: Phase 2 done (route: OpenSpec `explore-news-sources`). MisionesOnline answered again (robots.txt and REST API 200, `X-WP-Total` 56112), so the fallback branch did not run. Results: MisionesOnline 7,245 Política notes 2023-12-10 → 2026-09-30 (exact), Infobae ~23,100 and La Nación ~26,600 (days 10 and 25 of each month); every sampled Arc sitemap answered, 2023-12 included. Arc bodies need `header` and `list` blocks too (some La Nación notes went from 37 to 205+ words). La Nación sitemaps group by `display_date`, Infobae's by last modification, and both list notes months late → crawl sitemaps up to the scraping day and filter by `first_publish_date`. MisionesOnline: 11.4 % close with "Fuente: X" (Infobae, TN, Ámbito), 12.7 % also in Nacionales, no agency bylines. Infobae live blogs 2.2 %, La Nación 0. La Nación paywall: only `comun`/`abierta` in 186 notes, truncation unverified. Check: `uv run pytest` passed (10 tests); the three notebooks ran top to bottom with `PROBE_OFFLINE=1` and 0 network requests.
+
 ## Next step
-Phase 2 on `feat/harden-dagster-infra` through the OpenSpec change `explore-news-sources`, starting with T2.1 (MisionesOnline block: go/no-go). T2.2–T2.3 can run in parallel on the other team member's side. One PR for the branch afterwards (plan review, T1.5, `docs/def.md` sync, Phase 2; T1.1–T1.4 are already on `main`).
+PR for `feat/harden-dagster-infra` (plan review, T1.5, `docs/def.md` sync, Phase 2; T1.1–T1.4 are already on `main`), then Phase 3 (scraping clients) following `docs/decision-fuentes.md`. Delete `data/probe_cache/` once Phase 3 has saved its test fixtures.
