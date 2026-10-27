@@ -113,5 +113,7 @@ Done through the OpenSpec change `explore-news-sources` (archived in `openspec/c
 
 - 2026-10-27: T4.4 done, minimal (`notebooks/04_eda.ipynb`, tables only, no new dependencies, runs offline on `data/`). Arc outlets: 30 notes per month (Infobae 21–24 in a few months), so tone goes by month; MisionesOnline median 45 per week, ~170 per month until 2026-02 and ~320 from 2026-03. Bajada 100 % / 99.3 % / 69.4 % → title + bajada, and title + first paragraph for MisionesOnline notes without it. La Nación live notes (3 %) are mostly the daily "Javier Milei, en vivo" blog (median ~5,900 words); the URL rule is right in 29 of 31, the 2 misses are short notes. Paywall: only `comun` (975) and `abierta` (44), `comun` not shorter (median 759 vs 604 words): no sign of truncation but nothing to verify it on; a limitation for the report. MisionesOnline bajada falls from ~98 % (to 2024-T2) to ~55 % (from 2025) and "Fuente: X" from 20–40 % to 3–12 %.
 
+- 2026-10-27: OpenSpec change `add-dagster-assets` archived (`openspec archive -y`): spec `dagster-assets` created in `openspec/specs/` (6 requirements), Purpose filled in.
+
 ## Next step
-Phase 5: sentiment on title + bajada (title + first paragraph when a MisionesOnline note has no bajada), monthly aggregates per outlet, live notes left out. Archive the OpenSpec change `add-dagster-assets`. The branch `feat/harden-dagster-infra` still needs its PR (plan review, T1.5, Phase 2, Phase 3, Phase 4 code).
+Phase 5: sentiment on title + bajada (title + first paragraph when a MisionesOnline note has no bajada), monthly aggregates per outlet, live notes left out. The branch `feat/harden-dagster-infra` still needs its PR (plan review, T1.5, Phase 2, Phase 3, Phase 4 code).
