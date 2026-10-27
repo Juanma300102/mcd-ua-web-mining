@@ -16,7 +16,7 @@ Se scrapera:
 - MisionesOnline  
 - LaNacion
 
-La Nación e Infobae publican sitemaps diarios con todas las notas del día, y el HTML de cada nota trae embebido el JSON estructurado de Arc XP, así que no hace falta su API interna. MisionesOnline, al estar hecho en WordPress, expone su API REST pública (/wp-json/wp/v2/posts), pero desde 10/2026 responde con un desafío de Cloudflare (ver Riesgos).
+La Nación e Infobae publican sitemaps diarios con todas las notas del día, y el HTML de cada nota trae embebido el JSON estructurado de Arc XP, así que no hace falta su API interna. MisionesOnline, al estar hecho en WordPress, expone su API REST pública (/wp-json/wp/v2/posts). El 27/10/2026 estuvo unas horas detrás de un desafío de Cloudflare (ver Riesgos).
 
 ## Tecnologias
 
@@ -46,10 +46,11 @@ Todo se consume con requests, por rutas que el robots.txt de cada medio permite.
 | :---- | :---- | :---- | :---- |
 | Infobae | Sitemap diario /arc/outboundfeeds/sitemap/\<AAAA-MM-DD\>/, filtrando URLs /politica/ | HTML de la nota, JSON en Fusion.globalContent | Responde para 2023-12-11 (1375 URLs, 23 de Política). El sitemap por categoría (/sitemap2/category/politica/) solo trae las últimas 100 y no pagina. Hay notas "en vivo" largas. robots.txt solo prohíbe /buscador |
 | La Nación | Sitemap diario /sitemap-articles-from\<AAAA-MM-DD\>T00:00:00Z-to\<día siguiente\>T00:00:00Z.xml, filtrando URLs /politica/ | HTML de la nota, JSON en Fusion.globalContent | El índice histórico solo lista los últimos ~2 años, pero los archivos diarios anteriores responden: 2023-12-11 trae 364 URLs, 41 de Política. Muestra de 10 notas: content\_code "comun" y cuerpo completo (477 a 1483 palabras). robots.txt prohíbe /pf/api/ y /buscador para User-agent: \* |
-| MisionesOnline | API REST de WordPress: /wp-json/wp/v2/posts?categories=7\&after=2023-12-10 | El mismo JSON trae content.rendered (HTML del cuerpo) | Categoría Política (id 7), 55.895 notas en total, hija de Política y Economía (id 93796\). Desde 10/2026 todo el sitio, robots.txt incluido, responde 403 con desafío de Cloudflare |
+| MisionesOnline | API REST de WordPress: /wp-json/wp/v2/posts?categories=7\&after=2023-12-10 | El mismo JSON trae content.rendered (HTML del cuerpo) | Categoría Política (id 7), 55.895 notas en toda su historia y 7.245 entre el 10/12/2023 y el 30/09/2026, hija de Política y Economía (id 93796\). El 27/10/2026 a la mañana respondió 403 con desafío de Cloudflare y a la tarde volvió a responder 200 |
 
 Consultado el 01/10/2026: misionesonline.net/wp-json/wp/v2/categories, robots.txt de Infobae y La Nación, infobae.com/arc/outboundfeeds/sitemap-index-static y lanacion.com.ar/sitemap-index-historico.xml.  
-Revisado el 27/10/2026 con un User-Agent identificable: robots.txt de los tres medios, sitemaps diarios de 2023-12-11 y 2024-10-27, HTML de 1 nota de Infobae y 11 de La Nación, y la API de MisionesOnline (bloqueada).
+Revisado el 27/10/2026 con un User-Agent identificable: robots.txt de los tres medios, sitemaps diarios de 2023-12-11 y 2024-10-27, HTML de 1 nota de Infobae y 11 de La Nación, y la API de MisionesOnline (bloqueada a la mañana).  
+Exploración de la fase 2 (27/10/2026): volumen, mapa de campos, notas de agencia, notas en vivo, paywall y agrupación de los sitemaps en [`docs/decision-fuentes.md`](decision-fuentes.md), con la evidencia en `notebooks/`.
 
 ## Arquitectura
 
@@ -92,6 +93,8 @@ Una fila por nota, en Parquet, con el mismo esquema para los tres medios.
 | autor | string | Si existe |
 | seccion | string | Sección o categoría original del medio |
 | tags | list\[string\] | Etiquetas del medio, si existen |
+| fuente\_externa | string | Medio citado al final de la nota ("Fuente: X"), si existe. Solo aparece en MisionesOnline |
+| es\_en\_vivo | bool | Nota en vivo o minuto a minuto. Queda fuera de los agregados de tono por defecto |
 | fecha\_scraping | datetime | Cuándo se obtuvo la nota |
 
 El asset de sentimiento agrega sentimiento (positivo, neutral, negativo), score y modelo, separado del dataset base para poder comparar modelos sin volver a scrapear.
@@ -109,7 +112,7 @@ Propuesta: arrancar con pysentimiento (modelo en español, salida positivo, neut
 Seis fases en orden; la 2 y la 3 se pueden repartir entre los dos integrantes.
 
 1. **Base del proyecto.** Crear el repo copiando de mcd-ua-text-mining el docker-compose.yaml (solo Postgres), dagster.yaml, dagster-up.sh y la estructura uv \+ defs/. Validar con dg check defs.  
-2. **Exploración de fuentes.** Para cada medio, un notebook que confirme cómo listar notas de Política desde 12/2023, qué campos vienen y cuántas notas hay por mes. Se empieza por MisionesOnline, que hoy es la fuente más riesgosa por el bloqueo de Cloudflare.  
+2. **Exploración de fuentes (hecha, ver [`docs/decision-fuentes.md`](decision-fuentes.md)).** Para cada medio, un notebook que confirme cómo listar notas de Política desde 12/2023, qué campos vienen y cuántas notas hay por mes. Se empieza por MisionesOnline, que era la fuente más riesgosa por el bloqueo de Cloudflare.  
    1. MisionesOnline: confirmar si el bloqueo sigue (otro día, otra red) y, si se levanta, paginar /wp-json/wp/v2/posts por fecha con la categoría 7 y medir qué parte son notas de agencia (autor o firma). Si sigue bloqueado, evaluar el plan B (ver Riesgos).  
    2. Infobae: muestrear sitemaps diarios a lo largo del período para estimar notas de Política por mes, mapear los campos de Fusion.globalContent al esquema y medir cuántas notas son "en vivo".  
    3. La Nación: lo mismo que Infobae, más buscar notas con content\_code distinto de "comun" para confirmar que tampoco vienen truncadas.  
@@ -121,12 +124,13 @@ Seis fases en orden; la 2 y la 3 se pueden repartir entre los dos integrantes.
 
 ## Riesgos y decisiones abiertas
 
-* **Bloqueo de MisionesOnline (abierto).** Desde 10/2026 el sitio entero responde 403 con un desafío de Cloudflare (`cf-mitigated: challenge`), incluso para robots.txt. No se intenta pasar el desafío (ni con Playwright ni cambiando el User-Agent). Opciones, en orden: esperar y reintentar desde otra red, pedir acceso al medio, cambiar por otro medio provincial (rehace la exploración de esa fuente) o seguir solo con los dos nacionales (se pierde la comparación provincial vs nacional).  
-* **Paywall de La Nación.** Las notas muestreadas traen el cuerpo completo en el HTML, pero todas eran content\_code "comun". Falta confirmarlo con notas exclusivas para suscriptores.  
-* **Fecha de los sitemaps.** No está confirmado si cada sitemap diario agrupa por fecha de publicación o por última modificación. Una nota editada podría aparecer en más de un día, así que el deduplicado por URL canónica es obligatorio.  
-* **Notas "en vivo".** Infobae publica minuto a minuto de miles de palabras. Se decide en la fase 2 si se excluyen o se marcan.  
-* **Notas de agencia.** Parte de las notas de MisionesOnline son de agencias nacionales. Se decide en la fase 2 si se excluyen o se marcan con una columna es\_agencia.  
+* **Bloqueo de MisionesOnline.** El 27/10/2026 a la mañana el sitio entero respondió 403 con un desafío de Cloudflare (`cf-mitigated: challenge`), y a la tarde volvió a responder. No se intenta pasar el desafío (ni con Playwright ni cambiando el User-Agent): el cliente se detiene. Su backfill tarda menos de 5 minutos, así que se corre primero. Si el bloqueo vuelve y no se levanta, opciones en orden: pedir acceso al medio, cambiar por otro medio provincial (rehace la exploración de esa fuente) o seguir solo con los dos nacionales (se pierde la comparación provincial vs nacional).  
+* **Paywall de La Nación (abierto).** En 186 notas solo aparecieron los códigos de acceso libre `comun` y `abierta`, todas con el cuerpo completo. La truncación de notas pagas no está verificada: se revisa en el EDA (largo del cuerpo por content\_code).  
+* **Fecha de los sitemaps (decidido).** La Nación agrupa por `display_date` y Infobae por última modificación, y las dos listan notas meses después de su publicación. Los clientes recorren los sitemaps hasta el día del scraping, filtran por fecha de primera publicación y deduplican por URL canónica.  
+* **Notas "en vivo" (decidido).** Son el 2,2 % de Infobae y no aparecieron en La Nación. Se conservan con `es_en_vivo` y quedan fuera de los agregados de tono por defecto.  
+* **Notas de agencia y reescrituras (decidido).** En MisionesOnline casi no hay firmas de agencia, pero el 11,4 % de las notas cierra con "Fuente: X" (sobre todo Infobae y TN) y el 12,7 % está también en Nacionales. Se conservan con `fuente_externa`, y la comparación provincial vs nacional se reporta con y sin esas notas.  
 * **robots.txt.** El robots.txt de La Nación prohíbe /pf/api/ para todos los user agents, por eso se usan solo sitemaps y el HTML de las notas. Conviene mencionarlo en el informe y usar un rate limit bajo.  
-* **Volumen.** MisionesOnline tiene 55.895 notas de Política en total. Los días muestreados de Infobae y La Nación tienen entre 20 y 40 notas de Política, es decir entre 25.000 y 40.000 notas por medio en el período: con una request cada 2 segundos son unas 15 a 22 horas de backfill por medio. Hay que afinarlo en la fase 2.  
+* **Volumen.** Entre el 10/12/2023 y el 30/09/2026: 7.245 notas de MisionesOnline (unas 50 por semana; para la fase 5 puede convenir agregar por quincena o por mes), unas 23.100 de Infobae y unas 26.600 de La Nación. A una request cada 2 s, el backfill de cada medio Arc tarda unas 14 a 16 horas y baja de 5 a 10 GB de HTML, así que los raw guardan solo el JSON de la nota.  
 * **Sentimiento no es postura.** Una nota negativa puede serlo hacia la oposición. El informe debe aclarar qué mide el modelo.  
-* **A decidir:** qué modelo de sentimiento usar, si se incluye el cuerpo o solo título \+ bajada, dónde se guarda el dataset (Parquet local o tabla en el mismo Postgres) y la fecha de corte.
+* **Fecha de corte (decidido).** 31/10/2026 23:59, hora argentina, por fecha de publicación.  
+* **A decidir:** qué modelo de sentimiento usar, si se incluye el cuerpo o solo título \+ bajada, y dónde se guarda el dataset (Parquet local o tabla en el mismo Postgres).

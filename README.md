@@ -33,6 +33,23 @@ uv run pytest
 uv run dg check defs
 ```
 
+## Source exploration notebooks
+
+`notebooks/` holds the phase 2 exploration of each outlet; the decisions are in [`docs/decision-fuentes.md`](docs/decision-fuentes.md). Jupyter lives in its own dependency group:
+
+```bash
+uv sync --group notebooks
+uv run --group notebooks jupyter lab notebooks/
+```
+
+Every request goes through `notebooks/probe.py` (robots.txt check, 2 s between requests to a host, stops on an anti-bot challenge) and is cached in `data/probe_cache/`. To re-run a notebook from the cache only, without touching the sites:
+
+```bash
+cd notebooks && PROBE_OFFLINE=1 uv run --group notebooks jupyter nbconvert --to notebook --execute --inplace 02_infobae.ipynb
+```
+
+The cache keeps the outlets' pages (~175 MB); delete `data/probe_cache/` when you no longer need it.
+
 ## Layout
 
 ```
@@ -43,7 +60,8 @@ src/news_politica/
   dagster_home/dagster.yaml
   defs/                    # assets, jobs and schedules
 tests/
-docs/                      # project definition
+notebooks/                 # phase 2 source exploration (probe.py, arc.py, one notebook per outlet)
+docs/                      # project definition, source decisions
 odd/tasks/                 # task tracking
 data/                      # Parquet output (gitignored)
 ```
