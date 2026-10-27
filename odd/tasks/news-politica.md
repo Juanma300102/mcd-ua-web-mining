@@ -38,8 +38,8 @@ The repo is empty. The course project needs a reproducible dataset plus a sentim
 
 ### Phase 1 — Base
 - [x] T1.1 Scaffold the uv project: `pyproject.toml` (versions above, `[tool.dg]` config), `.python-version`, `.gitignore` (`data/`, `.venv`, `.env`). Commit `bae445d`.
-- [x] T1.2 Copy and adapt infra: `docker-compose.yaml` (postgres only, renamed volume), `scripts/dagster-up.sh` (`DAGSTER_HOME` → `src/news_politica/dagster_home`), `dagster.yaml`, `.env.example`.
-- [ ] T1.3 `definitions.py` + empty `defs/` + `tests/` smoke test.
+- [x] T1.2 Copy and adapt infra: `docker-compose.yaml` (postgres only, renamed volume), `scripts/dagster-up.sh` (`DAGSTER_HOME` → `src/news_politica/dagster_home`), `dagster.yaml`, `.env.example`. Commit `031a9a1`.
+- [x] T1.3 `definitions.py` + empty `defs/` + `tests/` smoke test.
 - [ ] T1.4 README with setup/run steps; move `def.md` to `docs/`.
 
 ### Phase 2 — Source exploration (notebooks; can be split between team members)
@@ -80,6 +80,7 @@ The repo is empty. The course project needs a reproducible dataset plus a sentim
 - 2026-10-26: T1.1 done (route: inline, 4 mechanical files). Check: `uv sync` OK; dagster 1.13.27, pandas 3.1.0, pyarrow 26.0.0 import.
 
 - 2026-10-27: T1.2 done (route: inline, mechanical copy). Check: `docker compose config` OK; `scripts/dagster-up.sh` served the UI on :3000 and created 22 Dagster tables in Postgres (after adding psycopg 3).
+- 2026-10-27: T1.3 done (route: inline). Check: `uv run pytest` 1 passed; `uv run dg check defs` OK.
 
 ## Next step
-T1.3.
+T1.4 (README, move `def.md` to `docs/`).
