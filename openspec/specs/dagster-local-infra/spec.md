@@ -1,7 +1,7 @@
 # dagster-local-infra Specification
 
 ## Purpose
-TBD - created by archiving change harden-dagster-infra. Update Purpose after archive.
+How the local Postgres-backed Dagster instance is started, exposed, checked for readiness and configured (driver, storage, code location name). Created by the `harden-dagster-infra` change (T1.5).
 ## Requirements
 ### Requirement: Postgres is reachable only from the host
 The local Postgres used for Dagster storage SHALL publish its port on the loopback interface (`127.0.0.1`) only.
