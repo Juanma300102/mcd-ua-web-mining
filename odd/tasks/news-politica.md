@@ -1,7 +1,7 @@
 # Feature: news-politica
 
 ## Objective
-Build a Dagster + uv pipeline that scrapes Política news from Infobae, La Nación and MisionesOnline since 2023-12-10, unifies them into one dataset, scores sentiment, and reports tone evolution per outlet over time. Full project definition: `def.md`.
+Build a Dagster + uv pipeline that scrapes Política news from Infobae, La Nación and MisionesOnline since 2023-12-10, unifies them into one dataset, scores sentiment, and reports tone evolution per outlet over time. Full project definition: `docs/def.md`.
 
 ## Problem / Why
 The repo is empty. The course project needs a reproducible dataset plus a sentiment analysis answering: how did the tone of political news change since Dec 2023, and does it differ between a digital national outlet, a traditional national newspaper, and a provincial outlet?
@@ -37,10 +37,10 @@ The repo is empty. The course project needs a reproducible dataset plus a sentim
 ## Tasks
 
 ### Phase 1 — Base
-- [x] T1.1 Scaffold the uv project: `pyproject.toml` (versions above, `[tool.dg]` config), `.python-version`, `.gitignore` (`data/`, `.venv`, `.env`). Commit `bae445d`.
-- [x] T1.2 Copy and adapt infra: `docker-compose.yaml` (postgres only, renamed volume), `scripts/dagster-up.sh` (`DAGSTER_HOME` → `src/news_politica/dagster_home`), `dagster.yaml`, `.env.example`. Commit `031a9a1`.
-- [x] T1.3 `definitions.py` + empty `defs/` + `tests/` smoke test.
-- [ ] T1.4 README with setup/run steps; move `def.md` to `docs/`.
+- [x] T1.1 Scaffold the uv project: `pyproject.toml` (versions above, `[tool.dg]` config), `.python-version`, `.gitignore` (`data/`, `.venv`, `.env`). Commit `7f59a2a`.
+- [x] T1.2 Copy and adapt infra: `docker-compose.yaml` (postgres only, renamed volume), `scripts/dagster-up.sh` (`DAGSTER_HOME` → `src/news_politica/dagster_home`), `dagster.yaml`, `.env.example`. Commit `69c65fa`.
+- [x] T1.3 `definitions.py` + empty `defs/` + `tests/` smoke test. Commit `cdb1684`.
+- [x] T1.4 README with setup/run steps; move `def.md` to `docs/`.
 
 ### Phase 2 — Source exploration (notebooks; can be split between team members)
 - [ ] T2.1 MisionesOnline: paginate `/wp-json/wp/v2/posts?categories=7&after=2023-12-10`; fields; monthly counts (`X-WP-Total`).
@@ -72,7 +72,7 @@ The repo is empty. The course project needs a reproducible dataset plus a sentim
 ## Acceptance criteria
 - `uv sync`, `uv run dg check defs` and `uv run pytest` pass.
 - `scripts/dagster-up.sh` starts the Dagster UI backed by Postgres.
-- The unified Parquet dataset covers all three outlets from 2023-12-10, with the schema in `def.md`.
+- The unified Parquet dataset covers all three outlets from 2023-12-10, with the schema in `docs/def.md`.
 - Sentiment and weekly tone assets materialize; the report answers the main question.
 
 ## Progress
@@ -81,6 +81,8 @@ The repo is empty. The course project needs a reproducible dataset plus a sentim
 
 - 2026-10-27: T1.2 done (route: inline, mechanical copy). Check: `docker compose config` OK; `scripts/dagster-up.sh` served the UI on :3000 and created 22 Dagster tables in Postgres (after adding psycopg 3).
 - 2026-10-27: T1.3 done (route: inline). Check: `uv run pytest` 1 passed; `uv run dg check defs` OK.
+- 2026-10-27: `main` had no commits; added root commit `3933c4a` (docs/def.md as `def.md`) and rebased the branch onto it, so commit hashes above are post-rebase.
+- 2026-10-27: T1.4 done (route: inline). README + `def.md` moved to `docs/`.
 
 ## Next step
-T1.4 (README, move `def.md` to `docs/`).
+Phase 1 PR slice, then Phase 2 (T2.1–T2.3 can be split between team members).
