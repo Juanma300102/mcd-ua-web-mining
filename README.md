@@ -59,7 +59,9 @@ src/news_politica/
   definitions.py           # loads everything under defs/
   dagster_home/dagster.yaml
   defs/                    # assets, jobs and schedules
+  sources/                 # scraping clients: HTTP client, one module per outlet, parse()
 tests/
+  fixtures/sources/        # trimmed responses from the phase 2 cache (build_fixtures.py)
 notebooks/                 # phase 2 source exploration (probe.py, arc.py, one notebook per outlet)
 docs/                      # project definition, source decisions
 odd/tasks/                 # task tracking

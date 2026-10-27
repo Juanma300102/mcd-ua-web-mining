@@ -35,12 +35,12 @@
 
 ## 6. Docs and plan
 
-- [ ] 6.1 `odd/tasks/news-politica.md`: mark T3.1–T3.4 with their commits. Rewrite T4.1 to add `catalogo_infobae` / `catalogo_lanacion` (unpartitioned), `raw_*` reading the catalog by `url_date` month, one Dagster pool per outlet with limit 1, `Blocked` → `Failure(allow_retries=False)`, and `check_losses` per partition. In T4.2 drop "HTML → plain text" (now in `parse`) and keep the period filter by `first_publish_date`. Add a Progress entry.
-- [ ] 6.2 `docs/def.md`: in Arquitectura, add the catalog step before `raw_*` and say that `raw_*` keeps the source JSON and `noticias_politica` parses it. Update `README.md`'s layout with `src/news_politica/sources/` and `tests/fixtures/sources/`.
+- [x] 6.1 `odd/tasks/news-politica.md`: mark T3.1–T3.4 with their commits. Rewrite T4.1 to add `catalogo_infobae` / `catalogo_lanacion` (unpartitioned), `raw_*` reading the catalog by `url_date` month, one Dagster pool per outlet with limit 1, `Blocked` → `Failure(allow_retries=False)`, and `check_losses` per partition. In T4.2 drop "HTML → plain text" (now in `parse`) and keep the period filter by `first_publish_date`. Add a Progress entry.
+- [x] 6.2 `docs/def.md`: in Arquitectura, add the catalog step before `raw_*` and say that `raw_*` keeps the source JSON and `noticias_politica` parses it. Update `README.md`'s layout with `src/news_politica/sources/` and `tests/fixtures/sources/`.
 
 ## 7. Verification
 
-- [ ] 7.1 `uv run pytest` and `uv run dg check defs` pass; nothing under `src/news_politica/defs/` changed.
+- [x] 7.1 `uv run pytest` and `uv run dg check defs` pass; nothing under `src/news_politica/defs/` changed.
 - [ ] 7.2 Manual smoke run against the live sites, run outside the sandbox and only with the team's OK: 1 sitemap and 2 Política notes per Arc outlet, plus page 1 of one MisionesOnline month, through `PoliteClient`, `fetch_*` and `parse`. Record in Progress the request count and that every `Article` has a title, date and non-empty body (except `raw_html`-only pages). If a site answers with a challenge, record it and stop.
 - [ ] 7.3 Once the fixtures are committed and 7.2 passed, ask the team before deleting `data/probe_cache/` (~175 MB). After deleting it, re-run the notebooks only if needed (they need the cache or the network).
-- [ ] 7.4 Commit each group with a Conventional Commit and record the hashes next to T3.1–T3.4 in `odd/tasks/news-politica.md`.
+- [x] 7.4 Commit each group with a Conventional Commit and record the hashes next to T3.1–T3.4 in `odd/tasks/news-politica.md`.

@@ -57,10 +57,11 @@ Exploración de la fase 2 (27/10/2026): volumen, mapa de campos, notas de agenci
 Se reutiliza el marco del repo mcd-ua-text-mining: proyecto Dagster con uv, assets cargados desde defs/ con load\_from\_defs\_folder, Postgres en docker-compose como storage de Dagster y el script dagster-up.sh para levantar todo. Se descarta lo específico de fake news (LightGBM, BERT, SearXNG, webapp).  
 Flujo de assets:
 
-1. raw\_infobae, raw\_lanacion y raw\_misionesonline: una descarga por medio, particionada por mes. Un mes fallido se reintenta solo y el backfill histórico corre por partes.  
-2. noticias\_politica: une las tres fuentes con un esquema común, limpia el HTML y deduplica.  
-3. sentimiento\_noticias: score de sentimiento por nota.  
-4. evolucion\_tono: agregados por medio y semana, y gráficos.
+1. catalogo\_infobae y catalogo\_lanacion: recorren los sitemaps diarios desde el 10/12/2023 hasta el día del scraping y guardan las URLs de Política con la fecha de su URL, que coincide con la de primera publicación. MisionesOnline no lo necesita: su API filtra por fecha de publicación.  
+2. raw\_infobae, raw\_lanacion y raw\_misionesonline: una descarga por medio, particionada por mes (los medios Arc toman del catálogo las URLs de ese mes). Guardan el JSON de la nota tal como viene del medio, no el HTML, así que un cambio en el parseo no obliga a volver a scrapear. Un mes fallido se reintenta solo, salvo que el sitio responda con un desafío anti-bot, y el backfill histórico corre por partes.  
+3. noticias\_politica: parsea el JSON de los tres medios al esquema común (el texto plano y las fechas salen de `sources/`), filtra el período por fecha de publicación y deduplica.  
+4. sentimiento\_noticias: score de sentimiento por nota.  
+5. evolucion\_tono: agregados por medio y semana, y gráficos.
 
 No hay schedule diario: un job de backfill descarga desde 12/2023 hasta la fecha de corte. Estructura propuesta del repo:  
 `news-politica/`  
@@ -117,7 +118,7 @@ Seis fases en orden; la 2 y la 3 se pueden repartir entre los dos integrantes.
    2. Infobae: muestrear sitemaps diarios a lo largo del período para estimar notas de Política por mes, mapear los campos de Fusion.globalContent al esquema y medir cuántas notas son "en vivo".  
    3. La Nación: lo mismo que Infobae, más buscar notas con content\_code distinto de "comun" para confirmar que tampoco vienen truncadas.  
    4. Nota de decisión: rate limit, duración estimada del backfill, fecha de corte, plan B para MisionesOnline, qué hacer con las notas de agencia y con las notas "en vivo".  
-3. **Clientes de scraping.** Un cliente HTTP compartido (rate limit, reintentos y User-Agent identificable) y un modelo común de nota, más un módulo por medio en sources/. Tests con respuestas guardadas.  
+3. **Clientes de scraping (hecha, cambio OpenSpec `add-scraping-clients`).** Un cliente HTTP compartido (rate limit, reintentos y User-Agent identificable), los modelos comunes (entrada de catálogo, documento crudo y nota) y un módulo por medio en sources/. Tests con respuestas guardadas y texto recortado.  
 4. **Assets de Dagster.** raw\_\* particionados por mes, noticias\_politica con limpieza y deduplicado, y un job de backfill desde 12/2023 hasta la fecha de corte. Cierra con el EDA del dataset (volumen por medio y semana, largo de notas, proporción con bajada), que alimenta las decisiones de la fase 5.  
 5. **Sentimiento.** Guía de etiquetado y muestra etiquetada, baseline y modelo alternativo, elegir uno y materializar sentimiento\_noticias y evolucion\_tono con la comparación antes y después de cada hito.  
 6. **Informe.** Gráficos de evolución con hitos, tabla antes y después de cada hito, comparación provincial vs nacional, conclusiones y limitaciones.
