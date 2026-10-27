@@ -40,7 +40,8 @@ The repo is empty. The course project needs a reproducible dataset plus a sentim
 - [x] T1.1 Scaffold the uv project: `pyproject.toml` (versions above, `[tool.dg]` config), `.python-version`, `.gitignore` (`data/`, `.venv`, `.env`). Commit `7f59a2a`.
 - [x] T1.2 Copy and adapt infra: `docker-compose.yaml` (postgres only, renamed volume), `scripts/dagster-up.sh` (`DAGSTER_HOME` → `src/news_politica/dagster_home`), `dagster.yaml`, `.env.example`. Commit `69c65fa`.
 - [x] T1.3 `definitions.py` + empty `defs/` + `tests/` smoke test. Commit `cdb1684`.
-- [x] T1.4 README with setup/run steps; move `def.md` to `docs/`.
+- [x] T1.4 README with setup/run steps; move `def.md` to `docs/`. Commit `d35aece`.
+- [ ] T1.5 (proposed, from review; awaiting approval) Harden infra: bind Postgres to `127.0.0.1` in compose; make the readiness wait check over TCP (`pg_isready -h localhost`) so a fresh volume can't fail with a false credentials error; switch the host connection check to psycopg 3, the driver Dagster actually uses; add a test that loads `dagster.yaml` and resolves the psycopg 3 dialect.
 
 ### Phase 2 — Source exploration (notebooks; can be split between team members)
 - [ ] T2.1 MisionesOnline: paginate `/wp-json/wp/v2/posts?categories=7&after=2023-12-10`; fields; monthly counts (`X-WP-Total`).
@@ -83,6 +84,7 @@ The repo is empty. The course project needs a reproducible dataset plus a sentim
 - 2026-10-27: T1.3 done (route: inline). Check: `uv run pytest` 1 passed; `uv run dg check defs` OK.
 - 2026-10-27: `main` had no commits; added root commit `3933c4a` (docs/def.md as `def.md`) and rebased the branch onto it, so commit hashes above are post-rebase.
 - 2026-10-27: T1.4 done (route: inline). README + `def.md` moved to `docs/`.
+- 2026-10-27: Review of `69c65fa..d35aece` (high risk: shell script): whole-branch candidate exceeded the reviewer context budget (`uv.lock`), so the range excluding T1.1 was reviewed. Approved and acknowledged (lineage `review-b3a7ab1aaa7eeaf5`). T1.1 (`7f59a2a`) was not reviewed. 8 non-blocking findings: 4 warnings (port bound to all interfaces with default credentials; first-run readiness race; host check uses psycopg2 instead of psycopg 3, reported twice) and 4 suggestions (duplicated pg_isready, triplicated storage block in `dagster.yaml`, smoke test doesn't cover storage). Captured as T1.5.
 
 ## Next step
-Phase 1 PR slice, then Phase 2 (T2.1–T2.3 can be split between team members).
+T1.5 if approved; then the Phase 1 PR slice, then Phase 2 (T2.1–T2.3 can be split between team members).
