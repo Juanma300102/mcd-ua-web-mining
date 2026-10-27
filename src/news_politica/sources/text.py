@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 # Argentina has had no daylight saving time since 2009.
 ART = timezone(timedelta(hours=-3), "ART")
 _SPACES = re.compile(r"\s+")
+_BLOCK_END = re.compile(r"</p>|<br\s*/?>|</h[1-6]>|</li>|</blockquote>", re.IGNORECASE)
 
 
 def html_to_text(markup):
@@ -17,6 +18,15 @@ def html_to_text(markup):
     if "<" in markup or "&" in markup:
         markup = BeautifulSoup(markup, "lxml").get_text(" ")
     return _SPACES.sub(" ", markup).strip()
+
+
+def join_paragraphs(paragraphs):
+    return "\n\n".join(p for p in paragraphs if p)
+
+
+def html_to_paragraphs(markup):
+    """Plain text that keeps paragraph breaks as a blank line."""
+    return join_paragraphs(html_to_text(chunk) for chunk in _BLOCK_END.split(markup or ""))
 
 
 def article_id(url):

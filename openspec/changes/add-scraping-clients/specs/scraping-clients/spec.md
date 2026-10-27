@@ -114,7 +114,7 @@ For Infobae and La Nación, `build_catalog` SHALL read every daily sitemap from 
 - **THEN** `check_losses` raises `TooManyLosses`
 
 ### Requirement: Parsing is pure and yields the dataset schema
-`parse(RawDoc) -> Article` SHALL make no network request and read no clock. `Article` SHALL have exactly the 13 columns of the dataset schema in `docs/def.md`. `id` SHALL be the SHA-1 hex of the canonical URL, `fecha_publicacion` a tz-aware datetime at UTC-3, `fecha_scraping` the `RawDoc` fetch time, and `titulo`, `bajada` and `cuerpo` plain text without HTML tags or entities. Missing optional fields SHALL become an empty string, an empty list or `False`. `parse` SHALL raise `ParseError` only when the URL, publish date or title is missing, the payload is not valid JSON, or the `RawDoc` has `error` set.
+`parse(RawDoc) -> Article` SHALL make no network request and read no clock. `Article` SHALL have exactly the 13 columns of the dataset schema in `docs/def.md`. `id` SHALL be the SHA-1 hex of the canonical URL, `fecha_publicacion` a tz-aware datetime at UTC-3, `fecha_scraping` the `RawDoc` fetch time, and `titulo`, `bajada` and `cuerpo` plain text without HTML tags or entities. `cuerpo` SHALL separate paragraphs with a blank line. Missing optional fields SHALL become an empty string, an empty list or `False`. `parse` SHALL raise `ParseError` only when the URL, publish date or title is missing, the payload is not valid JSON, or the `RawDoc` has `error` set.
 
 #### Scenario: Same input, same output
 - **WHEN** `parse` runs twice on the same `RawDoc`
@@ -133,7 +133,7 @@ For Infobae and La Nación, `build_catalog` SHALL read every daily sitemap from 
 - **THEN** `parse` raises `ParseError`
 
 ### Requirement: Arc notes are parsed with the Phase 2 field rules
-For Infobae and La Nación, `cuerpo` SHALL join the text of the `text`, `header` and `list` content blocks in order, recursing into list items. `subtype` 9 notes SHALL have an empty `cuerpo`. `bajada` SHALL come from `subheadlines.basic`, `autor` from `credits.by[].name`, `seccion` from `taxonomy.primary_section._id` and `tags` from `taxonomy.tags[].text`. `fuente_externa` SHALL be "". `es_en_vivo` SHALL be true at Infobae when `subtype == "live-blogging"`, and at La Nación when the URL or headline contains "en vivo" or "minuto a minuto".
+For Infobae and La Nación, `cuerpo` SHALL join the text of the `text`, `header` and `list` content blocks in order, recursing into list items, one paragraph per block or list item. Notes made only of `raw_html` blocks (La Nación `subtype` 9 special pages) SHALL have an empty `cuerpo`. `bajada` SHALL come from `subheadlines.basic`, `autor` from `credits.by[].name`, `seccion` from `taxonomy.primary_section._id` and `tags` from `taxonomy.tags[].text`. `fuente_externa` SHALL be "". `es_en_vivo` SHALL be true at Infobae when `subtype == "live-blogging"`, and at La Nación when the URL or headline contains "en vivo" or "minuto a minuto".
 
 #### Scenario: Body made of lists
 - **WHEN** a La Nación story's content is mostly `list` blocks with nested items

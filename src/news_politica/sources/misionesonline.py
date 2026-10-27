@@ -10,7 +10,7 @@ from datetime import date
 
 from news_politica.sources.http import ParseError, SourceError
 from news_politica.sources.models import Article, RawDoc
-from news_politica.sources.text import article_id, html_to_text, to_art
+from news_politica.sources.text import article_id, html_to_paragraphs, html_to_text, to_art
 
 MEDIO = "misionesonline"
 API = "https://misionesonline.net/wp-json/wp/v2/posts"
@@ -55,7 +55,8 @@ def _terms(post, taxonomy):
 
 def _bajada(excerpt, body):
     excerpt = excerpt.replace("[…]", "").strip()
-    return "" if not excerpt or body.startswith(excerpt[:AUTO_EXCERPT_PREFIX]) else excerpt
+    flat_body = " ".join(body.split())
+    return "" if not excerpt or flat_body.startswith(excerpt[:AUTO_EXCERPT_PREFIX]) else excerpt
 
 
 def _fuente_externa(body):
@@ -69,7 +70,7 @@ def parse_post(raw):
     titulo = html_to_text((post.get("title") or {}).get("rendered"))
     if not (url and post.get("date_gmt") and titulo):
         raise ParseError(f"{raw.url}: missing link, date_gmt or title")
-    cuerpo = html_to_text((post.get("content") or {}).get("rendered"))
+    cuerpo = html_to_paragraphs((post.get("content") or {}).get("rendered"))
     return Article(
         id=article_id(url),
         medio=MEDIO,

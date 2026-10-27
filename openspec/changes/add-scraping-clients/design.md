@@ -72,7 +72,8 @@ Alternative: trim the story to the schema fields. Rejected: it saves 10–20 % a
 Field rules (from `docs/decision-fuentes.md`):
 - `id` = SHA-1 hex of the canonical URL. Arc: `canonical_url` prefixed with the site. WordPress: `link`.
 - `fecha_publicacion` = Arc `first_publish_date` / WordPress `date_gmt`, both parsed as UTC and converted to a fixed UTC-3 offset (Argentina has had no DST since 2009). It is a tz-aware datetime.
-- Arc `cuerpo` = `text`, `header` and `list` blocks in order, with list items recursed and joined by blank lines. `subtype` 9 (special pages built with `raw_html` blocks) gives an empty body.
+- `cuerpo` keeps paragraph breaks: paragraphs are joined by a blank line (`\n\n`) and whitespace is collapsed inside each one. That keeps the Phase 5 per-paragraph variant possible. Arc: one paragraph per `text` / `header` block and per list item, with list items recursed. WordPress: `content.rendered` split on `</p>`, `<br>`, headings and list items. Added while applying.
+- `subtype` 9 gets no special case (revised while applying). These special pages are built with `raw_html` blocks, so they get an empty body unless they also carry text blocks, which one of the two sampled pages does.
 - Arc `bajada` = `subheadlines.basic`; `autor` = `credits.by[].name` joined with ", "; `seccion` = `taxonomy.primary_section._id`; `tags` = `taxonomy.tags[].text`.
 - `es_en_vivo`: Infobae `subtype == "live-blogging"`; La Nación "en vivo" / "minuto a minuto" in the URL or headline; MisionesOnline always false.
 - MisionesOnline `bajada` = the plain-text excerpt (with "[…]" removed), set to "" when it is the start of the body (first 60 characters, as in the notebook). `fuente_externa` = the outlet in a closing "Fuente: X" within the last 300 characters, cleaned of trailers with the notebook's regexes and upper-cased; otherwise "". `seccion` = the post's categories joined with ", ", so "Nacionales" stays visible. `autor` = the embedded author names.
