@@ -1,0 +1,136 @@
+{
+ "_id": "TWGXANO2BZFEBDWPC25V5KC3RU",
+ "type": "story",
+ "subtype": "1",
+ "canonical_url": "/politica/javier-milei-ira-al-congreso-este-domingo-para-presentar-el-presupuesto-2025-nid10092024/",
+ "website_url": "/politica/javier-milei-ira-al-congreso-este-domingo-para-presentar-el-presupuesto-2025-nid10092024/",
+ "first_publish_date": "2024-09-10T14:32:28.217Z",
+ "display_date": "2024-09-10T15:59:49.517Z",
+ "headlines": {
+  "basic": "Javier Milei irá al Congreso este domingo para presentar el Presupuesto 2025"
+ },
+ "subheadlines": {
+  "basic": "El Presidente mostrará su idea de déficit cero en el Palacio Legislativo, después de una semana cargada donde se tratará"
+ },
+ "content_elements": [
+  {
+   "_id": "MJLF2XUT4JE7NCZ5LATWD7X6D4",
+   "type": "text",
+   "content": "El presidente Javier Milei desembarcará en el Congreso el domingo 15 por la noche, a las 21, para presentar el"
+  },
+  {
+   "_id": "XKGE2XQRGBF63H5Y3KOT2SVF5E",
+   "type": "text",
+   "content": "El mandatario ya había adelantado que se presentaría en el Palacio Legislativo para dar a conocer este instrumento bajo su"
+  },
+  {
+   "_id": "BCIKN6E3BRFS7P54DFVXZJRQQ4",
+   "type": "oembed_response"
+  },
+  {
+   "_id": "IN5VR5QT2BGZVLW4NHKJ7KCIEY",
+   "type": "text",
+   "content": "Lo hará después de una semana cargada en el Congreso. Este miércoles la Cámara de Diputados tratará el veto que"
+  },
+  {
+   "_id": "MXXGA47TXBA3PD2BE6OEM25HCE",
+   "type": "text",
+   "content": "Sin embargo, fuera del recinto sectores políticos, sindicales, sociales y de derechos humanos preparan una masiva movilización para quejarse porque"
+  },
+  {
+   "_id": "KNXAGQUDMFHJ3BD4ACYN3SWAAY",
+   "type": "image"
+  },
+  {
+   "_id": "2BFCEDEBJJG3VCWUIM6NCQTY5Y",
+   "type": "text",
+   "content": "En tanto, el jueves los focos estarán puestos en el Senado . Allí los libertarios quieren avanzar con el proyecto"
+  },
+  {
+   "_id": "RCGECWRVJZCZVKBNHUGQ4JTTJE",
+   "type": "text",
+   "content": "Viernes y sábado serán días de descanso y el domingo cerrará con esta presentación de Milei, que es inusual debido"
+  },
+  {
+   "_id": "RA7GMMUAEFA7RBL6Y3HK443KUY",
+   "type": "text",
+   "content": "La Casa Rosada busca dar un golpe de efecto en un horario central para la televisión , como fue cuando"
+  },
+  {
+   "_id": "WNEJF4X3QFAZNDGAXVCDOKHUQY",
+   "type": "text",
+   "content": "Para este domingo se espera una férrea defensa del déficit cero. El libertario ya tildó de “degenerados fiscales” a los"
+  },
+  {
+   "_id": "OVIKAYLVINFT7JBNB7SBOJEUFE",
+   "type": "text",
+   "content": "En el Congreso lo esperarán la vice Victoria Villarruel , titular del Senado, con quien la relación está enfriada; y"
+  }
+ ],
+ "credits": {
+  "by": []
+ },
+ "taxonomy": {
+  "primary_section": {
+   "_id": "/politica",
+   "name": "Política"
+  },
+  "tags": [
+   {
+    "slug": "javier-milei-tid67207",
+    "text": "Javier Milei"
+   },
+   {
+    "slug": "congreso-nacional-tid28",
+    "text": "Congreso Nacional"
+   }
+  ]
+ },
+ "content_restrictions": {
+  "content_code": "comun"
+ },
+ "label": {
+  "edicion": {
+   "display": true,
+   "text": "Digital"
+  },
+  "eje_subeje": {
+   "display": true,
+   "text": "Breaking News"
+  },
+  "enviar_a_apps": {
+   "display": true,
+   "text": "Si",
+   "url": ""
+  },
+  "metarefresh": {
+   "display": true,
+   "text": "Si"
+  },
+  "mostrar_banners": {
+   "display": true,
+   "text": "Si",
+   "url": ""
+  },
+  "recomendar": {
+   "display": true,
+   "text": "Si",
+   "url": ""
+  },
+  "republicar_audio": {
+   "display": true,
+   "text": "No"
+  },
+  "showcase": {
+   "display": true,
+   "text": "No"
+  },
+  "trust": {
+   "text": "Noticia"
+  },
+  "volanta": {
+   "display": true,
+   "text": "A las 21."
+  }
+ }
+}

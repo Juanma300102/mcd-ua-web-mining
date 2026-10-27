@@ -1,0 +1,295 @@
+[
+ {
+  "id": 1000001660985,
+  "date": "2026-01-25T23:02:39",
+  "date_gmt": "2026-01-26T02:02:39",
+  "link": "https://misionesonline.net/2026/01/25/milei-viaja-a-mar-del-plata-para-encabezar-la-derecha-fest/",
+  "title": {
+   "rendered": "Milei viaja a Mar del Plata para encabezar la Derecha Fest y movilizar a la militancia"
+  },
+  "content": {
+   "rendered": "<p>En pleno verano y a días del inicio de las sesiones extraordinarias en el Congreso, el presidente Javier Milei viajará</p>"
+  },
+  "excerpt": {
+   "rendered": "<p>En pleno verano y a días del inicio de las sesiones extraordinarias en el Congreso, [&hellip;]</p>"
+  },
+  "categories": [
+   7,
+   395
+  ],
+  "tags": [
+   156256,
+   32899,
+   115257,
+   2607,
+   90014,
+   11788
+  ],
+  "_embedded": {
+   "author": [
+    {
+     "name": "Redacción"
+    }
+   ],
+   "wp:term": [
+    [
+     {
+      "taxonomy": "category",
+      "name": "Nacionales"
+     },
+     {
+      "taxonomy": "category",
+      "name": "Política"
+     }
+    ],
+    [
+     {
+      "taxonomy": "post_tag",
+      "name": "Derecha Fest"
+     },
+     {
+      "taxonomy": "post_tag",
+      "name": "Javier Milei"
+     },
+     {
+      "taxonomy": "post_tag",
+      "name": "la libertad avanza"
+     },
+     {
+      "taxonomy": "post_tag",
+      "name": "Mar del Plata"
+     },
+     {
+      "taxonomy": "post_tag",
+      "name": "militancia"
+     },
+     {
+      "taxonomy": "post_tag",
+      "name": "política nacional"
+     }
+    ]
+   ]
+  }
+ },
+ {
+  "id": 1000001660979,
+  "date": "2026-01-25T22:45:36",
+  "date_gmt": "2026-01-26T01:45:36",
+  "link": "https://misionesonline.net/2026/01/25/mesa-politica-reforma-laboral/",
+  "title": {
+   "rendered": "El Gobierno nacional reúne este lunes a la mesa política  para coordinar la última negociación antes de tratar la reforma laboral"
+  },
+  "content": {
+   "rendered": "<p>El Gobierno activará este lunes una instancia clave de coordinación política para encarar la recta final de las negociaciones antes</p>"
+  },
+  "excerpt": {
+   "rendered": "<p>El Gobierno activará este lunes una instancia clave de coordinación política para encarar la recta [&hellip;]</p>"
+  },
+  "categories": [
+   7,
+   395,
+   93796
+  ],
+  "tags": [
+   16115,
+   185,
+   9696,
+   101574,
+   11082,
+   15475
+  ],
+  "_embedded": {
+   "author": [
+    {
+     "name": "Karina Gonzalez"
+    }
+   ],
+   "wp:term": [
+    [
+     {
+      "taxonomy": "category",
+      "name": "Nacionales"
+     },
+     {
+      "taxonomy": "category",
+      "name": "Política"
+     },
+     {
+      "taxonomy": "category",
+      "name": "Política y Economía"
+     }
+    ],
+    [
+     {
+      "taxonomy": "post_tag",
+      "name": "Casa Rosada"
+     },
+     {
+      "taxonomy": "post_tag",
+      "name": "Congreso"
+     },
+     {
+      "taxonomy": "post_tag",
+      "name": "gobierno nacional"
+     },
+     {
+      "taxonomy": "post_tag",
+      "name": "politica argentina"
+     },
+     {
+      "taxonomy": "post_tag",
+      "name": "reforma laboral"
+     },
+     {
+      "taxonomy": "post_tag",
+      "name": "Sesiones extraordinarias"
+     }
+    ]
+   ]
+  }
+ },
+ {
+  "id": 1000001660867,
+  "date": "2026-01-25T17:21:47",
+  "date_gmt": "2026-01-25T20:21:47",
+  "link": "https://misionesonline.net/2026/01/25/reforma-laboral-pymes/",
+  "title": {
+   "rendered": "Reforma laboral: las pymes reiteraron sus advertencias por cambios en artículos que afectan al sector y enviaron un documento al Senado  "
+  },
+  "content": {
+   "rendered": "<p>Las pequeñas y medianas empresas volvieron a encender alertas frente al proyecto de reforma laboral que impulsa el Gobierno nacional.</p>"
+  },
+  "excerpt": {
+   "rendered": "<p>Las pequeñas y medianas empresas volvieron a encender alertas frente al proyecto de reforma laboral [&hellip;]</p>"
+  },
+  "categories": [
+   395,
+   4,
+   120,
+   1882,
+   7,
+   93796
+  ],
+  "tags": [
+   4165,
+   9696,
+   18306,
+   3473,
+   11082,
+   2291
+  ],
+  "_embedded": {
+   "author": [
+    {
+     "name": "Karina Gonzalez"
+    }
+   ],
+   "wp:term": [
+    [
+     {
+      "taxonomy": "category",
+      "name": "Economía"
+     },
+     {
+      "taxonomy": "category",
+      "name": "Empresas"
+     },
+     {
+      "taxonomy": "category",
+      "name": "Foresto-industria"
+     },
+     {
+      "taxonomy": "category",
+      "name": "Nacionales"
+     },
+     {
+      "taxonomy": "category",
+      "name": "Política"
+     },
+     {
+      "taxonomy": "category",
+      "name": "Política y Economía"
+     }
+    ],
+    [
+     {
+      "taxonomy": "post_tag",
+      "name": "CAME"
+     },
+     {
+      "taxonomy": "post_tag",
+      "name": "gobierno nacional"
+     },
+     {
+      "taxonomy": "post_tag",
+      "name": "mercado laboral"
+     },
+     {
+      "taxonomy": "post_tag",
+      "name": "pymes"
+     },
+     {
+      "taxonomy": "post_tag",
+      "name": "reforma laboral"
+     },
+     {
+      "taxonomy": "post_tag",
+      "name": "Senado"
+     }
+    ]
+   ]
+  }
+ },
+ {
+  "id": 1000001660730,
+  "date": "2026-01-25T10:49:19",
+  "date_gmt": "2026-01-25T13:49:19",
+  "link": "https://misionesonline.net/2026/01/25/reforma-laboral-milei-no-quiere-cambios-los-gobernadores-esperan-plata-y-la-cgt-amenaza-la-justicia/",
+  "title": {
+   "rendered": "Reforma laboral: Milei no quiere cambios, los gobernadores esperan plata y la CGT amenaza la Justicia"
+  },
+  "content": {
+   "rendered": "<p>El presidente aprovechó el largo viaje a Davos, en Suiza, para analizar con tres de los principales pilares de su</p>\n<p>Fuente: TN</p>"
+  },
+  "excerpt": {
+   "rendered": "<p>En su viaje a Davos, el Presidente ratificó que el proyecto impulsado por el Ejecutivo</p>"
+  },
+  "categories": [
+   7
+  ],
+  "tags": [
+   9696,
+   32899,
+   11082
+  ],
+  "_embedded": {
+   "author": [
+    {
+     "name": "Redacción"
+    }
+   ],
+   "wp:term": [
+    [
+     {
+      "taxonomy": "category",
+      "name": "Política"
+     }
+    ],
+    [
+     {
+      "taxonomy": "post_tag",
+      "name": "gobierno nacional"
+     },
+     {
+      "taxonomy": "post_tag",
+      "name": "Javier Milei"
+     },
+     {
+      "taxonomy": "post_tag",
+      "name": "reforma laboral"
+     }
+    ]
+   ]
+  }
+ }
+]

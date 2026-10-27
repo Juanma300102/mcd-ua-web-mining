@@ -1,17 +1,17 @@
 ## 1. Setup and fixtures
 
 - [x] 1.1 Stay on `feat/harden-dagster-infra` (team decision, 2026-10-27): Phase 3 lands on the same branch as T1.5 and Phase 2, so one PR covers all three. Check: `git branch --show-current` is `feat/harden-dagster-infra`.
-- [ ] 1.2 Create `src/news_politica/sources/` (empty `__init__.py`) and `tests/sources/` with the `FakeRaw` / `FakeSession` / `FakeClock` helpers from `tests/test_probe.py` copied into `tests/sources/conftest.py` (`test_probe.py` keeps its own). The session can also raise `requests.Timeout` / `ConnectionError` and return a sequence of responses per URL.
-- [ ] 1.3 Write `tests/fixtures/sources/build_fixtures.py` (design decision 9) and run it against `data/probe_cache/`. Arc outlets get 3–5 story JSONs (a normal note; a list-heavy La Nación note; an Infobae live blog; a La Nación `subtype` 9 note), one page cut to the `<script>` around `Fusion.globalContent`, and one sitemap with ~10 entries. MisionesOnline gets one API page with a hand-written excerpt, an automatic excerpt and a closing "Fuente: X", plus its `X-WP-*` headers. Text fields are cut to ~20 words. Check: a test scans the fixtures (spec: "Fixture text is shortened").
+- [x] 1.2 Create `src/news_politica/sources/` (empty `__init__.py`) and `tests/sources/` with the `FakeRaw` / `FakeSession` / `FakeClock` helpers from `tests/test_probe.py` copied into `tests/sources/conftest.py` (`test_probe.py` keeps its own). The session can also raise `requests.Timeout` / `ConnectionError` and return a sequence of responses per URL.
+- [x] 1.3 Write `tests/fixtures/sources/build_fixtures.py` (design decision 9) and run it against `data/probe_cache/`. Arc outlets get 3–5 story JSONs (a normal note; a list-heavy La Nación note; an Infobae live blog; a La Nación `subtype` 9 note), one page cut to the `<script>` around `Fusion.globalContent`, and one sitemap with ~10 entries. MisionesOnline gets one API page with a hand-written excerpt, an automatic excerpt and a closing "Fuente: X", plus its `X-WP-*` headers. Text fields are cut to ~20 words. Check: a test scans the fixtures (spec: "Fixture text is shortened").
 
 ## 2. Models, text helpers and HTTP client (T3.1)
 
-- [ ] 2.1 `models.py`: `CatalogEntry`, `RawDoc` and `Article` dataclasses (design decision 1). `Article` field names and order match the 13 schema columns in `docs/def.md`. Check: a test compares `Article` field names with the schema list.
-- [ ] 2.2 `text.py`: `html_to_text()` (bs4 + lxml, entities unescaped, whitespace collapsed), `article_id()` (SHA-1 hex), `ART` (fixed UTC-3) and `to_art()` for ISO UTC strings. Check: unit tests, including the 2024-03-01T02:30Z → 2024-02-29 23:30 case.
-- [ ] 2.3 `http.py`: error classes (`SourceError`, `TransientError`, `Blocked`, `Disallowed`, `TooManyLosses`, `ParseError`) and `PoliteClient` with the robots.txt check, per-host spacing, User-Agent, 30 s timeout, redirects with the final URL recorded, and challenge detection (design decision 5).
-- [ ] 2.4 Retries in `PoliteClient`: timeouts, connection errors, 5xx and 429 get 3 retries at 2/8/32 s, with `Retry-After` honoured up to 300 s. Retries respect the per-host spacing; other 4xx are returned.
-- [ ] 2.5 Tests for every scenario of the "Requests are polite and robots-aware", "Transient failures are retried a bounded number of times" and "Anti-bot challenges stop all traffic to the host" requirements, with the fake clock. Check: `uv run pytest tests/sources` passes in well under a second of wall time per test.
-- [ ] 2.6 `check_losses(docs, max_share=0.10)` in `sources/__init__.py` with tests for both of its scenarios.
+- [x] 2.1 `models.py`: `CatalogEntry`, `RawDoc` and `Article` dataclasses (design decision 1). `Article` field names and order match the 13 schema columns in `docs/def.md`. Check: a test compares `Article` field names with the schema list.
+- [x] 2.2 `text.py`: `html_to_text()` (bs4 + lxml, entities unescaped, whitespace collapsed), `article_id()` (SHA-1 hex), `ART` (fixed UTC-3) and `to_art()` for ISO UTC strings. Check: unit tests, including the 2024-03-01T02:30Z → 2024-02-29 23:30 case.
+- [x] 2.3 `http.py`: error classes (`SourceError`, `TransientError`, `Blocked`, `Disallowed`, `TooManyLosses`, `ParseError`) and `PoliteClient` with the robots.txt check, per-host spacing, User-Agent, 30 s timeout, redirects with the final URL recorded, and challenge detection (design decision 5).
+- [x] 2.4 Retries in `PoliteClient`: timeouts, connection errors, 5xx and 429 get 3 retries at 2/8/32 s, with `Retry-After` honoured up to 300 s. Retries respect the per-host spacing; other 4xx are returned.
+- [x] 2.5 Tests for every scenario of the "Requests are polite and robots-aware", "Transient failures are retried a bounded number of times" and "Anti-bot challenges stop all traffic to the host" requirements, with the fake clock. Check: `uv run pytest tests/sources` passes in well under a second of wall time per test.
+- [x] 2.6 `check_losses(docs, max_share=0.10)` in `sources/__init__.py` with tests for both of its scenarios.
 
 ## 3. MisionesOnline (T3.2)
 
