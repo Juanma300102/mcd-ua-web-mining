@@ -20,11 +20,15 @@
 - **THEN** the partition fails and nothing is stored for it
 
 ### Requirement: Arc catalogs are unpartitioned and report their gaps
-`catalogo_infobae` and `catalogo_lanacion` SHALL run `build_catalog` from 2023-12-10 to the scraping day and SHALL attach the number of entries, the failed sitemap days and the dropped URL count as materialization metadata.
+`catalogo_infobae` and `catalogo_lanacion` SHALL run `build_catalog` over the sitemap days in `SITEMAP_DAYS` (5 and 20) of every month from 2023-12-10 to the scraping day, merged and deduped by URL, and SHALL attach the number of entries, the failed sitemap days and the dropped URL count as materialization metadata.
 
 #### Scenario: A sitemap day fails
 - **WHEN** one sitemap day fails after retries
 - **THEN** the catalog is stored and its metadata lists that day under `failed_days`
+
+#### Scenario: Only the sampled sitemap days
+- **WHEN** the catalog is built up to 2024-01-31
+- **THEN** it requests the sitemaps of 2023-12-20, 2024-01-05 and 2024-01-20 and no other day
 
 ### Requirement: Requests to one outlet never run in parallel
 Every asset that makes requests SHALL belong to its outlet's pool (`infobae`, `lanacion`, `misionesonline`). The Dagster instance SHALL limit every pool to 1 with run granularity, so at most one run per outlet is in progress at a time.

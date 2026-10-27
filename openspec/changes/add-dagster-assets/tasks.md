@@ -17,7 +17,7 @@
 
 - [x] 4.1 README: how to launch the backfill from the UI, how to cancel one outlet after a `Blocked`, keep the machine awake. `odd/tasks/news-politica.md` and `docs/def.md`: cut-off 2026-09-30, T4.3 as an asset backfill (no job), T4.4 left for after the data.
 
-- [x] 4.2 Proof-of-concept sample: `SAMPLE_PER_MONTH = 30` in the Arc `raw_*` (design decision 8), with a test. Pools created in `scripts/dagster-up.sh` (design decision 9).
+- [x] 4.2 Proof-of-concept sample: `SAMPLE_PER_MONTH = 30` in the Arc `raw_*` (design decision 8), with a test. Pools created in `scripts/dagster-up.sh` (design decision 9). Catalogs from sitemap days 5 and 20 of each month (design decision 8b).
 
 ## 5. Backfill (outside the sandbox, team's OK)
 

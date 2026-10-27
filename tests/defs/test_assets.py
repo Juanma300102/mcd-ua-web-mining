@@ -86,11 +86,20 @@ def test_catalog_reports_failed_days(tmp_path, client, session, monkeypatch):
     day = date(2023, 12, 10)
     session.routes[INFOBAE.sitemap_url(day)] = FakeRaw(200, fixture_text("infobae", "sitemap.xml"))
     session.routes[INFOBAE.sitemap_url(day + timedelta(days=1))] = FakeRaw(500)
-    monkeypatch.setattr(assets, "build_catalog",
+    monkeypatch.setattr(assets, "sampled_catalog",
                         lambda client, outlet: build_catalog(client, outlet, start=day, end=day + timedelta(days=1)))
     result = run(tmp_path, client, [catalogo_infobae])
     assert result.success
     assert metadata(result, "catalogo_infobae") == {"entries": 4, "failed_days": "2023-12-11", "dropped": 0}
+
+
+def test_catalog_reads_only_the_sitemap_days(client, session):
+    for day in (date(2023, 12, 20), date(2024, 1, 5), date(2024, 1, 20)):
+        session.routes[INFOBAE.sitemap_url(day)] = FakeRaw(200, fixture_text("infobae", "sitemap.xml"))
+    catalog = assets.sampled_catalog(client, INFOBAE, end=date(2024, 1, 31))
+    sitemaps = [url for url, *_ in session.calls if "sitemap" in url]
+    assert sitemaps == [INFOBAE.sitemap_url(d) for d in (date(2023, 12, 20), date(2024, 1, 5), date(2024, 1, 20))]
+    assert len(catalog.entries) == 4 and catalog.failed_days == []
 
 
 # Raw partitions

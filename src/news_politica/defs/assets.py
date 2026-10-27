@@ -2,7 +2,7 @@
 
 from contextlib import contextmanager
 from dataclasses import asdict, fields
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 import dagster as dg
 import pandas as pd
@@ -14,7 +14,7 @@ from news_politica.sources.infobae import INFOBAE
 from news_politica.sources.lanacion import LANACION
 from news_politica.sources.misionesonline import MEDIO as MISIONESONLINE
 from news_politica.sources.misionesonline import fetch_month
-from news_politica.sources.models import Article, CatalogEntry, RawDoc
+from news_politica.sources.models import Article, Catalog, CatalogEntry, RawDoc
 from news_politica.sources.text import ART, article_id
 
 # Cut-off 2026-09-30 23:59 ART (add-dagster-assets): October 2026 is not complete before the delivery.
@@ -25,6 +25,25 @@ RETRY = dg.RetryPolicy(max_retries=2, delay=300)
 # Proof of concept: Arc notes fetched per month, chosen by URL hash so a re-run picks the same ones
 # (~35 min per outlet instead of ~14 h). None fetches every note. MisionesOnline is always complete.
 SAMPLE_PER_MONTH = 30
+# Proof of concept: the catalogs read these sitemap days of each month (~70 sitemaps, not ~1,050).
+# Two days list ~50 Política URLs per month, enough for the sample. None reads every day.
+SITEMAP_DAYS = (5, 20)
+
+
+def sampled_catalog(client, outlet, end=None):
+    """build_catalog over SITEMAP_DAYS of every month from START to end, merged and deduped by URL."""
+    end = end or date.today()
+    if SITEMAP_DAYS is None:
+        return build_catalog(client, outlet, end=end)
+    days = [START + timedelta(days=n) for n in range((end - START).days + 1)]
+    entries, failed, dropped, seen = [], [], 0, set()
+    for day in (d for d in days if d.day in SITEMAP_DAYS):
+        part = build_catalog(client, outlet, start=day, end=day)
+        entries += [e for e in part.entries if e.url not in seen]
+        seen.update(e.url for e in part.entries)
+        failed += part.failed_days
+        dropped += part.dropped
+    return Catalog(entries, failed, dropped)
 
 
 def to_frame(rows, cls):
@@ -61,9 +80,9 @@ def checked(context, docs, **metadata):
 def arc_assets(outlet):
     @dg.asset(name=f"catalogo_{outlet.medio}", pool=outlet.medio, retry_policy=RETRY)
     def catalog(context, client: dg.ResourceParam[PoliteClient]) -> pd.DataFrame:
-        """Política URLs of every daily sitemap from 2023-12-10 to the scraping day."""
+        """Política URLs of the SITEMAP_DAYS sitemaps of each month from 2023-12-10 to the scraping day."""
         with no_retry_when_blocked():
-            result = build_catalog(client, outlet)
+            result = sampled_catalog(client, outlet)
         context.add_output_metadata({
             "entries": len(result.entries),
             "failed_days": ", ".join(str(day) for day in result.failed_days) or "none",

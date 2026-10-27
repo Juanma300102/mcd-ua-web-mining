@@ -56,6 +56,8 @@ A `Blocked` outlet keeps failing its remaining partitions one by one (one robots
 
 **8. Proof-of-concept sample (revised while applying, 2026-10-27).** The project is a proof of concept and must be quick to run, so each Arc month fetches at most `SAMPLE_PER_MONTH = 30` catalog entries, the 30 with the lowest SHA-1 of the URL (stable across re-runs). Each Arc backfill drops from ~14 h to ~35–50 min; `raw_*` metadata adds `listed` (catalog entries in the month). MisionesOnline stays complete (100 posts per request, ~15 min for the period). `None` restores the full backfill.
 
+**8b. Catalogs from two sitemap days per month (revised while applying).** The full Infobae catalog was still running after 72 min (~48 KB/s from Akamai, no progress visible) and was cancelled. The catalogs now read only the sitemaps of days 5 and 20 of each month (`SITEMAP_DAYS`, ~70 sitemaps): enough Política URLs (~50 per month) for the 30-note sample. Because Infobae groups its sitemaps by last modification, a few listed notes belong to earlier months; they still land in their own `url_date` partition. `catalogo_lanacion` was already built from every day and was not rebuilt.
+
 **9. Pools created up front (found in the smoke run).** Dagster 1.13.27's queue daemon reads the configured pools before it creates the missing ones from `default_limit`, so in the queue pass where a pool first appears its runs are not limited: the first two MisionesOnline months started together. Once the pool exists the limit holds (the next two months ran one after the other). `scripts/dagster-up.sh` runs `dagster instance concurrency set <medio> 1` for the three outlets before `dg dev`.
 
 ## Risks / Trade-offs

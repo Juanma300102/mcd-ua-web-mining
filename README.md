@@ -28,7 +28,7 @@ If Postgres rejects the credentials after you change `.env`, the Docker volume s
 
 ## Backfill
 
-The dataset covers 2023-12-10 to the cut-off, 2026-09-30 23:59 ART. Run it outside Claude Code's sandbox, with Docker up. This is a proof of concept: each Infobae and La Nación month fetches a stable sample of 30 notes (`SAMPLE_PER_MONTH` in `defs/assets.py`), so each outlet takes ~35–50 min at 1 request / 2 s instead of ~14 h; MisionesOnline is complete and takes ~15 min.
+The dataset covers 2023-12-10 to the cut-off, 2026-09-30 23:59 ART. Run it outside Claude Code's sandbox, with Docker up. This is a proof of concept: each Infobae and La Nación month fetches a stable sample of 30 notes (`SAMPLE_PER_MONTH` in `defs/assets.py`), and the catalogs read only the sitemaps of days 5 and 20 of each month (`SITEMAP_DAYS`), so each outlet takes well under an hour at 1 request / 2 s instead of ~14 h; MisionesOnline is complete and takes ~15 min.
 
 1. `scripts/dagster-up.sh`, then in the UI (Assets) select every asset and click **Materialize all**, all partitions. Dagster runs an asset backfill: the two catalogs (~35 min each), then one run per month and outlet, then `noticias_politica`.
 2. Each outlet has its own pool with limit 1 (`dagster.yaml`), so at most one run per outlet is in progress; the three outlets run in parallel. `scripts/dagster-up.sh` creates the three pools before starting Dagster: on a fresh database, Dagster 1.13.27 lets the first runs of a pool start together before applying `default_limit`. Check with `dagster instance concurrency get --all`.
