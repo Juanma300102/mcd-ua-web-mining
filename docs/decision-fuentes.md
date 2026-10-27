@@ -91,4 +91,4 @@ En 186 notas (136 de la muestra y 50 más al azar): 181 tienen `content_code` `c
 - Paywall de La Nación (arriba).
 - Si el bloqueo de MisionesOnline vuelve durante el backfill.
 - Columnas nuevas en el esquema: `fuente_externa` y `es_en_vivo` (se agregan en `docs/def.md`).
-- Borrar `data/probe_cache/` al cerrar la fase 2: tiene unos 175 MB de páginas de los medios.
+- ~~Borrar `data/probe_cache/` al cerrar la fase 2~~: se borró el 27/10/2026 al cerrar la fase 3, después de armar con ella los fixtures de los tests (`tests/fixtures/sources/`).
