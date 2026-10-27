@@ -19,4 +19,4 @@
 - [x] 4.1 README: note that Postgres listens on `127.0.0.1` only and that `--wait` needs Docker Compose v2.1+.
 - [x] 4.2 Run `uv run pytest` and `uv run dg check defs`.
 - [x] 4.3 Run `scripts/dagster-up.sh` against the existing volume (UI opens, previous runs still listed). Then run `docker compose down -v` and start it again to confirm a fresh volume starts with no credentials error. Ask before `down -v`: it deletes the local Dagster history.
-- [ ] 4.4 Mark T1.5 done in `odd/tasks/news-politica.md` with its commit hash and a Progress line, and commit with a Conventional Commit message.
+- [x] 4.4 Mark T1.5 done in `odd/tasks/news-politica.md` with its commit hash and a Progress line, and commit with a Conventional Commit message.
