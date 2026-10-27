@@ -54,7 +54,9 @@ Consecuencias para las fases 3 y 4:
 
 ## Fecha de corte
 
-**Decisión:** 31/10/2026 23:59 (hora argentina), con `fecha_publicacion` como criterio. El backfill entra en un día de corrida por medio, y el período queda en casi 35 meses e incluye las legislativas de octubre de 2025.
+**Actualización (27/10/2026, cambio `add-dagster-assets`):** el corte pasa al 30/09/2026 23:59, porque la entrega es antes de que termine octubre.
+
+**Decisión original:** 31/10/2026 23:59 (hora argentina), con `fecha_publicacion` como criterio. El backfill entra en un día de corrida por medio, y el período queda en casi 35 meses e incluye las legislativas de octubre de 2025.
 
 ## MisionesOnline
 

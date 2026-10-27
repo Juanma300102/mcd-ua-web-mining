@@ -26,6 +26,17 @@ The script starts Postgres with `docker compose`, checks the connection, validat
 
 If Postgres rejects the credentials after you change `.env`, the Docker volume still has the old password. Run `docker compose down -v` (this deletes the local Dagster history) and try again.
 
+## Backfill
+
+The dataset covers 2023-12-10 to the cut-off, 2026-09-30 23:59 ART. Run it outside Claude Code's sandbox, on a machine that stays awake with Docker up: each Arc outlet takes ~14 h at 1 request / 2 s; MisionesOnline takes a few minutes.
+
+1. `scripts/dagster-up.sh`, then in the UI (Assets) select every asset and click **Materialize all**, all partitions. Dagster runs an asset backfill: the two catalogs (~35 min each), then one run per month and outlet, then `noticias_politica`.
+2. Each outlet has its own pool with limit 1 (`dagster.yaml`), so at most one run per outlet is in progress; the three outlets run in parallel.
+3. A month that fails with a transient error is retried twice, 5 min apart. A `Blocked` (anti-bot challenge) or `TooManyLosses` failure is not retried: cancel that outlet's remaining runs in the UI (Runs, filter by the asset) instead of letting them fail one by one, and check the site before re-launching.
+4. Failed months can be re-launched from the asset's partitions view. `noticias_politica` skips months that are missing, so it can be materialized from a partial backfill.
+
+Files land in `data/<asset>.parquet` and `data/raw_<medio>/<YYYY-MM-DD>.parquet` (`DATA_DIR` overrides `data/`).
+
 ## Checks
 
 ```bash
@@ -58,7 +69,7 @@ scripts/dagster-up.sh      # starts Postgres + Dagster
 src/news_politica/
   definitions.py           # loads everything under defs/
   dagster_home/dagster.yaml
-  defs/                    # assets, jobs and schedules
+  defs/                    # assets.py (catalogs, raw_* by month, noticias_politica), io.py (Parquet, client)
   sources/                 # scraping clients: HTTP client, one module per outlet, parse()
 tests/
   fixtures/sources/        # trimmed responses from the phase 2 cache (build_fixtures.py)

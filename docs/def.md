@@ -63,7 +63,7 @@ Flujo de assets:
 4. sentimiento\_noticias: score de sentimiento por nota.  
 5. evolucion\_tono: agregados por medio y semana, y gráficos.
 
-No hay schedule diario: un job de backfill descarga desde 12/2023 hasta la fecha de corte. Estructura propuesta del repo:  
+No hay schedule diario: un backfill de assets de Dagster (lanzado desde la UI, ver README) descarga desde 12/2023 hasta la fecha de corte. No es un job porque un job no puede mezclar assets particionados y sin particionar. Estructura propuesta del repo:  
 `news-politica/`  
   `docker-compose.yaml        # postgres (copiado del repo anterior)`  
   `pyproject.toml / uv.lock`  
@@ -119,7 +119,7 @@ Seis fases en orden; la 2 y la 3 se pueden repartir entre los dos integrantes.
    3. La Nación: lo mismo que Infobae, más buscar notas con content\_code distinto de "comun" para confirmar que tampoco vienen truncadas.  
    4. Nota de decisión: rate limit, duración estimada del backfill, fecha de corte, plan B para MisionesOnline, qué hacer con las notas de agencia y con las notas "en vivo".  
 3. **Clientes de scraping (hecha, cambio OpenSpec `add-scraping-clients`).** Un cliente HTTP compartido (rate limit, reintentos y User-Agent identificable), los modelos comunes (entrada de catálogo, documento crudo y nota) y un módulo por medio en sources/. Tests con respuestas guardadas y texto recortado.  
-4. **Assets de Dagster.** raw\_\* particionados por mes, noticias\_politica con limpieza y deduplicado, y un job de backfill desde 12/2023 hasta la fecha de corte. Cierra con el EDA del dataset (volumen por medio y semana, largo de notas, proporción con bajada), que alimenta las decisiones de la fase 5.  
+4. **Assets de Dagster.** raw\_\* particionados por mes, noticias\_politica con limpieza y deduplicado, y un backfill de assets desde 12/2023 hasta la fecha de corte. Cierra con el EDA del dataset (volumen por medio y semana, largo de notas, proporción con bajada), que alimenta las decisiones de la fase 5.  
 5. **Sentimiento.** Guía de etiquetado y muestra etiquetada, baseline y modelo alternativo, elegir uno y materializar sentimiento\_noticias y evolucion\_tono con la comparación antes y después de cada hito.  
 6. **Informe.** Gráficos de evolución con hitos, tabla antes y después de cada hito, comparación provincial vs nacional, conclusiones y limitaciones.
 
@@ -133,5 +133,5 @@ Seis fases en orden; la 2 y la 3 se pueden repartir entre los dos integrantes.
 * **robots.txt.** El robots.txt de La Nación prohíbe /pf/api/ para todos los user agents, por eso se usan solo sitemaps y el HTML de las notas. Conviene mencionarlo en el informe y usar un rate limit bajo.  
 * **Volumen.** Entre el 10/12/2023 y el 30/09/2026: 7.245 notas de MisionesOnline (unas 50 por semana; para la fase 5 puede convenir agregar por quincena o por mes), unas 23.100 de Infobae y unas 26.600 de La Nación. A una request cada 2 s, el backfill de cada medio Arc tarda unas 14 a 16 horas y baja de 5 a 10 GB de HTML, así que los raw guardan solo el JSON de la nota.  
 * **Sentimiento no es postura.** Una nota negativa puede serlo hacia la oposición. El informe debe aclarar qué mide el modelo.  
-* **Fecha de corte (decidido).** 31/10/2026 23:59, hora argentina, por fecha de publicación.  
+* **Fecha de corte (decidido).** 30/09/2026 23:59, hora argentina, por fecha de publicación. Se adelantó del 31/10 el 27/10/2026: la entrega es antes de que termine octubre y el backfill tarda unas 14 horas.  
 * **A decidir:** qué modelo de sentimiento usar, si se incluye el cuerpo o solo título \+ bajada, y dónde se guarda el dataset (Parquet local o tabla en el mismo Postgres).
