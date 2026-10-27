@@ -23,5 +23,5 @@
 
 
 - [x] 5.1 Start `scripts/dagster-up.sh`, materialize `raw_misionesonline` for one month and the two catalogs; check in the UI that only one run per outlet is in progress (pool limit works).
-- [ ] 5.2 Launch the backfill of all `raw_*` partitions, then `noticias_politica`. Record in Progress: duration, `failed_days`, losses per outlet, `parse_errors`, rows per outlet.
-- [ ] 5.3 Commit each group with a Conventional Commit and record the hashes next to T4.1–T4.3.
+- [x] 5.2 Launch the backfill of all `raw_*` partitions, then `noticias_politica`. Record in Progress: duration, `failed_days`, losses per outlet, `parse_errors`, rows per outlet.
+- [x] 5.3 Commit each group with a Conventional Commit and record the hashes next to T4.1–T4.3.
