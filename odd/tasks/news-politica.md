@@ -104,4 +104,4 @@ Done through the OpenSpec change `explore-news-sources` (archived in `openspec/c
 - 2026-10-27: Deleted `data/probe_cache/` (175 MB; OpenSpec task 7.3, team OK in chat), now that the fixtures are committed and the smoke run passed. The Phase 2 notebooks need the network to re-run (README updated).
 
 ## Next step
-PR for `feat/harden-dagster-infra` (plan review, T1.5, `docs/def.md` sync, Phase 2, Phase 3; T1.1–T1.4 are already on `main`), then Phase 4 (assets, T4.1 above). The OpenSpec change `add-scraping-clients` is ready to archive (`/opsx:archive`).
+PR for `feat/harden-dagster-infra` (plan review, T1.5, `docs/def.md` sync, Phase 2, Phase 3; T1.1–T1.4 are already on `main`), then Phase 4 (assets, T4.1 above). The OpenSpec change `add-scraping-clients` is archived (spec `scraping-clients` in `openspec/specs/`).
