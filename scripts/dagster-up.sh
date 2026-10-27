@@ -35,26 +35,14 @@ export DAGSTER_POSTGRES_USER="$POSTGRES_USER"
 export DAGSTER_POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
 export DAGSTER_POSTGRES_DB="$POSTGRES_DB"
 
-if ! docker compose up -d; then
+# --wait blocks until the compose healthcheck (pg_isready over TCP) passes.
+echo "Starting PostgreSQL and waiting for it to accept connections..."
+if ! docker compose up -d --wait --wait-timeout 90; then
   echo "" >&2
-  echo "docker compose up failed." >&2
+  echo "PostgreSQL did not start or did not become healthy in time." >&2
   echo "If the error says 'port is already allocated', host port ${POSTGRES_PUBLISH_PORT} is in use." >&2
   echo "Set another value in .env (template: .env.example), e.g. POSTGRES_PUBLISH_PORT=5435" >&2
-  exit 1
-fi
-
-echo "Waiting for PostgreSQL to accept connections..."
-for _ in $(seq 1 90); do
-  if docker compose exec postgres \
-    pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; then
-    break
-  fi
-  sleep 1
-done
-
-if ! docker compose exec postgres \
-  pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; then
-  echo "PostgreSQL did not respond in time." >&2
+  echo "Otherwise inspect it with: docker compose ps / docker compose logs postgres" >&2
   exit 1
 fi
 
@@ -74,9 +62,9 @@ uv sync
 echo "Checking the connection from the host (as Dagster will)..."
 if ! uv run python -c "
 import os, sys
-import psycopg2
+import psycopg
 try:
-    psycopg2.connect(
+    psycopg.connect(
         host=os.environ['DAGSTER_POSTGRES_HOST'],
         port=int(os.environ['DAGSTER_POSTGRES_PORT']),
         user=os.environ['DAGSTER_POSTGRES_USER'],

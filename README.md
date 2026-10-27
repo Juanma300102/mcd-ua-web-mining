@@ -7,7 +7,7 @@ Dataset and sentiment analysis of Argentine political news (Infobae, La Nación 
 ## Requirements
 
 - [uv](https://docs.astral.sh/uv/) (Python 3.11+; the repo pins 3.12 in `.python-version`)
-- Docker with Compose (Postgres for Dagster's run, schedule and event storage)
+- Docker with Compose v2.1+ (Postgres for Dagster's run, schedule and event storage; the start script uses `docker compose up --wait`)
 
 ## Setup
 
@@ -22,7 +22,7 @@ cp .env.example .env   # optional: change credentials or the Postgres port
 scripts/dagster-up.sh
 ```
 
-The script starts Postgres with `docker compose`, checks the connection, validates the definitions and opens the Dagster UI at http://127.0.0.1:3000. Postgres listens on host port `5434` by default (`POSTGRES_PUBLISH_PORT` in `.env`).
+The script starts Postgres with `docker compose`, checks the connection, validates the definitions and opens the Dagster UI at http://127.0.0.1:3000. Postgres listens on `127.0.0.1` only, host port `5434` by default (`POSTGRES_PUBLISH_PORT` in `.env`).
 
 If Postgres rejects the credentials after you change `.env`, the Docker volume still has the old password. Run `docker compose down -v` (this deletes the local Dagster history) and try again.
 

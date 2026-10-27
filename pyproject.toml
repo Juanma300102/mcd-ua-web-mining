@@ -6,7 +6,6 @@ requires-python = ">=3.11,<3.15"
 dependencies = [
     "dagster==1.13.27",
     "dagster-postgres>=0.29.27",
-    "psycopg2-binary>=2.9.13",
     "pandas>=3.1.0",
     "pyarrow>=26.0.0",
     "requests>=2.34.2",
