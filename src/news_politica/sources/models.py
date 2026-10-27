@@ -1,7 +1,10 @@
 """What the clients return: catalog entries, raw documents and parsed articles."""
 
+import json
 from dataclasses import dataclass, field
 from datetime import date, datetime
+
+from news_politica.sources.http import ParseError
 
 
 @dataclass(frozen=True)
@@ -33,6 +36,15 @@ class RawDoc:
     fetched_at: datetime
     payload: str | None = None
     error: str | None = None
+
+    def load(self):
+        """The payload as JSON; ParseError when the note is missing or the payload is unreadable."""
+        if self.error:
+            raise ParseError(f"{self.url}: no document ({self.error})")
+        try:
+            return json.loads(self.payload)
+        except (TypeError, ValueError) as error:
+            raise ParseError(f"{self.url}: unreadable payload") from error
 
 
 @dataclass(frozen=True)

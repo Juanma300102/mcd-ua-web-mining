@@ -15,9 +15,9 @@
 
 ## 3. MisionesOnline (T3.2)
 
-- [ ] 3.1 `misionesonline.py`: `fetch_month(client, month)` with pagination to `X-WP-TotalPages`, one `RawDoc` per post without `_links`, and `SourceError` when a listing page fails (design decision 7).
-- [ ] 3.2 `parse_post(raw)`: the `bajada` rule (excerpt vs start of body), `fuente_externa` (the notebook's `SOURCE` / `TRAILER` regexes on the last 300 characters), `seccion` from all categories, `autor` from embedded authors, `tags`, and `fecha_publicacion` from `date_gmt`.
-- [ ] 3.3 Tests on the fixtures for the "MisionesOnline returns every Política post of a month" and "MisionesOnline posts are parsed with the Phase 2 field rules" scenarios (three pages, failing page 2, hand-written and automatic excerpt, "Fuente: Infobae 👉 …").
+- [x] 3.1 `misionesonline.py`: `fetch_month(client, month)` with pagination to `X-WP-TotalPages`, one `RawDoc` per post without `_links`, and `SourceError` when a listing page fails (design decision 7).
+- [x] 3.2 `parse_post(raw)`: the `bajada` rule (excerpt vs start of body), `fuente_externa` (the notebook's `SOURCE` / `TRAILER` regexes on the last 300 characters), `seccion` from all categories, `autor` from embedded authors, `tags`, and `fecha_publicacion` from `date_gmt`.
+- [x] 3.3 Tests on the fixtures for the "MisionesOnline returns every Política post of a month" and "MisionesOnline posts are parsed with the Phase 2 field rules" scenarios (three pages, failing page 2, hand-written and automatic excerpt, "Fuente: Infobae 👉 …").
 
 ## 4. Arc shared module (T3.3 / T3.4 base)
 
