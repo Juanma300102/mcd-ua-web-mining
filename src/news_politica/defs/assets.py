@@ -15,13 +15,16 @@ from news_politica.sources.lanacion import LANACION
 from news_politica.sources.misionesonline import MEDIO as MISIONESONLINE
 from news_politica.sources.misionesonline import fetch_month
 from news_politica.sources.models import Article, CatalogEntry, RawDoc
-from news_politica.sources.text import ART
+from news_politica.sources.text import ART, article_id
 
 # Cut-off 2026-09-30 23:59 ART (add-dagster-assets): October 2026 is not complete before the delivery.
 MONTHS = dg.MonthlyPartitionsDefinition(start_date="2023-12-01", end_date="2026-10-01")
 PERIOD_START = datetime(START.year, START.month, START.day, tzinfo=ART)
 PERIOD_END = datetime(2026, 10, 1, tzinfo=ART)
 RETRY = dg.RetryPolicy(max_retries=2, delay=300)
+# Proof of concept: Arc notes fetched per month, chosen by URL hash so a re-run picks the same ones
+# (~35 min per outlet instead of ~14 h). None fetches every note. MisionesOnline is always complete.
+SAMPLE_PER_MONTH = 30
 
 
 def to_frame(rows, cls):
@@ -48,10 +51,10 @@ def no_retry_when_blocked():
         raise dg.Failure(f"{type(error).__name__}: {error}", allow_retries=False) from error
 
 
-def checked(context, docs):
+def checked(context, docs, **metadata):
     with no_retry_when_blocked():
         losses = check_losses(docs)
-    context.add_output_metadata({"notes": len(docs), "losses": losses})
+    context.add_output_metadata({**metadata, "notes": len(docs), "losses": losses})
     return to_frame(docs, RawDoc)
 
 
@@ -74,10 +77,11 @@ def arc_assets(outlet):
     def raw(context, client: dg.ResourceParam[PoliteClient], catalog: pd.DataFrame) -> pd.DataFrame:
         """Story JSON of every catalog note whose URL date falls in the month."""
         first, following = month_bounds(context.partition_key)
-        urls = [url for url, day in zip(catalog["url"], catalog["url_date"]) if first <= day < following]
+        listed = [url for url, day in zip(catalog["url"], catalog["url_date"]) if first <= day < following]
+        urls = sorted(listed, key=article_id)[:SAMPLE_PER_MONTH]
         with no_retry_when_blocked():
             docs = [fetch_story(client, outlet, url) for url in urls]
-        return checked(context, docs)
+        return checked(context, docs, listed=len(listed))
 
     return catalog, raw
 

@@ -28,10 +28,10 @@ If Postgres rejects the credentials after you change `.env`, the Docker volume s
 
 ## Backfill
 
-The dataset covers 2023-12-10 to the cut-off, 2026-09-30 23:59 ART. Run it outside Claude Code's sandbox, on a machine that stays awake with Docker up: each Arc outlet takes ~14 h at 1 request / 2 s; MisionesOnline takes a few minutes.
+The dataset covers 2023-12-10 to the cut-off, 2026-09-30 23:59 ART. Run it outside Claude Code's sandbox, with Docker up. This is a proof of concept: each Infobae and La Nación month fetches a stable sample of 30 notes (`SAMPLE_PER_MONTH` in `defs/assets.py`), so each outlet takes ~35–50 min at 1 request / 2 s instead of ~14 h; MisionesOnline is complete and takes ~15 min.
 
 1. `scripts/dagster-up.sh`, then in the UI (Assets) select every asset and click **Materialize all**, all partitions. Dagster runs an asset backfill: the two catalogs (~35 min each), then one run per month and outlet, then `noticias_politica`.
-2. Each outlet has its own pool with limit 1 (`dagster.yaml`), so at most one run per outlet is in progress; the three outlets run in parallel.
+2. Each outlet has its own pool with limit 1 (`dagster.yaml`), so at most one run per outlet is in progress; the three outlets run in parallel. `scripts/dagster-up.sh` creates the three pools before starting Dagster: on a fresh database, Dagster 1.13.27 lets the first runs of a pool start together before applying `default_limit`. Check with `dagster instance concurrency get --all`.
 3. A month that fails with a transient error is retried twice, 5 min apart. A `Blocked` (anti-bot challenge) or `TooManyLosses` failure is not retried: cancel that outlet's remaining runs in the UI (Runs, filter by the asset) instead of letting them fail one by one, and check the site before re-launching.
 4. Failed months can be re-launched from the asset's partitions view. `noticias_politica` skips months that are missing, so it can be materialized from a partial backfill.
 

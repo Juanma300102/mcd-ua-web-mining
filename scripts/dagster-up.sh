@@ -84,5 +84,12 @@ fi
 # dg reads the project from pyproject.toml ([tool.dg]), including code_location_name.
 uv run dg check defs
 
+# Create the outlet pools up front. Dagster 1.13.27 creates a pool from `default_limit` only after
+# the queue pass that first sees it, so on a fresh database the first runs of one outlet would
+# start together (seen on 2026-10-27).
+for pool in infobae lanacion misionesonline; do
+  uv run dagster instance concurrency set "$pool" 1 >/dev/null
+done
+
 echo "Dagster + Postgres ready"
 exec uv run dg dev

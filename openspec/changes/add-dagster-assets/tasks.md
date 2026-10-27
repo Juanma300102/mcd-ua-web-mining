@@ -17,8 +17,11 @@
 
 - [x] 4.1 README: how to launch the backfill from the UI, how to cancel one outlet after a `Blocked`, keep the machine awake. `odd/tasks/news-politica.md` and `docs/def.md`: cut-off 2026-09-30, T4.3 as an asset backfill (no job), T4.4 left for after the data.
 
+- [x] 4.2 Proof-of-concept sample: `SAMPLE_PER_MONTH = 30` in the Arc `raw_*` (design decision 8), with a test. Pools created in `scripts/dagster-up.sh` (design decision 9).
+
 ## 5. Backfill (outside the sandbox, team's OK)
 
-- [ ] 5.1 Start `scripts/dagster-up.sh`, materialize `raw_misionesonline` for one month and the two catalogs; check in the UI that only one run per outlet is in progress (pool limit works).
+
+- [x] 5.1 Start `scripts/dagster-up.sh`, materialize `raw_misionesonline` for one month and the two catalogs; check in the UI that only one run per outlet is in progress (pool limit works).
 - [ ] 5.2 Launch the backfill of all `raw_*` partitions, then `noticias_politica`. Record in Progress: duration, `failed_days`, losses per outlet, `parse_errors`, rows per outlet.
 - [ ] 5.3 Commit each group with a Conventional Commit and record the hashes next to T4.1–T4.3.

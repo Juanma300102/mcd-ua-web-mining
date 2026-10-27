@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Raw assets are partitioned by month up to the cut-off
-`raw_infobae`, `raw_lanacion` and `raw_misionesonline` SHALL share a monthly partitions definition from 2023-12 to 2026-09, with one run per partition. Each partition SHALL store one row per `RawDoc` as Parquet, keeping the source JSON payload, and SHALL call `check_losses` before it is stored. An Arc partition SHALL fetch exactly the catalog entries whose `url_date` falls in its month.
+`raw_infobae`, `raw_lanacion` and `raw_misionesonline` SHALL share a monthly partitions definition from 2023-12 to 2026-09, with one run per partition. Each partition SHALL store one row per `RawDoc` as Parquet, keeping the source JSON payload, and SHALL call `check_losses` before it is stored. An Arc partition SHALL fetch only catalog entries whose `url_date` falls in its month, at most `SAMPLE_PER_MONTH` of them (30, the lowest SHA-1 of the URL), and report how many the month lists.
 
 #### Scenario: Arc month from the catalog
 - **WHEN** `raw_infobae` is materialized for 2024-03 with a catalog holding entries dated 2024-02-29, 2024-03-01 and 2024-03-31
@@ -10,6 +10,10 @@
 #### Scenario: Catalog entry outside every partition
 - **WHEN** the catalog holds an entry with `url_date` 2019-05-01
 - **THEN** no partition fetches it
+
+#### Scenario: Month with more notes than the sample
+- **WHEN** the catalog lists 4 notes in March and the sample size is 2
+- **THEN** the partition fetches the 2 with the lowest URL hash, and a re-run fetches the same 2
 
 #### Scenario: Too many losses
 - **WHEN** more than 10 % of a partition's documents come back with `error` set

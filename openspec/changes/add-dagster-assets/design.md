@@ -54,6 +54,10 @@ A `Blocked` outlet keeps failing its remaining partitions one by one (one robots
 
 **7. Backfill without a job (T4.3).** In the UI: select all assets → Materialize → all partitions. The asset backfill daemon (started by `dg dev`) runs the catalogs, then the months, then `noticias_politica`. Run order: MisionesOnline is quick and runs alongside the other two, since every outlet has its own pool.
 
+**8. Proof-of-concept sample (revised while applying, 2026-10-27).** The project is a proof of concept and must be quick to run, so each Arc month fetches at most `SAMPLE_PER_MONTH = 30` catalog entries, the 30 with the lowest SHA-1 of the URL (stable across re-runs). Each Arc backfill drops from ~14 h to ~35–50 min; `raw_*` metadata adds `listed` (catalog entries in the month). MisionesOnline stays complete (100 posts per request, ~15 min for the period). `None` restores the full backfill.
+
+**9. Pools created up front (found in the smoke run).** Dagster 1.13.27's queue daemon reads the configured pools before it creates the missing ones from `default_limit`, so in the queue pass where a pool first appears its runs are not limited: the first two MisionesOnline months started together. Once the pool exists the limit holds (the next two months ran one after the other). `scripts/dagster-up.sh` runs `dagster instance concurrency set <medio> 1` for the three outlets before `dg dev`.
+
 ## Risks / Trade-offs
 
 - [The 14 h backfill does not finish before the delivery] → Launch it as soon as the assets pass their tests, overnight; partial months can still feed `noticias_politica` (materialize it over the months that finished).

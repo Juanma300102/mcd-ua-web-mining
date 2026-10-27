@@ -103,9 +103,22 @@ def test_arc_month_fetches_only_its_catalog_entries(tmp_path, client, session):
         session.routes[note_url(f"nota-{day}")] = page
     result = run(tmp_path, client, [raw_infobae], MARCH)
     assert result.success
-    assert metadata(result, "raw_infobae") == {"notes": 2, "losses": 0}
+    assert metadata(result, "raw_infobae") == {"listed": 2, "notes": 2, "losses": 0}
     assert len(session.requested(note_url("nota-2024-02-29"))) == 0
     assert len(session.requested(note_url("nota-2019-05-01"))) == 0
+
+
+def test_arc_month_fetches_a_stable_sample(tmp_path, client, session, monkeypatch):
+    monkeypatch.setattr(assets, "SAMPLE_PER_MONTH", 2)
+    days = [date(2024, 3, day) for day in (1, 2, 3, 4)]
+    store_catalog(tmp_path, days)
+    page = FakeRaw(200, fixture_text("infobae", "page.html"))
+    for day in days:
+        session.routes[note_url(f"nota-{day}")] = page
+    result = run(tmp_path, client, [raw_infobae], MARCH)
+    assert metadata(result, "raw_infobae") == {"listed": 4, "notes": 2, "losses": 0}
+    fetched = {url for url, *_ in session.calls if "nota-" in url}
+    assert fetched == set(sorted((note_url(f"nota-{d}") for d in days), key=assets.article_id)[:2])
 
 
 def test_too_many_losses_fail_the_month(tmp_path, client, session):
@@ -119,11 +132,12 @@ def test_too_many_losses_fail_the_month(tmp_path, client, session):
 def test_blocked_host_fails_without_retry(tmp_path, client, session):
     # A retry would also sleep the policy's 300 s; the URL must be requested once.
     store_catalog(tmp_path, [date(2024, 3, 1), date(2024, 3, 2)])
-    session.routes[note_url("nota-2024-03-01")] = CHALLENGE
+    for day in (1, 2):
+        session.routes[note_url(f"nota-2024-03-0{day}")] = CHALLENGE
     result = run(tmp_path, client, [raw_infobae], MARCH)
     assert not result.success
-    assert len(session.requested(note_url("nota-2024-03-01"))) == 1
-    assert len(session.requested(note_url("nota-2024-03-02"))) == 0
+    # The first note met the challenge; the host is blocked, so the second is never sent.
+    assert len([url for url, *_ in session.calls if "nota-" in url]) == 1
 
 
 def test_transient_failures_stay_retryable():
