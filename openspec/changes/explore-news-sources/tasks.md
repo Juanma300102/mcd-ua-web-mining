@@ -1,9 +1,9 @@
 ## 1. Setup
 
 - [x] 1.1 Keep working on `feat/harden-dagster-infra` (team decision, 2026-10-27): Phase 2 lands on the same branch as T1.5, so its PR covers both. Check: `git branch --show-current` is `feat/harden-dagster-infra` and the docs updates from the 2026-10-27 probe are committed before the notebooks.
-- [ ] 1.2 Add a `notebooks` dependency group to `pyproject.toml` with `ipykernel`, `jupyterlab` and `nbconvert` at their latest PyPI versions, and run `uv lock`. Check: `uv sync --group notebooks` works, and `uv sync` alone does not install Jupyter.
-- [ ] 1.3 Add `notebooks/probe.py` (design decision 3): robots.txt check per host (refuse every request to a host whose robots.txt is not 200), ≥2 s between requests to the same host, identifiable User-Agent, 2xx cache under `data/probe_cache/` with a status/headers sidecar, `is_challenge()`, `story_json()`.
-- [ ] 1.4 Add `tests/test_probe.py` with no network (requests mocked): a disallowed path raises before any request; a cached URL makes no request; two uncached URLs on one host are ≥2 s apart (fake clock); a non-2xx response is not cached; a 403 with `cf-mitigated: challenge` is detected; `story_json()` parses a saved Arc page snippet. Check: `uv run pytest` passes.
+- [x] 1.2 Add a `notebooks` dependency group to `pyproject.toml` with `ipykernel`, `jupyterlab` and `nbconvert` at their latest PyPI versions, and run `uv lock`. Check: `uv sync --group notebooks` works, and `uv sync` alone does not install Jupyter.
+- [x] 1.3 Add `notebooks/probe.py` (design decision 3): robots.txt check per host (refuse every request to a host whose robots.txt is not 200), ≥2 s between requests to the same host, identifiable User-Agent, 2xx cache under `data/probe_cache/` with a status/headers sidecar, `is_challenge()`, `story_json()`.
+- [x] 1.4 Add `tests/test_probe.py` with no network (requests mocked): a disallowed path raises before any request; a cached URL makes no request; two uncached URLs on one host are ≥2 s apart (fake clock); a non-2xx response is not cached; a 403 with `cf-mitigated: challenge` is detected; `story_json()` parses a saved Arc page snippet. Check: `uv run pytest` passes.
 
 ## 2. MisionesOnline (T2.1, first)
 
