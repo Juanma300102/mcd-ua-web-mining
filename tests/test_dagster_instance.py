@@ -16,10 +16,11 @@ def _placeholders(value):
     return value
 
 
-def test_storage_uses_psycopg3_driver():
+def test_storage_uses_psycopg2_driver():
+    # psycopg 3 breaks dagster-webserver ("the connection is closed"), see dagster.yaml.
     config = yaml.safe_load(DAGSTER_YAML.read_text())["storage"]["postgres"]
     url = pg_url_from_config(_placeholders(config))
 
-    assert url.startswith("postgresql+psycopg://")
+    assert url.startswith("postgresql+psycopg2://")
     # create_engine does not connect, it only resolves the dialect and driver.
-    assert sa.create_engine(url).dialect.driver == "psycopg"
+    assert sa.create_engine(url).dialect.driver == "psycopg2"

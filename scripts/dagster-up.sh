@@ -62,9 +62,9 @@ uv sync
 echo "Checking the connection from the host (as Dagster will)..."
 if ! uv run python -c "
 import os, sys
-import psycopg
+import psycopg2
 try:
-    psycopg.connect(
+    psycopg2.connect(
         host=os.environ['DAGSTER_POSTGRES_HOST'],
         port=int(os.environ['DAGSTER_POSTGRES_PORT']),
         user=os.environ['DAGSTER_POSTGRES_USER'],
@@ -81,7 +81,8 @@ except Exception as exc:
   exit 1
 fi
 
-uv run dagster definitions validate -m news_politica.definitions
+# dg reads the project from pyproject.toml ([tool.dg]), including code_location_name.
+uv run dg check defs
 
 echo "Dagster + Postgres ready"
-exec uv run dagster dev -m news_politica.definitions
+exec uv run dg dev

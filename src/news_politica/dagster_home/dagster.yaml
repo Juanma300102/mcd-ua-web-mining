@@ -1,5 +1,6 @@
 # One block configures run, schedule and event-log storage.
-# scheme pins the psycopg 3 driver instead of relying on SQLAlchemy's default.
+# scheme pins psycopg2: with psycopg 3 (SQLAlchemy 2.1's default for postgresql://)
+# dagster-webserver fails its first query with "the connection is closed".
 storage:
   postgres:
     postgres_db:
@@ -13,4 +14,4 @@ storage:
         env: DAGSTER_POSTGRES_PASSWORD
       db_name:
         env: DAGSTER_POSTGRES_DB
-      scheme: postgresql+psycopg
+      scheme: postgresql+psycopg2
