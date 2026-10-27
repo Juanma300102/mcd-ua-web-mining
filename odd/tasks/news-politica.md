@@ -7,8 +7,9 @@ Build a Dagster + uv pipeline that scrapes Política news from Infobae, La Naci�
 The repo is empty. The course project needs a reproducible dataset plus a sentiment analysis answering: how did the tone of political news change since Dec 2023, and does it differ between a digital national outlet, a traditional national newspaper, and a provincial outlet?
 
 ## Scope
-- In: the three outlets' Política sections, 2023-12-10 to the scraping cut-off date; title, summary (bajada) and body.
+- In: the three outlets' Política sections, 2023-12-10 to a fixed cut-off date; title, summary (bajada) and body.
 - Out: everything specific to the fake-news project (LightGBM, BERT training, SearXNG, webapp).
+- Out (time budget, plan review 2026-10-27): daily incremental schedule, national vs provincial topic classifier, inter-annotator agreement, change-point / time-series models, tone toward the government.
 
 ## Constraints and decisions
 - Reference repo: `../text-mining/mcd-ua-text-mining/` (Dagster project in `classification/`). Reuse `docker-compose.yaml` (postgres only), `scripts/dagster-up.sh`, `dagster_home/dagster.yaml`, `definitions.py` with `load_from_defs_folder`.
@@ -26,6 +27,9 @@ The repo is empty. The course project needs a reproducible dataset plus a sentim
 - Sentiment model (pysentimiento baseline vs a multilingual model or zero-shot LLM).
 - Analyze body text, or only title + summary.
 - Keep Parquet, or also load into a Postgres table.
+- Cut-off date value (e.g. 2026-10-31).
+- La Nación fallback if its API doesn't reach 2023-12 or returns truncated paywalled bodies: shorten the period for all outlets, compare only the common range, or swap the outlet (decided in T2.4).
+- MisionesOnline agency (syndicated national) notes: exclude, or keep with an `es_agencia` flag (decided in T2.4 from T2.1's numbers).
 
 ## Process
 - Branch: `feat/news-politica-base`.
@@ -44,10 +48,11 @@ The repo is empty. The course project needs a reproducible dataset plus a sentim
 - [ ] T1.5 (proposed, from review; awaiting approval) Harden infra: bind Postgres to `127.0.0.1` in compose; make the readiness wait check over TCP (`pg_isready -h localhost`) so a fresh volume can't fail with a false credentials error; switch the host connection check to psycopg 3, the driver Dagster actually uses; add a test that loads `dagster.yaml` and resolves the psycopg 3 dialect.
 
 ### Phase 2 — Source exploration (notebooks; can be split between team members)
-- [ ] T2.1 MisionesOnline: paginate `/wp-json/wp/v2/posts?categories=7&after=2023-12-10`; fields; monthly counts (`X-WP-Total`).
+Do T2.3 first: it is the riskiest source and T2.4 is a go/no-go on it.
+- [ ] T2.1 MisionesOnline: paginate `/wp-json/wp/v2/posts?categories=7&after=2023-12-10`; fields; monthly counts (`X-WP-Total`); share of agency notes (author/byline).
 - [ ] T2.2 Infobae: document the Arc `/pf/api/v3/content/fetch/...` list (Política) and detail endpoints, backward pagination, monthly volume; sitemap fallback.
-- [ ] T2.3 La Nación: same as T2.2; confirm the API reaches 2023-12 (the historical sitemap only starts in 2025-09).
-- [ ] T2.4 Volume estimate and decision note (rate limit, backfill duration).
+- [ ] T2.3 La Nación: same as T2.2; confirm the API reaches 2023-12 (the historical sitemap only starts in 2025-09) and that paywalled notes return the full body.
+- [ ] T2.4 Volume estimate and decision note: rate limit, backfill duration, cut-off date, La Nación fallback, agency notes handling.
 
 ### Phase 3 — Scraping clients (`src/news_politica/sources/`)
 - [ ] T3.1 Shared HTTP client (rate limit, retries/backoff, User-Agent) and a common `Article` model matching the dataset schema.
@@ -58,23 +63,23 @@ The repo is empty. The course project needs a reproducible dataset plus a sentim
 ### Phase 4 — Dagster assets
 - [ ] T4.1 Monthly partitions from 2023-12; `raw_misionesonline`, `raw_infobae`, `raw_lanacion` (Parquet per partition, retry policy).
 - [ ] T4.2 `noticias_politica`: common schema, HTML → plain text, id = hash of canonical URL, dedupe, Argentina timezone.
-- [ ] T4.3 Jobs + daily schedule; run the backfill from 2023-12.
+- [ ] T4.3 Backfill job from 2023-12 to the cut-off date (no daily schedule).
+- [ ] T4.4 EDA notebook (volume per outlet and week, note length, share with bajada). Moved from Phase 6: it feeds the Phase 5 decisions (body vs title + summary, minimum notes per week).
 
 ### Phase 5 — Sentiment
-- [ ] T5.1 Hand-label a sample (~300 notes, 100 per outlet) + labeling helper.
+- [ ] T5.1 Short labeling guide (what counts as positive/neutral/negative, with examples), then hand-label a sample (~300 notes, 100 per outlet) + labeling helper.
 - [ ] T5.2 `sentimiento_noticias` with the pysentimiento baseline (title + summary), with a `modelo` column.
 - [ ] T5.3 Alternative model; compare accuracy and macro F1; choose one.
-- [ ] T5.4 `evolucion_tono`: weekly aggregates per outlet + charts with political milestones.
+- [ ] T5.4 `evolucion_tono`: weekly aggregates per outlet + charts with political milestones. Milestone list with dates in a versioned file (DNU 70/2023, Ley Bases, Oct 2025 legislative elections, at least one Misiones event); compare mean score and negative share 2 weeks before vs after each one.
 
 ### Phase 6 — Report
-- [ ] T6.1 EDA notebook (volume per outlet and month, note length).
-- [ ] T6.2 Report: evolution charts, conclusions, limitations (robots.txt, sentiment is not stance).
+- [ ] T6.2 Report: evolution charts, milestone before/after table, provincial vs national comparison, conclusions, limitations (robots.txt, sentiment is not stance, pysentimiento trained on tweets, agency notes). T6.1 (EDA) moved to T4.4.
 
 ## Acceptance criteria
 - `uv sync`, `uv run dg check defs` and `uv run pytest` pass.
 - `scripts/dagster-up.sh` starts the Dagster UI backed by Postgres.
-- The unified Parquet dataset covers all three outlets from 2023-12-10, with the schema in `docs/def.md`.
-- Sentiment and weekly tone assets materialize; the report answers the main question.
+- The unified Parquet dataset covers all three outlets from 2023-12-10 to the cut-off date (or the range decided in T2.4), with the schema in `docs/def.md`.
+- Sentiment and weekly tone assets materialize; the report answers the main question and both secondary questions (milestones, provincial vs national).
 
 ## Progress
 - 2026-10-26: task list defined.
@@ -85,6 +90,7 @@ The repo is empty. The course project needs a reproducible dataset plus a sentim
 - 2026-10-27: `main` had no commits; added root commit `3933c4a` (docs/def.md as `def.md`) and rebased the branch onto it, so commit hashes above are post-rebase.
 - 2026-10-27: T1.4 done (route: inline). README + `def.md` moved to `docs/`.
 - 2026-10-27: Review of `69c65fa..d35aece` (high risk: shell script): whole-branch candidate exceeded the reviewer context budget (`uv.lock`), so the range excluding T1.1 was reviewed. Approved and acknowledged (lineage `review-b3a7ab1aaa7eeaf5`). T1.1 (`7f59a2a`) was not reviewed. 8 non-blocking findings: 4 warnings (port bound to all interfaces with default credentials; first-run readiness race; host check uses psycopg2 instead of psycopg 3, reported twice) and 4 suggestions (duplicated pg_isready, triplicated storage block in `dagster.yaml`, smoke test doesn't cover storage). Captured as T1.5.
+- 2026-10-27: Plan review against the objective, kept to low-cost changes because of the time budget. Added: La Nación first + paywall check + go/no-go in T2.4; agency share in T2.1; labeling guide in T5.1; milestone list and before/after comparison in T5.4. Moved: EDA from T6.1 to T4.4. Removed: daily schedule (fixed cut-off date instead). Left out: see Scope. `docs/def.md` still describes the daily schedule and the old phase order.
 
 ## Next step
-T1.5 if approved; then the Phase 1 PR slice, then Phase 2 (T2.1–T2.3 can be split between team members).
+T1.5 if approved; then the Phase 1 PR slice, then Phase 2 starting with T2.3 (T2.1–T2.2 can run in parallel on the other team member's side).
