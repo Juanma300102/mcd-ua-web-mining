@@ -80,7 +80,7 @@ src/news_politica/
 tests/
   fixtures/sources/        # trimmed responses from the phase 2 cache (build_fixtures.py)
 notebooks/                 # phase 2 source exploration (probe.py, arc.py, one notebook per outlet)
-docs/                      # project definition, source decisions
+docs/                      # project definition, source decisions, bitacora-fases.html (phases 1-4 report)
 odd/tasks/                 # task tracking
 data/                      # Parquet output (gitignored)
 ```
