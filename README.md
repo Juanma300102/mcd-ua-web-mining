@@ -61,6 +61,12 @@ cd notebooks && PROBE_OFFLINE=1 uv run --group notebooks jupyter nbconvert --to 
 
 The cache from the phase 2 run (~175 MB of the outlets' pages) was deleted when phase 3 closed, after the test fixtures were built from it. `PROBE_OFFLINE=1` therefore fails until a notebook has run online once and filled the cache again; delete `data/probe_cache/` when you no longer need it.
 
+`notebooks/04_eda.ipynb` is the EDA of the dataset (T4.4). It only reads `data/noticias_politica.parquet` and `data/raw_lanacion/`, so it needs the backfill but no network:
+
+```bash
+cd notebooks && uv run --group notebooks jupyter nbconvert --to notebook --execute --inplace 04_eda.ipynb
+```
+
 ## Layout
 
 ```
