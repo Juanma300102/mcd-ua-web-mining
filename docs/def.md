@@ -32,10 +32,11 @@ El proyecto construye un dataset de noticias de política argentina publicadas d
 **Pregunta principal:** ¿cómo cambió el sentimiento de las noticias de política desde diciembre de 2023, y difiere entre un medio nacional digital (Infobae), un diario nacional tradicional (La Nación) y un medio provincial (MisionesOnline)?  
 **Preguntas secundarias:**
 
-* ¿Hay quiebres de tono alrededor de hitos políticos (Ley Bases, elecciones legislativas de octubre de 2025, conflictos con gobernadores)?  
+* ¿Hay quiebres de tono alrededor de hitos políticos (DNU 70/2023, Ley Bases, elecciones legislativas de octubre de 2025, al menos un hito de Misiones)?  
 * ¿El medio provincial cubre la política con un tono distinto al de los nacionales?
 
-**Alcance:** sección Política de cada medio, del 10/12/2023 a la fecha de corte del scraping. Se trabaja con título, bajada y cuerpo de cada nota.
+**Alcance:** sección Política de cada medio, del 10/12/2023 a una fecha de corte fija del scraping. Se trabaja con título, bajada y cuerpo de cada nota.  
+**Fuera de alcance (por tiempo):** actualización diaria, clasificador de temas nacional vs provincial, acuerdo entre anotadores, modelos de series temporales o de puntos de quiebre, y tono hacia el gobierno.
 
 ## Fuentes de datos
 
@@ -59,7 +60,7 @@ Flujo de assets:
 3. sentimiento\_noticias: score de sentimiento por nota.  
 4. evolucion\_tono: agregados por medio y semana, y gráficos.
 
-Un schedule diario agrega las notas nuevas. Estructura propuesta del repo:  
+No hay schedule diario: un job de backfill descarga desde 12/2023 hasta la fecha de corte. Estructura propuesta del repo:  
 `news-politica/`  
   `docker-compose.yaml        # postgres (copiado del repo anterior)`  
   `pyproject.toml / uv.lock`  
@@ -69,7 +70,7 @@ Un schedule diario agrega las notas nuevas. Estructura propuesta del repo:
     `dagster_home/dagster.yaml`  
     `sources/                 # un cliente por medio`  
     `defs/assets/             # raw_*, noticias_politica, sentimiento, evolucion`  
-    `defs/jobs.py, schedules.py`  
+    `defs/jobs.py             # job de backfill`  
   `data/                      # parquet, gitignored`  
   `notebooks/                 # EDA y gráficos del informe`  
   `tests/`
@@ -99,27 +100,29 @@ El asset de sentimiento agrega sentimiento (positivo, neutral, negativo), score 
 Propuesta: arrancar con pysentimiento (modelo en español, salida positivo, neutral o negativo) como baseline, y compararlo contra un modelo multilingüe o un LLM en modo zero-shot sobre una muestra etiquetada a mano.
 
 * **Unidad de análisis:** título \+ bajada como señal principal, porque los modelos tipo BERT cortan en 512 tokens. El cuerpo se analiza por párrafos y se promedia, como variante.  
-* **Validación:** etiquetar a mano unas 300 notas (100 por medio) y reportar accuracy y F1 macro de cada modelo.  
-* **Agregación:** score medio y proporción de notas negativas por medio y por semana, con los hitos políticos marcados en el gráfico.  
-* **Opcional:** distinguir tono general de tono hacia el gobierno, filtrando notas que mencionen al Presidente o a ministros.
+* **Validación:** escribir una guía corta de etiquetado (qué cuenta como positivo, neutral o negativo, con ejemplos), etiquetar a mano unas 300 notas (100 por medio) y reportar accuracy y F1 macro de cada modelo.  
+* **Agregación:** score medio y proporción de notas negativas por medio y por semana, con los hitos políticos marcados en el gráfico. Los hitos y sus fechas van en un archivo versionado, y para cada uno se comparan las 2 semanas anteriores con las 2 posteriores.
 
 ## Pasos de ejecución
 
 Seis fases en orden; la 2 y la 3 se pueden repartir entre los dos integrantes.
 
-1. **Base del proyecto.** Crear el repo copiando de mcd-ua-text-mining el docker-compose.yaml (solo Postgres), dagster.yaml, dagster-up.sh y la estructura uv \+ defs/. Validar con dagster definitions validate.  
-2. **Exploración de fuentes.** Para cada medio, un notebook que confirme cómo listar notas de Política desde 12/2023, qué campos vienen y cuántas notas hay por mes.  
-   1. Infobae y La Nación: documentar los endpoints de /pf/api que usa el frontend (listado por sección y detalle de nota) y cómo se pagina hacia atrás.  
-   2. MisionesOnline: paginar /wp-json/wp/v2/posts por fecha con la categoría 7\.  
-3. **Clientes de scraping.** Un módulo por medio en sources/, con rate limit, reintentos y User-Agent identificable. Tests con respuestas guardadas.  
-4. **Assets de Dagster.** raw\_\* particionados por mes, noticias\_politica con limpieza y deduplicado, y un schedule diario. Backfill desde 12/2023.  
-5. **Sentimiento.** Etiquetar la muestra, correr el baseline y el modelo alternativo, elegir uno y materializar sentimiento\_noticias y evolucion\_tono.  
-6. **Informe.** EDA del dataset (volumen por medio y mes, largo de notas), gráficos de evolución con hitos, conclusiones y limitaciones.
+1. **Base del proyecto.** Crear el repo copiando de mcd-ua-text-mining el docker-compose.yaml (solo Postgres), dagster.yaml, dagster-up.sh y la estructura uv \+ defs/. Validar con dg check defs.  
+2. **Exploración de fuentes.** Para cada medio, un notebook que confirme cómo listar notas de Política desde 12/2023, qué campos vienen y cuántas notas hay por mes. Se empieza por La Nación, que es la fuente más riesgosa.  
+   1. La Nación: documentar los endpoints de /pf/api que usa el frontend (listado por sección y detalle de nota) y cómo se pagina hacia atrás; confirmar que la API llega a 12/2023 y que las notas con paywall traen el cuerpo completo.  
+   2. Infobae: lo mismo que La Nación, con los sitemaps por categoría como respaldo.  
+   3. MisionesOnline: paginar /wp-json/wp/v2/posts por fecha con la categoría 7 y medir qué parte son notas de agencia (autor o firma).  
+   4. Nota de decisión: rate limit, duración estimada del backfill, fecha de corte, plan B para La Nación y qué hacer con las notas de agencia.  
+3. **Clientes de scraping.** Un cliente HTTP compartido (rate limit, reintentos y User-Agent identificable) y un modelo común de nota, más un módulo por medio en sources/. Tests con respuestas guardadas.  
+4. **Assets de Dagster.** raw\_\* particionados por mes, noticias\_politica con limpieza y deduplicado, y un job de backfill desde 12/2023 hasta la fecha de corte. Cierra con el EDA del dataset (volumen por medio y semana, largo de notas, proporción con bajada), que alimenta las decisiones de la fase 5.  
+5. **Sentimiento.** Guía de etiquetado y muestra etiquetada, baseline y modelo alternativo, elegir uno y materializar sentimiento\_noticias y evolucion\_tono con la comparación antes y después de cada hito.  
+6. **Informe.** Gráficos de evolución con hitos, tabla antes y después de cada hito, comparación provincial vs nacional, conclusiones y limitaciones.
 
 ## Riesgos y decisiones abiertas
 
-* **Historia de La Nación.** El sitemap histórico solo llega a 09/2025, así que las notas anteriores dependen de la API. Hay que confirmar en la fase 2 que pagina hasta 12/2023.  
+* **Historia de La Nación.** El sitemap histórico solo llega a 09/2025, así que las notas anteriores dependen de la API. Hay que confirmar en la fase 2 que pagina hasta 12/2023 y que las notas con paywall no vienen truncadas. Si falla, se acorta el período para todos, se compara solo el rango común o se cambia de medio.  
+* **Notas de agencia.** Parte de las notas de MisionesOnline son de agencias nacionales. Se decide en la fase 2 si se excluyen o se marcan con una columna es\_agencia.  
 * **robots.txt.** Las APIs de Arc son públicas y sin auth, pero el robots.txt de La Nación prohíbe /pf/api/ para bots. Conviene mencionarlo en el informe y usar un rate limit bajo.  
 * **Volumen.** MisionesOnline tiene 55.895 notas de Política en total; Infobae y La Nación probablemente superen eso en el período. Hay que estimarlo en la fase 2 antes del backfill.  
 * **Sentimiento no es postura.** Una nota negativa puede serlo hacia la oposición. El informe debe aclarar qué mide el modelo.  
-* **A decidir:** qué modelo de sentimiento usar, si se incluye el cuerpo o solo título \+ bajada, y dónde se guarda el dataset (Parquet local o tabla en el mismo Postgres).
+* **A decidir:** qué modelo de sentimiento usar, si se incluye el cuerpo o solo título \+ bajada, dónde se guarda el dataset (Parquet local o tabla en el mismo Postgres) y la fecha de corte.
