@@ -17,6 +17,7 @@ The repo is empty. The course project needs a reproducible dataset plus a sentim
 - Dependencies: latest versions from PyPI (checked 2026-10-26), not the reference repo's pins:
   - `requires-python = ">=3.11,<3.15"` (pandas 3 and pyarrow 26 need 3.11+), `.python-version` 3.12
   - `dagster==1.13.27`, `dagster-postgres>=0.29.27`, `psycopg2-binary>=2.9.13`, `pandas>=3.1.0`, `pyarrow>=26.0.0`, `requests>=2.34.2`, `beautifulsoup4>=4.15.0`, `lxml>=6.1.3`
+  - `psycopg[binary]>=3.3.6`: dagster allows `sqlalchemy<3`, which resolves to 2.1.x, and 2.1 uses psycopg 3 as the default `postgresql://` driver. `dagster-postgres` only declares psycopg2, so without this dependency Postgres storage fails with `No module named 'psycopg'`.
   - dev: `dagster-webserver==1.13.27`, `dagster-dg-cli==1.13.27`, `pytest>=9.1.1`
   - Phase 5 `sentiment` group: `pysentimiento>=0.7.3` (check that it resolves with pandas 3)
 - Scraping etiquette: low rate limit, retries with backoff, identifiable User-Agent. La Nación's robots.txt disallows `/pf/api/` for bots; mention this in the report.
@@ -27,7 +28,8 @@ The repo is empty. The course project needs a reproducible dataset plus a sentim
 - Keep Parquet, or also load into a Postgres table.
 
 ## Process
-- Branch: `feat/news-politica-base` (create before the first commit; currently on `main`).
+- Branch: `feat/news-politica-base`.
+- Postgres host port defaults to 5434 (text-mining uses 5433).
 - TDD: not configured (source: no project/session setting) → ordinary functional checks. Runner: `uv run pytest`.
 - Delivery strategy: `ask-on-risk`. The forecast is well over 400 changed lines in total, so ship one PR slice per phase.
 - Every task closes with a Conventional Commit; record its hash next to the task.
@@ -35,8 +37,8 @@ The repo is empty. The course project needs a reproducible dataset plus a sentim
 ## Tasks
 
 ### Phase 1 — Base
-- [x] T1.1 Scaffold the uv project: `pyproject.toml` (versions above, `[tool.dg]` config), `.python-version`, `.gitignore` (`data/`, `.venv`, `.env`).
-- [ ] T1.2 Copy and adapt infra: `docker-compose.yaml` (postgres only, renamed volume), `scripts/dagster-up.sh` (`DAGSTER_HOME` → `src/news_politica/dagster_home`), `dagster.yaml`, `.env.example`.
+- [x] T1.1 Scaffold the uv project: `pyproject.toml` (versions above, `[tool.dg]` config), `.python-version`, `.gitignore` (`data/`, `.venv`, `.env`). Commit `bae445d`.
+- [x] T1.2 Copy and adapt infra: `docker-compose.yaml` (postgres only, renamed volume), `scripts/dagster-up.sh` (`DAGSTER_HOME` → `src/news_politica/dagster_home`), `dagster.yaml`, `.env.example`.
 - [ ] T1.3 `definitions.py` + empty `defs/` + `tests/` smoke test.
 - [ ] T1.4 README with setup/run steps; move `def.md` to `docs/`.
 
@@ -77,5 +79,7 @@ The repo is empty. The course project needs a reproducible dataset plus a sentim
 - 2026-10-26: task list defined.
 - 2026-10-26: T1.1 done (route: inline, 4 mechanical files). Check: `uv sync` OK; dagster 1.13.27, pandas 3.1.0, pyarrow 26.0.0 import.
 
+- 2026-10-27: T1.2 done (route: inline, mechanical copy). Check: `docker compose config` OK; `scripts/dagster-up.sh` served the UI on :3000 and created 22 Dagster tables in Postgres (after adding psycopg 3).
+
 ## Next step
-T1.2 (infra copy).
+T1.3.
