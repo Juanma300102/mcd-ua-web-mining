@@ -15,3 +15,11 @@ storage:
       db_name:
         env: DAGSTER_POSTGRES_DB
       scheme: postgresql+psycopg2
+
+# One pool per outlet (assets set pool=<medio>), at most one run of it at a time: each run has
+# its own PoliteClient, so this keeps 1 request / 2 s per host. "run" granularity makes the queue
+# launch a run only when its pool is free, so queued runs of one outlet don't hold back the others.
+concurrency:
+  pools:
+    default_limit: 1
+    granularity: run
