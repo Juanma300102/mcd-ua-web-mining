@@ -95,9 +95,9 @@ Conventions for every code task: tests go in the same task or commit (TDD is off
 
 ## 6. Evaluation (C5)
 
-- [ ] 6.1 Create `src/news_politica/sentiment/evaluation.py`: `evaluate(labels, scores, by=("modelo",))` returning `(macro F1 + accuracy + per-class F1, confusion matrix)` in pandas without scikit-learn; excludes `descartar`; groupings `modelo`, `modelo x medio`, `modelo x fuente_texto`.
-- [ ] 6.2 Create `tests/sentiment/test_evaluation.py`: hand-computed macro F1 and confusion case, perfect agreement gives accuracy and macro F1 of 1.0, `descartar` excluded (290 of 300 style case), per-outlet and per-`fuente_texto` rows present. Spec scenarios: perfect agreement, discarded notes, per-outlet metrics. Check: `uv run pytest tests/sentiment/test_evaluation.py`.
-- [ ] 6.3 Extend `notebooks/05_sentimiento.ipynb` with the "Evaluacion" section: read `anotaciones/etiquetas.csv`, score the 300 sample texts with robertuito and with `SentimentModels.alternative()` (`score_notes` on the sample), call `evaluate`, show the tables and confusion matrices. Check: the section runs end to end once labels exist.
+- [x] 6.1 Create `src/news_politica/sentiment/evaluation.py`: `evaluate(labels, scores, by=("modelo",))` returning `(macro F1 + accuracy + per-class F1, confusion matrix)` in pandas without scikit-learn; excludes `descartar`; groupings `modelo`, `modelo x medio`, `modelo x fuente_texto`.
+- [x] 6.2 Create `tests/sentiment/test_evaluation.py`: hand-computed macro F1 and confusion case, perfect agreement gives accuracy and macro F1 of 1.0, `descartar` excluded (290 of 300 style case), per-outlet and per-`fuente_texto` rows present. Spec scenarios: perfect agreement, discarded notes, per-outlet metrics. Check: `uv run pytest tests/sentiment/test_evaluation.py`.
+- [ ] 6.3 Extend `notebooks/05_sentimiento.ipynb` with the "Evaluacion" section: read `anotaciones/etiquetas.csv`, score the 300 sample texts with robertuito and with `SentimentModels.alternative()` (`score_notes` on the sample), call `evaluate`, show the tables and confusion matrices. Check: the section runs end to end once labels exist. (Section written and validated structurally with nbformat plus cell compilation; it stays unchecked until it is run with real labels and models, which needs 7.1 and 7.2.)
 
 ## 7. Labels, model decision and final materialization (C6)
 
