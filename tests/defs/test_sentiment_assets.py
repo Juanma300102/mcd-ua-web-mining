@@ -14,7 +14,7 @@ from news_politica.sentiment.scoring import SCORE_COLUMNS
 
 from .conftest import UPSTREAM, info_logs, metadata, store
 
-ALL = [*UPSTREAM, sentimiento_noticias]
+WITH_SENTIMENT = [*UPSTREAM, sentimiento_noticias]
 
 
 class FakeClassifier:
@@ -71,7 +71,7 @@ def run(tmp_path, client, models, modelos=None, instance=None):
     config = {"ops": {"sentimiento_noticias": {"config": {"modelos": modelos}}}} if modelos else None
     resources = {"io_manager": ParquetIOManager(base_path=UPath(tmp_path)), "client": client,
                  "sentiment_models": models}
-    return dg.materialize(ALL, selection=[sentimiento_noticias], resources=resources, run_config=config,
+    return dg.materialize(WITH_SENTIMENT, selection=[sentimiento_noticias], resources=resources, run_config=config,
                           instance=instance, raise_on_error=False)
 
 

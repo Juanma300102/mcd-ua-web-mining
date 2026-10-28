@@ -145,7 +145,25 @@ def read_labels(paths: list[Path], sample: pd.DataFrame) -> pd.DataFrame:
     files) and duplicated ids, and requires every sample id to be labeled.
     Ids are compared as strings on both sides.
     """
-    labels = pd.concat([_read_sheet(p) for p in paths], ignore_index=True)
+    return _validated(pd.concat([_read_sheet(p) for p in paths], ignore_index=True), sample)
+
+
+def load_labels(path: Path, sample: pd.DataFrame) -> pd.DataFrame:
+    """Read the committed `anotaciones/etiquetas.csv` and apply the same checks as `read_labels`.
+
+    The file must have exactly the columns `id, anotador, etiqueta`; each id must belong to
+    the annotator the sample assigns it, and every sample id must be labeled once.
+    """
+    labels = pd.read_csv(path, dtype=str, keep_default_na=False, encoding="utf-8-sig")
+    if list(labels.columns) != LABEL_COLUMNS:
+        raise ValueError(f"{Path(path).name}: columns must be {LABEL_COLUMNS}, got {list(labels.columns)}")
+    labels["id"] = labels["id"].str.strip()
+    return _validated(labels.rename(columns={"anotador": "_hoja"}), sample)
+
+
+def _validated(labels: pd.DataFrame, sample: pd.DataFrame) -> pd.DataFrame:
+    """Checks shared by the sheets and the committed file; `labels` has `id, etiqueta, _hoja`."""
+    labels = labels.copy()
     labels["etiqueta"] = labels["etiqueta"].str.strip().str.lower()
     no_id = labels["id"] == ""
     if no_id.any():

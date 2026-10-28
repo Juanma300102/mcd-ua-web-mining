@@ -6,6 +6,7 @@ from news_politica.sentiment.labeling import (
     MEDIOS,
     export_sheets,
     labeling_sample,
+    load_labels,
     read_labels,
 )
 
@@ -232,3 +233,40 @@ def test_read_labels_compares_ids_as_strings(tmp_path):
     fill(paths)
     labels = read_labels(paths, s)
     assert len(labels) == len(s)
+
+
+def committed(sample, tmp_path, **changes):
+    """A committed-style labels file (`id, anotador, etiqueta`), optionally altered."""
+    frame = sample[["id", "anotador"]].assign(etiqueta="neu")
+    for column, value in changes.items():
+        frame[column] = value
+    path = tmp_path / "etiquetas.csv"
+    frame.to_csv(path, index=False)
+    return path
+
+
+def test_load_labels_reads_the_committed_file(sample, tmp_path):
+    labels = load_labels(committed(sample, tmp_path), sample)
+    assert list(labels.columns) == LABEL_COLUMNS and len(labels) == len(sample)
+    assert set(labels["etiqueta"]) == {"neu"}
+
+
+def test_load_labels_rejects_the_same_problems_as_read_labels(sample, tmp_path):
+    with pytest.raises(ValueError, match="unknown labels"):
+        load_labels(committed(sample, tmp_path, etiqueta="meh"), sample)
+    with pytest.raises(ValueError, match="blank labels"):
+        load_labels(committed(sample, tmp_path, etiqueta=""), sample)
+    swapped = sample["anotador"].map({"a": "b", "b": "a"})
+    with pytest.raises(ValueError, match="other annotator"):
+        load_labels(committed(sample, tmp_path, anotador=swapped), sample)
+    path = committed(sample, tmp_path)
+    pd.read_csv(path, dtype=str).head(len(sample) - 1).to_csv(path, index=False)
+    with pytest.raises(ValueError, match="no label"):
+        load_labels(path, sample)
+
+
+def test_load_labels_requires_exactly_the_committed_columns(sample, tmp_path):
+    path = committed(sample, tmp_path)
+    pd.read_csv(path, dtype=str).assign(texto="leaked").to_csv(path, index=False)
+    with pytest.raises(ValueError, match="columns must be"):
+        load_labels(path, sample)

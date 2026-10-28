@@ -102,3 +102,40 @@ def test_empty_input_gives_empty_frames():
     labels, scores = frames([], [])
     metrics, confusion = evaluate(labels, scores)
     assert metrics.empty and confusion.empty
+
+
+def test_duplicate_label_ids_are_rejected():
+    labels, scores = frames(["pos", "neg"], ["pos", "neg"])
+    with pytest.raises(ValueError, match="duplicated ids in labels"):
+        evaluate(pd.concat([labels, labels.iloc[:1]]), scores)
+
+
+def test_duplicate_scores_per_model_are_rejected_but_other_models_may_repeat_ids():
+    labels, scores = frames(["pos", "neg"], ["pos", "neg"])
+    with pytest.raises(ValueError, match="duplicated .*in scores"):
+        evaluate(labels, pd.concat([scores, scores.iloc[:1]]))
+    evaluate(labels, pd.concat([scores, scores.assign(modelo="other")]))  # same ids, another model: fine
+
+
+def test_missing_group_keys_are_rejected():
+    labels, scores = frames(["pos", "neg"], ["pos", "neg"])
+    scores.loc[1, "medio"] = None
+    with pytest.raises(ValueError, match="missing values in the grouping columns"):
+        evaluate(labels, scores, by=("modelo", "medio"))
+
+
+def test_predictions_outside_the_classes_are_rejected_so_totals_match_n():
+    with pytest.raises(ValueError, match="unknown predictions"):
+        evaluate(*frames(["pos", "neg"], ["pos", "mixed"]))
+
+
+def test_confusion_totals_equal_n_with_unparsed_notes():
+    metrics, confusion = evaluate(*frames(["pos", "neg", "neu", "neu"], ["pos", None, float("nan"), "neu"]))
+    assert metrics.loc[0, "n"] == 4 and confusion["n"].sum() == 4
+    assert cell(confusion, "neg", "sin_respuesta") == 1 and cell(confusion, "neu", "sin_respuesta") == 1
+
+
+def test_group_columns_come_first_in_the_confusion_matrix():
+    labels, scores = frames(["pos", "neg"], ["pos", "neg"])
+    _, confusion = evaluate(labels, scores, by=("modelo", "medio", "fuente_texto"))
+    assert list(confusion.columns) == ["modelo", "medio", "fuente_texto", "etiqueta", "prediccion", "n"]

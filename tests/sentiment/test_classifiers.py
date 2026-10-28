@@ -7,6 +7,7 @@ import requests
 
 from news_politica.sentiment.classifiers import (
     MDEBERTA,
+    OLLAMA_ATTEMPTS,
     OLLAMA_MODEL,
     QWEN,
     MdebertaClassifier,
@@ -65,8 +66,16 @@ def generated(answer, top_logprobs=None):
     return FakeResponse(body)
 
 
-def classifier_for(response):
-    return OllamaClassifier(URL, FakeOllamaSession({"/api/generate": response}))
+class Sleeps(list):
+    """Records the backoff sleeps instead of waiting."""
+
+    def __call__(self, seconds):
+        self.append(seconds)
+
+
+def classifier_for(response, sleeps=None):
+    session = FakeOllamaSession({"/api/generate": response})
+    return OllamaClassifier(URL, session, sleep=Sleeps() if sleeps is None else sleeps)
 
 
 def test_logprobs_become_renormalized_probabilities():
@@ -91,7 +100,7 @@ def test_logprobs_with_missing_digits_renormalize_over_the_present_ones():
 
 def test_request_has_the_designed_options_and_prompt():
     session = FakeOllamaSession({"/api/generate": generated("2", top(**{"2": -0.1}))})
-    OllamaClassifier(URL, session).predict(["Un texto"])
+    OllamaClassifier(URL, session, sleep=Sleeps()).predict(["Un texto"])
     method, path, kwargs = session.calls[0]
     assert (method, path) == ("POST", "/api/generate")
     payload = kwargs["json"]
@@ -164,18 +173,69 @@ def test_unparseable_answer_gives_nan_probabilities(answer):
     assert len(probs) == 3 and all(math.isnan(p) for p in probs)
 
 
-def test_generate_errors_raise_model_unavailable():
-    down = classifier_for(requests.ConnectionError("refused"))
+def test_transient_errors_are_retried_with_backoff_then_raise():
+    for transient in (requests.ConnectionError("refused"), requests.Timeout("slow"), FakeResponse({}, 503),
+                      FakeResponse({}, 429)):
+        sleeps = Sleeps()
+        classifier = classifier_for(transient, sleeps)
+        with pytest.raises(ModelUnavailable, match=f"gave up after {OLLAMA_ATTEMPTS} attempts"):
+            classifier.predict(["x"])
+        assert len(classifier.session.calls) == OLLAMA_ATTEMPTS
+        assert sleeps == [0.5, 1.0]  # no sleep after the last attempt
+
+
+def test_connection_error_message_says_how_to_start_ollama():
     with pytest.raises(ModelUnavailable, match="ollama serve"):
-        down.predict(["x"])
-    missing = classifier_for(FakeResponse({"error": "model not found"}, 404))
-    with pytest.raises(ModelUnavailable, match="HTTP 404"):
-        missing.predict(["x"])
+        classifier_for(requests.ConnectionError("refused")).predict(["x"])
+
+
+def test_a_transient_error_followed_by_an_answer_succeeds():
+    sleeps = Sleeps()
+    ok = generated("3", top(**{"3": -0.1}))
+    classifier = classifier_for([requests.ReadTimeout("slow"), FakeResponse({}, 502), ok], sleeps)
+    assert classifier.predict(["x"])[0][0] == 1.0
+    assert len(classifier.session.calls) == 3 and sleeps == [0.5, 1.0]
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 404, 422])
+def test_non_transient_http_errors_raise_immediately(status):
+    sleeps = Sleeps()
+    classifier = classifier_for(FakeResponse({"error": "nope"}, status), sleeps)
+    with pytest.raises(ModelUnavailable, match=f"HTTP {status}.*ollama pull"):
+        classifier.predict(["x"])
+    assert len(classifier.session.calls) == 1 and sleeps == []
+
+
+def test_other_request_exceptions_are_not_retried():
+    sleeps = Sleeps()
+    classifier = classifier_for(requests.exceptions.InvalidURL("bad url"), sleeps)
+    with pytest.raises(ModelUnavailable, match="request failed"):
+        classifier.predict(["x"])
+    assert len(classifier.session.calls) == 1 and sleeps == []
+
+
+@pytest.mark.parametrize("response", [None, FakeResponse([1])])
+def test_bad_bodies_are_not_retried(response):
+    sleeps = Sleeps()
+    classifier = classifier_for(BadJson(None) if response is None else response, sleeps)
+    with pytest.raises(ModelUnavailable):
+        classifier.predict(["x"])
+    assert len(classifier.session.calls) == 1 and sleeps == []
+
+
+def test_the_availability_probes_share_the_retry_policy():
+    models = models_with(**{"/api/tags": [FakeResponse({}, 503), tags(OLLAMA_MODEL)]})
+    assert isinstance(models.load(QWEN), OllamaClassifier)
+    assert models.sleep == [0.5]
+    down = models_with(**{"/api/tags": requests.ConnectionError("refused")})
+    with pytest.raises(ModelUnavailable, match="not reachable"):
+        down.load(QWEN)
+    assert down.sleep == [0.5, 1.0]
 
 
 def test_a_malformed_answer_for_one_note_is_nan_not_a_run_failure():
     session = FakeOllamaSession({"/api/generate": [generated("3", top(**{"3": -0.1})), generated("???"), generated("1")]})
-    first, odd, last = OllamaClassifier(URL, session).predict(["a", "b", "c"])
+    first, odd, last = OllamaClassifier(URL, session, sleep=Sleeps()).predict(["a", "b", "c"])
     assert first[0] == 1.0 and last == (0.0, 0.0, 1.0)
     assert all(math.isnan(p) for p in odd)
 
@@ -193,6 +253,39 @@ def test_a_malformed_answer_for_one_note_is_nan_not_a_run_failure():
 )
 def test_ill_typed_logprobs_fall_back_to_one_hot(logprobs):
     assert OllamaClassifier.parse({"response": "3", "logprobs": logprobs}) == (1.0, 0.0, 0.0)
+
+
+@pytest.mark.parametrize(
+    "logprobs",
+    [
+        None,
+        7,
+        {"token": "3"},
+        [None, 5, "3", ["3"]],  # entries that are not dicts
+        [{"token": 3, "logprob": -0.1, "top_logprobs": top(**{"3": -0.1})}],  # token is not a string
+        [{"logprob": -0.1, "top_logprobs": top(**{"3": -0.1})}],  # no token
+        [token_entry("3", {"3": -0.1})],  # top_logprobs is a dict
+        [token_entry("3", [{"token": 3, "logprob": -0.1}])],  # candidate token is not a string
+        [token_entry("3", [{"token": "3", "logprob": True}])],  # bool is not a logprob
+        [token_entry("3", [{"token": "3", "logprob": None}])],
+        [token_entry("3", [{"token": "3", "logprob": 10**400}])],  # int too large for a float
+        [token_entry("3", [{"token": "3", "logprob": -(10**400)}])],
+        [token_entry("3", [{"token": "3", "logprob": math.inf}])],
+    ],
+)
+def test_wrong_typed_logprob_fields_degrade_to_one_hot(logprobs):
+    assert OllamaClassifier.parse({"response": "3", "logprobs": logprobs}) == (1.0, 0.0, 0.0)
+
+
+@pytest.mark.parametrize("response", [None, 3, ["3"], {"a": "3"}, b"3"])
+def test_wrong_typed_response_is_nan(response):
+    assert all(math.isnan(p) for p in OllamaClassifier.parse({"response": response}))
+
+
+def test_a_valid_candidate_survives_ill_typed_neighbours():
+    entries = [{"token": 2, "logprob": -1.0}, {"token": "2", "logprob": "x"}, *top(**{"3": math.log(0.5)})]
+    probs = OllamaClassifier.parse({"response": "3", "logprobs": [token_entry("3", entries)]})
+    assert probs == (1.0, 0.0, 0.0)
 
 
 def test_non_dict_top_logprobs_entries_are_skipped():
@@ -234,7 +327,7 @@ def ps(size_vram=None):
 
 def models_with(**routes):
     routes.setdefault("/api/generate", generated("2", top(**{"2": -0.1})))
-    return SentimentModels(URL, FakeOllamaSession(routes))
+    return SentimentModels(URL, FakeOllamaSession(routes), sleep=Sleeps())
 
 
 def test_load_qwen_returns_an_ollama_classifier():
@@ -277,6 +370,14 @@ def test_alternative_falls_back_when_size_vram_is_zero(caplog):
 @pytest.mark.parametrize("size", [math.nan, math.inf, -math.inf])
 def test_non_finite_size_vram_is_model_unavailable(size):
     models = models_with(**{"/api/tags": tags(OLLAMA_MODEL), "/api/ps": FakeResponse({"models": [{"name": OLLAMA_MODEL, "size_vram": size}]})})
+    with pytest.raises(ModelUnavailable, match="size_vram"):
+        models._vram_bytes()
+    assert models.alternative() == MDEBERTA
+
+
+def test_huge_size_vram_is_model_unavailable_not_overflow():
+    huge = FakeResponse({"models": [{"name": OLLAMA_MODEL, "size_vram": 10**400}]})
+    models = models_with(**{"/api/tags": tags(OLLAMA_MODEL), "/api/ps": huge})
     with pytest.raises(ModelUnavailable, match="size_vram"):
         models._vram_bytes()
     assert models.alternative() == MDEBERTA

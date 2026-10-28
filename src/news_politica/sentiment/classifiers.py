@@ -13,6 +13,8 @@ import logging
 import math
 import os
 import re
+import time
+from collections.abc import Callable
 from typing import Protocol
 
 import requests
@@ -42,6 +44,9 @@ DIGIT_TO_PROBS: dict[str, Probs] = {"1": (0.0, 0.0, 1.0), "2": (0.0, 1.0, 0.0), 
 DIGIT_INDEX = {"1": 2, "2": 1, "3": 0}  # position of each digit's class in (pos, neu, neg)
 
 OLLAMA_TIMEOUT = 120
+OLLAMA_PROBE_TIMEOUT = 10
+OLLAMA_ATTEMPTS = 3  # tries per request when the failure is transient
+OLLAMA_BACKOFF_S = 0.5  # sleep before the 2nd try; doubles before each later one
 OLLAMA_OPTIONS = {"temperature": 0, "seed": 42, "num_predict": 2}
 OLLAMA_PULL_HINT = f"run `ollama pull {OLLAMA_MODEL}`"
 SYNC_HINT = "run `uv sync --group sentiment`"
@@ -75,6 +80,47 @@ def _json_object(response, where: str) -> dict:
     return body
 
 
+def _finite_number(value) -> float | None:
+    """`value` as a finite float, or None for bools, non-numbers, NaN, infinities and ints too big for a float."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    try:
+        number = float(value)
+    except OverflowError:
+        return None
+    return number if math.isfinite(number) else None
+
+
+def _call_ollama(
+    send: Callable[[], requests.Response], where: str, sleep: Callable[[float], None], hint: str = ""
+) -> requests.Response:
+    """Run one Ollama request under the error policy shared by every call to the server.
+
+    Transient failures (timeouts, connection errors, HTTP 429 and 5xx) are retried up to
+    `OLLAMA_ATTEMPTS` times with a doubling backoff, then raise `ModelUnavailable`. Anything else
+    (other 4xx, other transport errors) raises `ModelUnavailable` at once: retrying cannot fix it.
+    Bodies are checked by the callers, and a bad body is never retried.
+    """
+    reason = ""
+    for attempt in range(OLLAMA_ATTEMPTS):
+        try:
+            response = send()
+        except (requests.Timeout, requests.ConnectionError) as exc:
+            reason = f"Ollama is not reachable {where}; run `ollama serve` ({exc})"
+        except requests.RequestException as exc:
+            raise ModelUnavailable(f"Ollama request failed {where} ({exc})") from exc
+        else:
+            code = response.status_code
+            if code == 200:
+                return response
+            reason = f"Ollama answered HTTP {code} {where}{hint}"
+            if code != 429 and code < 500:
+                raise ModelUnavailable(reason)
+        if attempt < OLLAMA_ATTEMPTS - 1:
+            sleep(OLLAMA_BACKOFF_S * 2**attempt)
+    raise ModelUnavailable(f"{reason} (gave up after {OLLAMA_ATTEMPTS} attempts)")
+
+
 class Classifier(Protocol):
     name: str  # the `modelo` value
     device: str  # "cpu", "cuda" or "ollama"
@@ -94,10 +140,11 @@ class OllamaClassifier:
     name = QWEN
     device = "ollama"
 
-    def __init__(self, url: str = OLLAMA_URL, session=None, model: str = OLLAMA_MODEL):
+    def __init__(self, url: str = OLLAMA_URL, session=None, model: str = OLLAMA_MODEL, sleep=time.sleep):
         self.url = url.rstrip("/")
         self.session = session or requests.Session()
         self.model = model
+        self.sleep = sleep  # injected in tests so retries never really wait
 
     def predict(self, texts: list[str]) -> list[Probs]:
         return [self._predict_one(text) for text in texts]
@@ -112,15 +159,13 @@ class OllamaClassifier:
             "logprobs": True,
             "top_logprobs": 5,
         }
-        try:
-            response = self.session.post(f"{self.url}/api/generate", json=payload, timeout=OLLAMA_TIMEOUT)
-        except requests.RequestException as exc:
-            raise ModelUnavailable(f"Ollama is not reachable at {self.url}; run `ollama serve` ({exc})") from exc
-        if response.status_code != 200:
-            raise ModelUnavailable(
-                f"Ollama answered HTTP {response.status_code} at {self.url}/api/generate; {OLLAMA_PULL_HINT} "
-                "if the model is missing"
-            )
+        where = f"at {self.url}/api/generate"
+        response = _call_ollama(
+            lambda: self.session.post(f"{self.url}/api/generate", json=payload, timeout=OLLAMA_TIMEOUT),
+            where,
+            self.sleep,
+            hint=f"; {OLLAMA_PULL_HINT} if the model is missing",
+        )
         body = _json_object(response, f"at {self.url}/api/generate")
         if not isinstance(body.get("response"), str):
             raise ModelUnavailable(f"Ollama answered without a `response` text at {self.url}/api/generate")
@@ -130,7 +175,14 @@ class OllamaClassifier:
 
     @staticmethod
     def parse(body: dict) -> Probs:
-        found = re.search(r"[123]", str(body.get("response") or ""))
+        """Probabilities of one answer. Every field is type-checked: a malformed answer is NaN.
+
+        Wrong-typed `response`, `logprobs`, `top_logprobs`, entries, `token` or `logprob` never
+        raise; they degrade to one-hot (the digit is readable) or NaN (it is not). Only real
+        programming errors propagate.
+        """
+        response = body.get("response")
+        found = re.search(r"[123]", response) if isinstance(response, str) else None
         if not found:
             return NAN_PROBS
         digit = found.group()
@@ -144,30 +196,30 @@ class OllamaClassifier:
         return (probs[0], probs[1], probs[2])
 
     @staticmethod
+    def _token(entry) -> str | None:
+        """The stripped `token` of a logprobs entry, or None when the entry or its token is ill-typed."""
+        if not isinstance(entry, dict) or not isinstance(entry.get("token"), str):
+            return None
+        return entry["token"].strip()
+
+    @staticmethod
     def _digit_weights(logprobs, digit: str) -> dict[str, float]:
         """`exp(logprob)` of the digits in the `top_logprobs` of the token that carries the answer digit.
 
         The model may emit a space or a word before the digit, so the first generated token is not
-        always the one that holds the answer.
+        always the one that holds the answer. Entries, tokens and logprobs of the wrong type are skipped.
         """
         if not isinstance(logprobs, list):
             return {}
-        entry = next(
-            (e for e in logprobs if isinstance(e, dict) and str(e.get("token", "")).strip() == digit), None
-        )
-        if entry is None:
-            return {}
-        weights: dict[str, float] = {}
-        candidates = entry.get("top_logprobs")
+        entry = next((e for e in logprobs if OllamaClassifier._token(e) == digit), None)
+        candidates = entry.get("top_logprobs") if entry else None
         if not isinstance(candidates, list):
             return {}
+        weights: dict[str, float] = {}
         for candidate in candidates:
-            if not isinstance(candidate, dict):
-                continue  # tolerate odd entries instead of failing the note
-            token = str(candidate.get("token", "")).strip()
-            value = candidate.get("logprob")
-            usable = isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
-            if token in DIGIT_TO_PROBS and token not in weights and usable:
+            token = OllamaClassifier._token(candidate)
+            value = _finite_number(candidate.get("logprob")) if token is not None else None
+            if token in DIGIT_TO_PROBS and token not in weights and value is not None:
                 weights[token] = math.exp(min(value, 0.0))  # a logprob is <= 0; clamping avoids overflow
         return weights if sum(weights.values()) > 0 else {}
 
@@ -246,9 +298,10 @@ class MdebertaClassifier:
 class SentimentModels:
     """Plain resource that builds classifiers on demand and picks the alternative model."""
 
-    def __init__(self, ollama_url: str = OLLAMA_URL, session=None):
+    def __init__(self, ollama_url: str = OLLAMA_URL, session=None, sleep=time.sleep):
         self.ollama_url = ollama_url.rstrip("/")
         self.session = session or requests.Session()
+        self.sleep = sleep  # injected in tests so retries never really wait
 
     def load(self, name: str) -> Classifier:
         if name == ROBERTUITO:
@@ -257,7 +310,7 @@ class SentimentModels:
             return MdebertaClassifier()
         if name == QWEN:
             self._require_ollama_model()
-            return OllamaClassifier(self.ollama_url, self.session)
+            return OllamaClassifier(self.ollama_url, self.session, sleep=self.sleep)
         raise UnknownModel(f"unknown sentiment model {name!r}; choose one of {list(MODEL_NAMES)}")
 
     def alternative(self) -> str:
@@ -274,12 +327,10 @@ class SentimentModels:
         return MDEBERTA
 
     def _get(self, path: str) -> dict:
-        try:
-            response = self.session.get(f"{self.ollama_url}{path}", timeout=10)
-        except requests.RequestException as exc:
-            raise ModelUnavailable(f"Ollama is not reachable at {self.ollama_url}; run `ollama serve` ({exc})") from exc
-        if response.status_code != 200:
-            raise ModelUnavailable(f"Ollama answered HTTP {response.status_code} for {path} at {self.ollama_url}")
+        where = f"for {path} at {self.ollama_url}"
+        response = _call_ollama(
+            lambda: self.session.get(f"{self.ollama_url}{path}", timeout=OLLAMA_PROBE_TIMEOUT), where, self.sleep
+        )
         return _json_object(response, f"for {path} at {self.ollama_url}")
 
     def _models(self, path: str) -> list[dict]:
@@ -299,7 +350,8 @@ class SentimentModels:
                 size = model.get("size_vram")
                 if size is None:
                     return 0
-                if isinstance(size, bool) or not isinstance(size, (int, float)) or not math.isfinite(size):
-                    raise ModelUnavailable(f"Ollama reported an invalid size_vram {size!r} at {self.ollama_url}")
-                return int(size)
+                number = _finite_number(size)  # also rejects ints too big for a float (OverflowError)
+                if number is None:
+                    raise ModelUnavailable(f"Ollama reported an invalid size_vram at {self.ollama_url}: {size!r:.40}")
+                return int(number)
         return 0

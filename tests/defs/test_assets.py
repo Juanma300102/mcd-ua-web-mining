@@ -24,7 +24,6 @@ from ..sources.conftest import FakeRaw, fixture_text
 from .conftest import UPSTREAM, info_logs, metadata, store
 
 DAGSTER_YAML = Path(__file__).parents[2] / "src/news_politica/dagster_home/dagster.yaml"
-ALL = UPSTREAM
 FETCHED = datetime(2026, 10, 27, 12, tzinfo=timezone.utc)
 MARCH = "2024-03-01"
 CHALLENGE = FakeRaw(403, "<title>Just a moment...</title>", {"cf-mitigated": "challenge"})
@@ -36,7 +35,7 @@ def note_url(slug):
 
 def run(tmp_path, client, selection, partition_key=None, instance=None):
     resources = {"io_manager": ParquetIOManager(base_path=UPath(tmp_path)), "client": client}
-    return dg.materialize(ALL, selection=selection, resources=resources, partition_key=partition_key,
+    return dg.materialize(UPSTREAM, selection=selection, resources=resources, partition_key=partition_key,
                           instance=instance, raise_on_error=False)
 
 
@@ -55,7 +54,7 @@ def test_pools_limit_one_run_per_outlet():
 
 
 def test_assets_carry_their_outlet_pool():
-    pools = {a.key.to_user_string(): a.op.pool for a in ALL}
+    pools = {a.key.to_user_string(): a.op.pool for a in UPSTREAM}
     assert pools == {
         "catalogo_infobae": "infobae", "raw_infobae": "infobae",
         "catalogo_lanacion": "lanacion", "raw_lanacion": "lanacion",
