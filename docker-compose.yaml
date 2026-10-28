@@ -8,11 +8,13 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dagster}
       POSTGRES_DB: ${POSTGRES_DB:-dagster}
     ports:
-      - "${POSTGRES_PUBLISH_PORT:-5434}:5432"
+      - "127.0.0.1:${POSTGRES_PUBLISH_PORT:-5434}:5432"
     volumes:
       - news_politica_dagster_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      # -h localhost: on a fresh volume the init server only listens on the Unix
+      # socket, so a socket check reports ready before TCP connections work.
+      test: ["CMD-SHELL", "pg_isready -h localhost -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 5s
       timeout: 5s
       retries: 12

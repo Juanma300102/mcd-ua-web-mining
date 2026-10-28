@@ -1,7 +1,8 @@
-run_storage:
-  module: dagster_postgres.run_storage
-  class: PostgresRunStorage
-  config:
+# One block configures run, schedule and event-log storage.
+# scheme pins psycopg2: with psycopg 3 (SQLAlchemy 2.1's default for postgresql://)
+# dagster-webserver fails its first query with "the connection is closed".
+storage:
+  postgres:
     postgres_db:
       hostname:
         env: DAGSTER_POSTGRES_HOST
@@ -13,35 +14,12 @@ run_storage:
         env: DAGSTER_POSTGRES_PASSWORD
       db_name:
         env: DAGSTER_POSTGRES_DB
+      scheme: postgresql+psycopg2
 
-schedule_storage:
-  module: dagster_postgres.schedule_storage
-  class: PostgresScheduleStorage
-  config:
-    postgres_db:
-      hostname:
-        env: DAGSTER_POSTGRES_HOST
-      port:
-        env: DAGSTER_POSTGRES_PORT
-      username:
-        env: DAGSTER_POSTGRES_USER
-      password:
-        env: DAGSTER_POSTGRES_PASSWORD
-      db_name:
-        env: DAGSTER_POSTGRES_DB
-
-event_log_storage:
-  module: dagster_postgres.event_log
-  class: PostgresEventLogStorage
-  config:
-    postgres_db:
-      hostname:
-        env: DAGSTER_POSTGRES_HOST
-      port:
-        env: DAGSTER_POSTGRES_PORT
-      username:
-        env: DAGSTER_POSTGRES_USER
-      password:
-        env: DAGSTER_POSTGRES_PASSWORD
-      db_name:
-        env: DAGSTER_POSTGRES_DB
+# One pool per outlet (assets set pool=<medio>), at most one run of it at a time: each run has
+# its own PoliteClient, so this keeps 1 request / 2 s per host. "run" granularity makes the queue
+# launch a run only when its pool is free, so queued runs of one outlet don't hold back the others.
+concurrency:
+  pools:
+    default_limit: 1
+    granularity: run

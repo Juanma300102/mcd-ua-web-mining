@@ -35,26 +35,14 @@ export DAGSTER_POSTGRES_USER="$POSTGRES_USER"
 export DAGSTER_POSTGRES_PASSWORD="$POSTGRES_PASSWORD"
 export DAGSTER_POSTGRES_DB="$POSTGRES_DB"
 
-if ! docker compose up -d; then
+# --wait blocks until the compose healthcheck (pg_isready over TCP) passes.
+echo "Starting PostgreSQL and waiting for it to accept connections..."
+if ! docker compose up -d --wait --wait-timeout 90; then
   echo "" >&2
-  echo "docker compose up failed." >&2
+  echo "PostgreSQL did not start or did not become healthy in time." >&2
   echo "If the error says 'port is already allocated', host port ${POSTGRES_PUBLISH_PORT} is in use." >&2
   echo "Set another value in .env (template: .env.example), e.g. POSTGRES_PUBLISH_PORT=5435" >&2
-  exit 1
-fi
-
-echo "Waiting for PostgreSQL to accept connections..."
-for _ in $(seq 1 90); do
-  if docker compose exec postgres \
-    pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; then
-    break
-  fi
-  sleep 1
-done
-
-if ! docker compose exec postgres \
-  pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; then
-  echo "PostgreSQL did not respond in time." >&2
+  echo "Otherwise inspect it with: docker compose ps / docker compose logs postgres" >&2
   exit 1
 fi
 
@@ -93,7 +81,15 @@ except Exception as exc:
   exit 1
 fi
 
-uv run dagster definitions validate -m news_politica.definitions
+# dg reads the project from pyproject.toml ([tool.dg]), including code_location_name.
+uv run dg check defs
+
+# Create the outlet pools up front. Dagster 1.13.27 creates a pool from `default_limit` only after
+# the queue pass that first sees it, so on a fresh database the first runs of one outlet would
+# start together (seen on 2026-10-27).
+for pool in infobae lanacion misionesonline; do
+  uv run dagster instance concurrency set "$pool" 1 >/dev/null
+done
 
 echo "Dagster + Postgres ready"
-exec uv run dagster dev -m news_politica.definitions
+exec uv run dg dev
