@@ -14,6 +14,7 @@ from news_politica.sentiment.classifiers import (
     OllamaClassifier,
     RobertuitoClassifier,
     SentimentModels,
+    UnknownModel,
     _ollama_url,
 )
 
@@ -172,6 +173,56 @@ def test_generate_errors_raise_model_unavailable():
         missing.predict(["x"])
 
 
+def test_a_malformed_answer_for_one_note_is_nan_not_a_run_failure():
+    session = FakeOllamaSession({"/api/generate": [generated("3", top(**{"3": -0.1})), generated("???"), generated("1")]})
+    first, odd, last = OllamaClassifier(URL, session).predict(["a", "b", "c"])
+    assert first[0] == 1.0 and last == (0.0, 0.0, 1.0)
+    assert all(math.isnan(p) for p in odd)
+
+
+@pytest.mark.parametrize(
+    "logprobs",
+    [
+        [{"token": "3", "logprob": -0.1, "top_logprobs": 5}],
+        [{"token": "3", "logprob": -0.1, "top_logprobs": "abc"}],
+        [{"token": "3", "logprob": -0.1, "top_logprobs": [None, 7, "x"]}],
+        [{"token": "3", "logprob": -0.1, "top_logprobs": [{"token": "3", "logprob": "high"}]}],
+        [{"token": "3", "logprob": -0.1, "top_logprobs": [{"token": "3", "logprob": math.nan}]}],
+        "garbage",
+    ],
+)
+def test_ill_typed_logprobs_fall_back_to_one_hot(logprobs):
+    assert OllamaClassifier.parse({"response": "3", "logprobs": logprobs}) == (1.0, 0.0, 0.0)
+
+
+def test_non_dict_top_logprobs_entries_are_skipped():
+    entries = [None, "x", *top(**{"3": -0.1, "2": -2.0})]
+    probs = OllamaClassifier.parse({"response": "3", "logprobs": [token_entry("3", entries)]})
+    assert probs[0] > 0.8 and probs[1] > 0 and probs[2] == 0
+
+
+def test_programming_errors_in_parse_are_not_swallowed(monkeypatch):
+    def broken(logprobs, digit):
+        raise TypeError("bug")
+
+    monkeypatch.setattr(OllamaClassifier, "_digit_weights", staticmethod(broken))
+    with pytest.raises(TypeError, match="bug"):
+        classifier_for(generated("3", top(**{"3": -0.1}))).predict(["x"])
+
+
+@pytest.mark.parametrize("body", [{"model": "x"}, {"response": None}, {"response": 3}])
+def test_a_body_without_a_response_text_raises_model_unavailable(body):
+    with pytest.raises(ModelUnavailable, match="response"):
+        classifier_for(FakeResponse(body)).predict(["x"])
+
+
+def test_non_json_and_non_dict_bodies_share_one_guard():
+    with pytest.raises(ModelUnavailable, match="non-JSON"):
+        classifier_for(BadJson(None)).predict(["x"])
+    with pytest.raises(ModelUnavailable, match="unexpected body"):
+        classifier_for(FakeResponse([1])).predict(["x"])
+
+
 def tags(*names):
     return FakeResponse({"models": [{"name": n} for n in names]})
 
@@ -205,7 +256,7 @@ def test_load_qwen_with_model_not_pulled_raises():
 
 
 def test_unknown_model_name_is_rejected():
-    with pytest.raises(ValueError, match="unknown sentiment model"):
+    with pytest.raises(UnknownModel, match="unknown sentiment model"):
         models_with().load("gpt")
 
 
@@ -221,6 +272,14 @@ def test_alternative_falls_back_when_size_vram_is_zero(caplog):
     with caplog.at_level(logging.WARNING):
         assert models.alternative() == MDEBERTA
     assert "size_vram is 0" in caplog.text
+
+
+@pytest.mark.parametrize("size", [math.nan, math.inf, -math.inf])
+def test_non_finite_size_vram_is_model_unavailable(size):
+    models = models_with(**{"/api/tags": tags(OLLAMA_MODEL), "/api/ps": FakeResponse({"models": [{"name": OLLAMA_MODEL, "size_vram": size}]})})
+    with pytest.raises(ModelUnavailable, match="size_vram"):
+        models._vram_bytes()
+    assert models.alternative() == MDEBERTA
 
 
 def test_alternative_falls_back_when_the_model_is_not_listed_as_running():
@@ -254,7 +313,7 @@ class BadJson(FakeResponse):
         {"/api/tags": tags(OLLAMA_MODEL), "/api/generate": BadJson(None)},
         {"/api/tags": tags(OLLAMA_MODEL), "/api/generate": FakeResponse([1])},
         {"/api/tags": tags(OLLAMA_MODEL), "/api/generate": FakeResponse({"response": 3})},
-        {"/api/tags": tags(OLLAMA_MODEL), "/api/generate": FakeResponse({"response": "3", "logprobs": [{"top_logprobs": 5, "token": "3"}]})},
+        {"/api/tags": tags(OLLAMA_MODEL), "/api/generate": FakeResponse({"error": "no response field"})},
         {"/api/tags": tags(OLLAMA_MODEL), "/api/generate": requests.Timeout("slow")},
         {"/api/tags": tags(OLLAMA_MODEL), "/api/ps": BadJson(None)},
         {"/api/tags": tags(OLLAMA_MODEL), "/api/ps": FakeResponse({"models": {"a": 1}})},

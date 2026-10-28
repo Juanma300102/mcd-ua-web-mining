@@ -60,6 +60,21 @@ class ModelUnavailable(RuntimeError):
     """A model cannot be used on this machine; the message says how to fix it."""
 
 
+class UnknownModel(ValueError):
+    """The requested model name is not one of `MODEL_NAMES`."""
+
+
+def _json_object(response, where: str) -> dict:
+    """The JSON object of an Ollama answer; anything else is a server-level failure."""
+    try:
+        body = response.json()
+    except ValueError as exc:
+        raise ModelUnavailable(f"Ollama answered a non-JSON body {where} ({exc})") from exc
+    if not isinstance(body, dict):
+        raise ModelUnavailable(f"Ollama answered an unexpected body {where}")
+    return body
+
+
 class Classifier(Protocol):
     name: str  # the `modelo` value
     device: str  # "cpu", "cuda" or "ollama"
@@ -106,20 +121,16 @@ class OllamaClassifier:
                 f"Ollama answered HTTP {response.status_code} at {self.url}/api/generate; {OLLAMA_PULL_HINT} "
                 "if the model is missing"
             )
-        try:
-            body = response.json()
-        except ValueError as exc:
-            raise ModelUnavailable(f"Ollama answered a non-JSON body at {self.url}/api/generate ({exc})") from exc
-        if not isinstance(body, dict):
-            raise ModelUnavailable(f"Ollama answered an unexpected body at {self.url}/api/generate")
-        try:
-            return self.parse(body)
-        except (TypeError, AttributeError, ValueError, OverflowError) as exc:
-            raise ModelUnavailable(f"Ollama answered an unexpected shape at {self.url}/api/generate ({exc})") from exc
+        body = _json_object(response, f"at {self.url}/api/generate")
+        if not isinstance(body.get("response"), str):
+            raise ModelUnavailable(f"Ollama answered without a `response` text at {self.url}/api/generate")
+        # Only transport/server-level failures raise above. From here on a single odd answer is
+        # that note's problem: `parse` returns NaN probabilities and the note counts as unparsed.
+        return self.parse(body)
 
     @staticmethod
     def parse(body: dict) -> Probs:
-        found = re.search(r"[123]", body.get("response") or "")
+        found = re.search(r"[123]", str(body.get("response") or ""))
         if not found:
             return NAN_PROBS
         digit = found.group()
@@ -147,11 +158,17 @@ class OllamaClassifier:
         if entry is None:
             return {}
         weights: dict[str, float] = {}
-        for candidate in entry.get("top_logprobs") or []:
+        candidates = entry.get("top_logprobs")
+        if not isinstance(candidates, list):
+            return {}
+        for candidate in candidates:
+            if not isinstance(candidate, dict):
+                continue  # tolerate odd entries instead of failing the note
             token = str(candidate.get("token", "")).strip()
             value = candidate.get("logprob")
-            if token in DIGIT_TO_PROBS and token not in weights and isinstance(value, (int, float)):
-                weights[token] = math.exp(value)
+            usable = isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+            if token in DIGIT_TO_PROBS and token not in weights and usable:
+                weights[token] = math.exp(min(value, 0.0))  # a logprob is <= 0; clamping avoids overflow
         return weights if sum(weights.values()) > 0 else {}
 
 
@@ -241,7 +258,7 @@ class SentimentModels:
         if name == QWEN:
             self._require_ollama_model()
             return OllamaClassifier(self.ollama_url, self.session)
-        raise ValueError(f"unknown sentiment model {name!r}; choose one of {list(MODEL_NAMES)}")
+        raise UnknownModel(f"unknown sentiment model {name!r}; choose one of {list(MODEL_NAMES)}")
 
     def alternative(self) -> str:
         """`qwen2.5-7b` only if Ollama serves it from the GPU (`size_vram > 0`), else `mdeberta-xnli`."""
@@ -263,13 +280,7 @@ class SentimentModels:
             raise ModelUnavailable(f"Ollama is not reachable at {self.ollama_url}; run `ollama serve` ({exc})") from exc
         if response.status_code != 200:
             raise ModelUnavailable(f"Ollama answered HTTP {response.status_code} for {path} at {self.ollama_url}")
-        try:
-            body = response.json()
-        except ValueError as exc:
-            raise ModelUnavailable(f"Ollama answered a non-JSON body for {path} at {self.ollama_url} ({exc})") from exc
-        if not isinstance(body, dict):
-            raise ModelUnavailable(f"Ollama answered an unexpected body for {path} at {self.ollama_url}")
-        return body
+        return _json_object(response, f"for {path} at {self.ollama_url}")
 
     def _models(self, path: str) -> list[dict]:
         models = self._get(path).get("models", [])
@@ -288,7 +299,7 @@ class SentimentModels:
                 size = model.get("size_vram")
                 if size is None:
                     return 0
-                if isinstance(size, bool) or not isinstance(size, (int, float)):
-                    raise ModelUnavailable(f"Ollama reported a non-numeric size_vram {size!r} at {self.ollama_url}")
+                if isinstance(size, bool) or not isinstance(size, (int, float)) or not math.isfinite(size):
+                    raise ModelUnavailable(f"Ollama reported an invalid size_vram {size!r} at {self.ollama_url}")
                 return int(size)
         return 0

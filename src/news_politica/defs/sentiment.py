@@ -7,8 +7,9 @@ loading these definitions never imports torch.
 
 import dagster as dg
 import pandas as pd
+from pydantic import field_validator
 
-from news_politica.sentiment.classifiers import ModelUnavailable, SentimentModels
+from news_politica.sentiment.classifiers import ModelUnavailable, SentimentModels, UnknownModel
 from news_politica.sentiment.scoring import SCORE_COLUMNS, score_notes
 
 MODELO_FINAL = "robertuito"  # updated with the decision in docs/decision-sentimiento.md (task 7.3)
@@ -16,6 +17,12 @@ MODELO_FINAL = "robertuito"  # updated with the decision in docs/decision-sentim
 
 class ScoringConfig(dg.Config):
     modelos: list[str] = [MODELO_FINAL]
+
+    @field_validator("modelos")
+    @classmethod
+    def _unique(cls, names: list[str]) -> list[str]:
+        """Keep the first occurrence so the output stays one row per (id, modelo)."""
+        return list(dict.fromkeys(names))
 
 
 @dg.asset
@@ -35,9 +42,14 @@ def sentimiento_noticias(
         except ModelUnavailable as error:
             # Retrying does not install a library or start a server.
             raise dg.Failure(f"{name} is not available: {error}", allow_retries=False) from error
-        except ValueError as error:
+        except UnknownModel as error:
+            # A typo in the `modelos` config; only this error, so unrelated ValueErrors still surface.
             raise dg.Failure(str(error), allow_retries=False) from error
-        frames.append(score_notes(noticias_politica, classifier, log=context.log))
+        try:
+            frames.append(score_notes(noticias_politica, classifier, log=context.log))
+        except ModelUnavailable as error:
+            # Ollama can go away mid-run (stopped, OOM); retrying the whole run would not bring it back.
+            raise dg.Failure(f"{name} became unavailable while scoring: {error}", allow_retries=False) from error
     scores = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=SCORE_COLUMNS)
     per_model = scores["modelo"].value_counts().to_dict()
     labels = {

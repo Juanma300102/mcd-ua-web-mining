@@ -21,10 +21,10 @@ from news_politica.sources.misionesonline import fetch_month, month_url
 from news_politica.sources.models import CatalogEntry, RawDoc
 
 from ..sources.conftest import FakeRaw, fixture_text
-from .conftest import info_logs
+from .conftest import UPSTREAM, info_logs, metadata, store
 
 DAGSTER_YAML = Path(__file__).parents[2] / "src/news_politica/dagster_home/dagster.yaml"
-ALL = [catalogo_infobae, catalogo_lanacion, raw_infobae, raw_lanacion, raw_misionesonline, noticias_politica]
+ALL = UPSTREAM
 FETCHED = datetime(2026, 10, 27, 12, tzinfo=timezone.utc)
 MARCH = "2024-03-01"
 CHALLENGE = FakeRaw(403, "<title>Just a moment...</title>", {"cf-mitigated": "challenge"})
@@ -40,22 +40,10 @@ def run(tmp_path, client, selection, partition_key=None, instance=None):
                           instance=instance, raise_on_error=False)
 
 
-def store(tmp_path, name, frame, partition=None):
-    path = tmp_path / name / f"{partition}.parquet" if partition else tmp_path / f"{name}.parquet"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_parquet(path, index=False)
-
-
 def store_catalog(tmp_path, days):
     entries = [CatalogEntry("infobae", note_url(f"nota-{day}"), day, "", day) for day in days]
     store(tmp_path, "catalogo_infobae", to_frame(entries, CatalogEntry))
 
-
-
-def metadata(result, name):
-    [event] = result.asset_materializations_for_node(name)
-    # The IO manager adds the file path.
-    return {key: value.value for key, value in event.metadata.items() if key != "path"}
 
 
 # Instance and definitions

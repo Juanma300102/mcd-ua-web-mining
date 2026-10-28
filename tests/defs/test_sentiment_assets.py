@@ -9,12 +9,10 @@ from upath import UPath
 
 from news_politica.defs.io import ParquetIOManager
 from news_politica.defs.sentiment import MODELO_FINAL, ScoringConfig, sentimiento_noticias
-from news_politica.sentiment.classifiers import ModelUnavailable
+from news_politica.sentiment.classifiers import ModelUnavailable, SentimentModels
 from news_politica.sentiment.scoring import SCORE_COLUMNS
 
-from .conftest import info_logs
-from .test_assets import ALL as UPSTREAM
-from .test_assets import metadata, store
+from .conftest import UPSTREAM, info_logs, metadata, store
 
 ALL = [*UPSTREAM, sentimiento_noticias]
 
@@ -42,15 +40,21 @@ class FakeClassifier:
 class FakeModels:
     """Stands in for `SentimentModels`: no torch, no Ollama."""
 
-    def __init__(self, unavailable=()):
+    def __init__(self, unavailable=(), fail_midrun=()):
         self.unavailable = set(unavailable)
+        self.fail_midrun = set(fail_midrun)
         self.loaded = []
 
     def load(self, name):
         if name in self.unavailable:
             raise ModelUnavailable(f"{name} needs `uv sync --group sentiment`")
         self.loaded.append(name)
-        return FakeClassifier(name)
+        classifier = FakeClassifier(name)
+        if name in self.fail_midrun:
+            def predict(texts):
+                raise ModelUnavailable("Ollama is not reachable; run `ollama serve`")
+            classifier.predict = predict
+        return classifier
 
 
 def make_notes(titles):
@@ -120,6 +124,48 @@ def test_unavailable_model_is_a_non_retryable_failure(tmp_path, client):
             FakeModels(unavailable={"robertuito"}), make_notes(["todo bien"]),
         )
     assert caught.value.allow_retries is False
+
+
+def test_model_lost_mid_run_is_a_non_retryable_failure_naming_the_model(tmp_path, client):
+    store(tmp_path, "noticias_politica", make_notes(["todo bien"]))
+    assert not run(tmp_path, client, FakeModels(fail_midrun={"qwen2.5-7b"}), ["qwen2.5-7b"]).success
+    with pytest.raises(dg.Failure, match="qwen2.5-7b became unavailable while scoring.*ollama serve") as caught:
+        sentimiento_noticias(
+            dg.build_asset_context(), ScoringConfig(modelos=["qwen2.5-7b"]),
+            FakeModels(fail_midrun={"qwen2.5-7b"}), make_notes(["todo bien"]),
+        )
+    assert caught.value.allow_retries is False
+
+
+def test_unknown_model_name_is_a_non_retryable_failure():
+    with pytest.raises(dg.Failure, match="unknown sentiment model") as caught:
+        sentimiento_noticias(
+            dg.build_asset_context(), ScoringConfig(modelos=["gpt"]), SentimentModels(session=object()),
+            make_notes(["todo bien"]),
+        )
+    assert caught.value.allow_retries is False
+
+
+def test_unrelated_value_errors_are_not_converted_to_failures():
+    class Broken(FakeModels):
+        def load(self, name):
+            raise ValueError("a programming error")
+
+    with pytest.raises(ValueError, match="programming error"):
+        sentimiento_noticias(
+            dg.build_asset_context(), ScoringConfig(modelos=["robertuito"]), Broken(), make_notes(["todo bien"])
+        )
+
+
+def test_duplicate_models_are_dropped_keeping_order(tmp_path, client):
+    assert ScoringConfig(modelos=["b", "a", "b", "a"]).modelos == ["b", "a"]
+    store(tmp_path, "noticias_politica", make_notes(["todo bien", "nada"]))
+    models = FakeModels()
+    result = run(tmp_path, client, models, ["robertuito", "mdeberta-xnli", "robertuito"])
+    assert result.success
+    scores = result.output_for_node("sentimiento_noticias")
+    assert len(scores) == 4 and not scores.duplicated(["id", "modelo"]).any()
+    assert models.loaded == ["robertuito", "mdeberta-xnli"]
 
 
 def test_logs_start_progress_and_summary(tmp_path, client):
