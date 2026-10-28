@@ -60,8 +60,8 @@ Flujo de assets:
 1. catalogo\_infobae y catalogo\_lanacion: recorren los sitemaps diarios desde el 10/12/2023 hasta el día del scraping y guardan las URLs de Política con la fecha de su URL, que coincide con la de primera publicación. MisionesOnline no lo necesita: su API filtra por fecha de publicación.  
 2. raw\_infobae, raw\_lanacion y raw\_misionesonline: una descarga por medio, particionada por mes (los medios Arc toman del catálogo las URLs de ese mes). Guardan el JSON de la nota tal como viene del medio, no el HTML, así que un cambio en el parseo no obliga a volver a scrapear. Un mes fallido se reintenta solo, salvo que el sitio responda con un desafío anti-bot, y el backfill histórico corre por partes.  
 3. noticias\_politica: parsea el JSON de los tres medios al esquema común (el texto plano y las fechas salen de `sources/`), filtra el período por fecha de publicación y deduplica.  
-4. sentimiento\_noticias: score de sentimiento por nota.  
-5. evolucion\_tono: agregados por medio y semana, y gráficos.
+4. sentimiento\_noticias: probabilidades, etiqueta y score de sentimiento por nota y por modelo, en formato largo (una fila por `(id, modelo)`). Los modelos se eligen con la configuración `modelos` del asset y se cargan con el resource `sentiment_models`, así que cargar las definiciones nunca importa torch.  
+5. evolucion\_tono: agregados por modelo, medio y semana (score medio con intervalo de confianza del 95 %, proporción de cada etiqueta y cobertura de bajada). Los gráficos y la comparación antes y después de cada hito están en el notebook `05_sentimiento`.
 
 No hay schedule diario: un backfill de assets de Dagster (lanzado desde la UI, ver README) descarga desde 12/2023 hasta la fecha de corte. No es un job porque un job no puede mezclar assets particionados y sin particionar. Estructura propuesta del repo:  
 `news-politica/`  
@@ -73,6 +73,7 @@ No hay schedule diario: un backfill de assets de Dagster (lanzado desde la UI, v
     `dagster_home/dagster.yaml`  
     `sources/                 # un cliente por medio`  
     `defs/assets/             # raw_*, noticias_politica, sentimiento, evolucion`  
+    `sentiment/              # texto de análisis, etiquetado, clasificadores, evaluación, tono`  
     `defs/jobs.py             # job de backfill`  
   `data/                      # parquet, gitignored`  
   `notebooks/                 # EDA y gráficos del informe`  
@@ -98,7 +99,7 @@ Una fila por nota, en Parquet, con el mismo esquema para los tres medios.
 | es\_en\_vivo | bool | Nota en vivo o minuto a minuto. Queda fuera de los agregados de tono por defecto |
 | fecha\_scraping | datetime | Cuándo se obtuvo la nota |
 
-El asset de sentimiento agrega sentimiento (positivo, neutral, negativo), score y modelo, separado del dataset base para poder comparar modelos sin volver a scrapear.
+El asset de sentimiento agrega las probabilidades de cada clase (positivo, neutral, negativo), la etiqueta, el score (`prob_pos - prob_neg`) y el modelo, separado del dataset base para poder comparar modelos sin volver a scrapear.
 
 ## Análisis de sentimiento
 
@@ -107,6 +108,16 @@ Propuesta: arrancar con pysentimiento (modelo en español, salida positivo, neut
 * **Unidad de análisis:** título \+ bajada como señal principal, porque los modelos tipo BERT cortan en 512 tokens. El cuerpo se analiza por párrafos y se promedia, como variante.  
 * **Validación:** escribir una guía corta de etiquetado (qué cuenta como positivo, neutral o negativo, con ejemplos), etiquetar a mano unas 300 notas (100 por medio) y reportar accuracy y F1 macro de cada modelo.  
 * **Agregación:** score medio y proporción de notas negativas por medio y por semana, con los hitos políticos marcados en el gráfico. Los hitos y sus fechas van en un archivo versionado, y para cada uno se comparan las 2 semanas anteriores con las 2 posteriores.
+
+### Estado y decisiones de la fase 5
+
+El código de la fase 5 está terminado y probado sin datos reales (cambio OpenSpec `add-sentiment-analysis`). Falta lo que depende de personas o de la máquina con GPU: el etiquetado manual de las 300 notas, la evaluación de los modelos, la elección del modelo final y la materialización de los assets (el detalle está en `docs/decision-sentimiento.md`). Decisiones tomadas:
+
+* **Texto de análisis.** Título más bajada. Si no hay bajada se usa el primer párrafo del cuerpo, y si tampoco hay cuerpo, solo el título. Cada fila guarda de dónde salió (`fuente_texto`: `bajada`, `cuerpo` o `titulo`), porque la cobertura de bajada cambia con el tiempo y puede mover el tono sin que cambie el contenido. El cuerpo completo queda fuera de la versión base.
+* **Modelos.** Baseline: `robertuito` (pysentimiento), que resolvió y predijo en el spike de dependencias. Alternativa: `qwen2.5-7b` en Ollama si corre en la GPU, y `mdeberta-xnli` (zero-shot) si no. La elección se hace por el hardware detectado, no por una variable de entorno. El modelo final se decide con el F1 macro sobre las notas etiquetadas.
+* **Score.** `prob_pos - prob_neg`, entre -1 y 1. Los scores de modelos distintos no comparten escala, así que todos los agregados se calculan por modelo.
+* **Muestra de validación.** 300 notas (100 por medio) elegidas por hash sobre el dataset completo y congelado, repartidas entre los dos anotadores, sin notas en vivo. Las planillas no se commitean; solo `anotaciones/etiquetas.csv`, sin texto.
+* **Tono y hitos.** Semanas ISO en hora argentina, sin notas en vivo ni notas sin score. Cada hito compara 14 días antes con 14 días después (el día del hito cuenta como "después"), recortados al período del dataset; un lado con menos de 10 notas no informa media ni proporción. Los hitos y sus fuentes están en `anotaciones/hitos.csv`; sus fechas aún no están verificadas.
 
 ## Pasos de ejecución
 
@@ -120,7 +131,7 @@ Seis fases en orden; la 2 y la 3 se pueden repartir entre los dos integrantes.
    4. Nota de decisión: rate limit, duración estimada del backfill, fecha de corte, plan B para MisionesOnline, qué hacer con las notas de agencia y con las notas "en vivo".  
 3. **Clientes de scraping (hecha, cambio OpenSpec `add-scraping-clients`).** Un cliente HTTP compartido (rate limit, reintentos y User-Agent identificable), los modelos comunes (entrada de catálogo, documento crudo y nota) y un módulo por medio en sources/. Tests con respuestas guardadas y texto recortado.  
 4. **Assets de Dagster.** raw\_\* particionados por mes, noticias\_politica con limpieza y deduplicado, y un backfill de assets desde 12/2023 hasta la fecha de corte. Cierra con el EDA del dataset (volumen por medio y semana, largo de notas, proporción con bajada), que alimenta las decisiones de la fase 5.  
-5. **Sentimiento.** Guía de etiquetado y muestra etiquetada, baseline y modelo alternativo, elegir uno y materializar sentimiento\_noticias y evolucion\_tono con la comparación antes y después de cada hito.  
+5. **Sentimiento (en curso, cambio OpenSpec `add-sentiment-analysis`; código listo, falta el etiquetado y la materialización).** Guía de etiquetado y muestra etiquetada, baseline y modelo alternativo, elegir uno y materializar sentimiento\_noticias y evolucion\_tono con la comparación antes y después de cada hito.  
 6. **Informe.** Gráficos de evolución con hitos, tabla antes y después de cada hito, comparación provincial vs nacional, conclusiones y limitaciones.
 
 ## Riesgos y decisiones abiertas
@@ -134,4 +145,5 @@ Seis fases en orden; la 2 y la 3 se pueden repartir entre los dos integrantes.
 * **Volumen.** Entre el 10/12/2023 y el 30/09/2026: 7.245 notas de MisionesOnline (unas 50 por semana; para la fase 5 puede convenir agregar por quincena o por mes), unas 23.100 de Infobae y unas 26.600 de La Nación. A una request cada 2 s, el backfill de cada medio Arc tarda unas 14 a 16 horas y baja de 5 a 10 GB de HTML, así que los raw guardan solo el JSON de la nota.  
 * **Sentimiento no es postura.** Una nota negativa puede serlo hacia la oposición. El informe debe aclarar qué mide el modelo.  
 * **Fecha de corte (decidido).** 30/09/2026 23:59, hora argentina, por fecha de publicación. Se adelantó del 31/10 el 27/10/2026: la entrega es antes de que termine octubre y el backfill tarda unas 14 horas.  
-* **A decidir:** qué modelo de sentimiento usar, si se incluye el cuerpo o solo título \+ bajada, y dónde se guarda el dataset (Parquet local o tabla en el mismo Postgres).
+* **Texto de análisis (decidido).** Título \+ bajada, con el primer párrafo del cuerpo como respaldo (ver "Estado y decisiones de la fase 5").  
+* **A decidir:** qué modelo de sentimiento usar (depende de la evaluación sobre las notas etiquetadas) y dónde se guarda el dataset (Parquet local o tabla en el mismo Postgres).

@@ -121,8 +121,8 @@ Conventions for every code task: tests go in the same task or commit (TDD is off
 
 - [ ] 9.1 Extend `notebooks/05_sentimiento.ipynb` with the "Evolucion" section (weekly series per outlet with the t interval and a 4-week rolling mean, milestones marked, bajada coverage `prop_bajada` shown next to the series) and the "Hitos" section (before/after table filtered by `alcance`, insufficient and truncated windows marked). Check: runs end to end on the materialized Parquet.
 - [ ] 9.2 **[HUMAN]** Materialize `evolucion_tono` from the stored `sentimiento_noticias` and run the notebook sections of 9.1. Check: weekly points for the three outlets and a before/after row for every milestone with a date.
-- [ ] 9.3 `README.md`: document `uv sync --group sentiment`, the CPU torch index, Ollama (`ollama serve`, `ollama pull qwen2.5:7b-instruct`, `OLLAMA_HOST`) and the GPU note, and how to materialize the two assets with `modelos` config.
-- [ ] 9.4 `docs/def.md`: record the Phase 5 status and the analysis-text and model decisions (Spanish).
+- [x] 9.3 `README.md`: document `uv sync --group sentiment`, the CPU torch index, Ollama (`ollama serve`, `ollama pull qwen2.5:7b-instruct`, `OLLAMA_HOST`) and the GPU note, and how to materialize the two assets with `modelos` config.
+- [x] 9.4 `docs/def.md`: record the Phase 5 status and the analysis-text and model decisions (Spanish). (Added "Estado y decisiones de la fase 5"; the status is "en curso" until 7.x and 9.1/9.2 are done, so update it at close-out.)
 - [ ] 9.5 `odd/tasks/news-politica.md`: mark Phase 5 progress, with the materialization record from task 7.4 and the commit hashes of C1 to C8.
 - [ ] 9.6 Final check: `uv run pytest` and `uv run dg check defs` pass in an environment without the `sentiment` group; confirm `data/etiquetado/` is untracked and `anotaciones/` holds only `etiquetas.csv` and `hitos.csv`.
 

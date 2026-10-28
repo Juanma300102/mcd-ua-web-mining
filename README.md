@@ -37,6 +37,65 @@ The dataset covers 2023-12-10 to the cut-off, 2026-09-30 23:59 ART. Run it outsi
 
 Files land in `data/<asset>.parquet` and `data/raw_<medio>/<YYYY-MM-DD>.parquet` (`DATA_DIR` overrides `data/`).
 
+## Sentiment analysis
+
+The sentiment code is in `src/news_politica/sentiment/`; the assets are `sentimiento_noticias` (one row per note and model, in long format) and `evolucion_tono` (weekly tone per model and outlet). Both read `data/noticias_politica.parquet`, so run the backfill first. The decisions and the labeling guide are in [`docs/decision-sentimiento.md`](docs/decision-sentimiento.md) and [`docs/guia-etiquetado.md`](docs/guia-etiquetado.md).
+
+### Install the models
+
+The models live in their own dependency group, so `uv sync` and the tests never install torch:
+
+```bash
+uv sync --group sentiment
+```
+
+On Linux and Windows the group takes torch from the CPU index (`pytorch-cpu` in `pyproject.toml`, not the much larger CUDA build); macOS uses PyPI. `robertuito` (pysentimiento) and `mdeberta-xnli` download their weights from Hugging Face the first time they run. The Dagster definitions load without the group: a model is only imported when an asset or the notebook asks for it, and a missing library fails the run with the command to fix it.
+
+### Ollama (optional, GPU alternative)
+
+The alternative model, `qwen2.5-7b`, runs in [Ollama](https://ollama.com) and is reached over HTTP, so it adds no Python package:
+
+```bash
+ollama serve                       # leave it running
+ollama pull qwen2.5:7b-instruct
+export OLLAMA_HOST=http://localhost:11434   # optional; this is the default
+```
+
+`SentimentModels.alternative()` picks `qwen2.5-7b` only when Ollama is reachable, the model is pulled and `GET /api/ps` reports `size_vram > 0` (the model runs on the GPU). Otherwise it logs a warning and falls back to `mdeberta-xnli`, because the LLM on CPU is too slow for the whole dataset. Naming `qwen2.5-7b` explicitly never falls back: if Ollama is down the run fails with the fix. A generation that times out is not retried; connection errors and HTTP 429/5xx are retried up to 3 times.
+
+### Draw the labeling sample
+
+The 300-note sample (100 per outlet, split between annotators `a` and `b`) is drawn in section 1 of `notebooks/05_sentimiento.ipynb`:
+
+```bash
+uv sync --group notebooks --group sentiment
+uv run --group notebooks jupyter lab notebooks/
+```
+
+Draw it only from the complete, frozen dataset that the team shares. The sample depends on the note ids present, so a partial `data/noticias_politica.parquet` gives a different sample; the notebook fails if an outlet has fewer eligible notes than `PER_MEDIO`. The sheets (`data/etiquetado/anotador_{a,b}.csv`) contain scraped text and stay out of git, and `export_sheets` refuses to overwrite sheets that already exist. After both members fill them in, the merge cell validates them and writes `anotaciones/etiquetas.csv` (`id, anotador, etiqueta`, no text), the only labeling file that is committed. Commit the notebook without outputs.
+
+### Materialize the assets
+
+In the Dagster UI, select `sentimiento_noticias` and click **Materialize**; the Launchpad takes the models to score:
+
+```yaml
+ops:
+  sentimiento_noticias:
+    config:
+      modelos: [robertuito]   # robertuito (default), mdeberta-xnli, qwen2.5-7b
+```
+
+From the command line (`DAGSTER_HOME` as in `scripts/dagster-up.sh`):
+
+```bash
+export DAGSTER_HOME="$PWD/src/news_politica/dagster_home"
+uv run dagster asset materialize -m news_politica.definitions --select sentimiento_noticias \
+  --config-json '{"ops": {"sentimiento_noticias": {"config": {"modelos": ["robertuito"]}}}}'
+uv run dagster asset materialize -m news_politica.definitions --select evolucion_tono
+```
+
+Listing several models scores each one and writes one row per `(id, modelo)`. `evolucion_tono` leaves out live notes, unscored notes, scores without a note and notes without a date, and the run reports how many of each. The milestones used for the before and after comparison are in `anotaciones/hitos.csv`.
+
 ## Checks
 
 ```bash
@@ -75,12 +134,14 @@ scripts/dagster-up.sh      # starts Postgres + Dagster
 src/news_politica/
   definitions.py           # loads everything under defs/
   dagster_home/dagster.yaml
-  defs/                    # assets.py (catalogs, raw_* by month, noticias_politica), io.py (Parquet, client)
+  defs/                    # assets.py (catalogs, raw_* by month, noticias_politica), sentiment.py, io.py (Parquet, client, models)
   sources/                 # scraping clients: HTTP client, one module per outlet, parse()
+  sentiment/               # analysis text, labeling, classifiers, scoring, evaluation, weekly tone
 tests/
   fixtures/sources/        # trimmed responses from the phase 2 cache (build_fixtures.py)
-notebooks/                 # phase 2 source exploration (probe.py, arc.py, one notebook per outlet)
-docs/                      # project definition, source decisions, bitacora-fases.html (phases 1-4 report)
+notebooks/                 # phase 2 source exploration (probe.py, arc.py, one notebook per outlet), 05 sentiment
+anotaciones/               # etiquetas.csv (human labels, no text), hitos.csv (political milestones)
+docs/                      # project definition, source and sentiment decisions, labeling guide, bitacora-fases.html (phases 1-4 report)
 odd/tasks/                 # task tracking
 data/                      # Parquet output (gitignored)
 ```
