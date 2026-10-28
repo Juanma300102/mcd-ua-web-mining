@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "dagster": {
+      "source": {
+        "source": "github",
+        "repo": "dagster-io/skills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "dagster@dagster": true
+  }
+}
