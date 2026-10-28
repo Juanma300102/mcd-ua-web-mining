@@ -72,7 +72,7 @@ class OllamaClassifier:
 
     The model answers with a digit (1 negative, 2 neutral, 3 positive). When the
     response carries logprobs, the probabilities are the renormalized `exp(logprob)`
-    of the digits among the first token's `top_logprobs`; otherwise the parsed
+    of the digits among the `top_logprobs` of the token that carries the answer digit; otherwise the parsed
     digit gives a one-hot. An unparseable answer gives NaN probabilities.
     """
 
@@ -106,7 +106,16 @@ class OllamaClassifier:
                 f"Ollama answered HTTP {response.status_code} at {self.url}/api/generate; {OLLAMA_PULL_HINT} "
                 "if the model is missing"
             )
-        return self.parse(response.json())
+        try:
+            body = response.json()
+        except ValueError as exc:
+            raise ModelUnavailable(f"Ollama answered a non-JSON body at {self.url}/api/generate ({exc})") from exc
+        if not isinstance(body, dict):
+            raise ModelUnavailable(f"Ollama answered an unexpected body at {self.url}/api/generate")
+        try:
+            return self.parse(body)
+        except (TypeError, AttributeError, ValueError, OverflowError) as exc:
+            raise ModelUnavailable(f"Ollama answered an unexpected shape at {self.url}/api/generate ({exc})") from exc
 
     @staticmethod
     def parse(body: dict) -> Probs:
@@ -114,7 +123,7 @@ class OllamaClassifier:
         if not found:
             return NAN_PROBS
         digit = found.group()
-        weights = OllamaClassifier._digit_weights(body.get("logprobs"))
+        weights = OllamaClassifier._digit_weights(body.get("logprobs"), digit)
         if not weights:
             return DIGIT_TO_PROBS[digit]
         total = sum(weights.values())
@@ -124,15 +133,24 @@ class OllamaClassifier:
         return (probs[0], probs[1], probs[2])
 
     @staticmethod
-    def _digit_weights(logprobs) -> dict[str, float]:
-        """`exp(logprob)` of the digits in the first generated token's `top_logprobs`."""
-        if not logprobs:
+    def _digit_weights(logprobs, digit: str) -> dict[str, float]:
+        """`exp(logprob)` of the digits in the `top_logprobs` of the token that carries the answer digit.
+
+        The model may emit a space or a word before the digit, so the first generated token is not
+        always the one that holds the answer.
+        """
+        if not isinstance(logprobs, list):
+            return {}
+        entry = next(
+            (e for e in logprobs if isinstance(e, dict) and str(e.get("token", "")).strip() == digit), None
+        )
+        if entry is None:
             return {}
         weights: dict[str, float] = {}
-        for candidate in logprobs[0].get("top_logprobs") or []:
+        for candidate in entry.get("top_logprobs") or []:
             token = str(candidate.get("token", "")).strip()
             value = candidate.get("logprob")
-            if token in DIGIT_TO_PROBS and token not in weights and value is not None:
+            if token in DIGIT_TO_PROBS and token not in weights and isinstance(value, (int, float)):
                 weights[token] = math.exp(value)
         return weights if sum(weights.values()) > 0 else {}
 
@@ -245,15 +263,32 @@ class SentimentModels:
             raise ModelUnavailable(f"Ollama is not reachable at {self.ollama_url}; run `ollama serve` ({exc})") from exc
         if response.status_code != 200:
             raise ModelUnavailable(f"Ollama answered HTTP {response.status_code} for {path} at {self.ollama_url}")
-        return response.json()
+        try:
+            body = response.json()
+        except ValueError as exc:
+            raise ModelUnavailable(f"Ollama answered a non-JSON body for {path} at {self.ollama_url} ({exc})") from exc
+        if not isinstance(body, dict):
+            raise ModelUnavailable(f"Ollama answered an unexpected body for {path} at {self.ollama_url}")
+        return body
+
+    def _models(self, path: str) -> list[dict]:
+        models = self._get(path).get("models", [])
+        if not isinstance(models, list) or not all(isinstance(m, dict) for m in models):
+            raise ModelUnavailable(f"Ollama answered an unexpected `models` shape for {path} at {self.ollama_url}")
+        return models
 
     def _require_ollama_model(self) -> None:
-        names = {m.get("name") or m.get("model") for m in self._get("/api/tags").get("models", [])}
+        names = {m.get("name") or m.get("model") for m in self._models("/api/tags")}
         if OLLAMA_MODEL not in names:
             raise ModelUnavailable(f"Ollama has no model {OLLAMA_MODEL}; {OLLAMA_PULL_HINT}")
 
     def _vram_bytes(self) -> int:
-        for model in self._get("/api/ps").get("models", []):
+        for model in self._models("/api/ps"):
             if (model.get("name") or model.get("model")) == OLLAMA_MODEL:
-                return int(model.get("size_vram") or 0)
+                size = model.get("size_vram")
+                if size is None:
+                    return 0
+                if isinstance(size, bool) or not isinstance(size, (int, float)):
+                    raise ModelUnavailable(f"Ollama reported a non-numeric size_vram {size!r} at {self.ollama_url}")
+                return int(size)
         return 0

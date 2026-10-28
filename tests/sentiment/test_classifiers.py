@@ -115,6 +115,48 @@ def test_logprobs_without_any_digit_fall_back_to_one_hot():
     assert classifier_for(response).predict(["x"]) == [(0.0, 0.0, 1.0)]
 
 
+def token_entry(token, top_logprobs):
+    return {"token": token, "logprob": -0.1, "top_logprobs": top_logprobs}
+
+
+def test_weights_come_from_the_token_that_carries_the_digit():
+    # First token is a space, the digit is in the second one: only the second one's alternatives count.
+    body = {
+        "response": " 3",
+        "logprobs": [
+            token_entry(" ", top(**{"1": math.log(0.9), "3": math.log(0.1)})),
+            token_entry("3", top(**{"3": math.log(0.6), "2": math.log(0.4)})),
+        ],
+    }
+    assert OllamaClassifier.parse(body) == pytest.approx((0.6, 0.4, 0.0))
+
+
+def test_weights_come_from_the_token_after_a_word():
+    body = {
+        "response": "Es 1",
+        "logprobs": [
+            token_entry("Es", top(Es=-0.1)),
+            token_entry(" 1", top(**{"1": math.log(0.5), "2": math.log(0.5)})),
+        ],
+    }
+    assert OllamaClassifier.parse(body) == pytest.approx((0.0, 0.5, 0.5))
+
+
+def test_digit_in_the_first_token_uses_it():
+    body = {"response": "2", "logprobs": [token_entry("2", top(**{"2": math.log(0.8), "3": math.log(0.2)}))]}
+    assert OllamaClassifier.parse(body) == pytest.approx((0.2, 0.8, 0.0))
+
+
+def test_no_token_carrying_the_digit_gives_one_hot():
+    body = {"response": "Es 3", "logprobs": [token_entry("Es", top(**{"1": -0.1, "3": -2.0}))]}
+    assert OllamaClassifier.parse(body) == (1.0, 0.0, 0.0)
+
+
+def test_no_logprobs_gives_one_hot_and_unparseable_gives_nan():
+    assert OllamaClassifier.parse({"response": "1"}) == (0.0, 0.0, 1.0)
+    assert all(math.isnan(p) for p in OllamaClassifier.parse({"response": "nada", "logprobs": [token_entry("nada", [])]}))
+
+
 @pytest.mark.parametrize("answer", ["", "No sé", "cuatro"])
 def test_unparseable_answer_gives_nan_probabilities(answer):
     (probs,) = classifier_for(generated(answer)).predict(["x"])
@@ -195,6 +237,42 @@ def test_alternative_falls_back_when_ollama_is_down(caplog):
 
 def test_alternative_falls_back_when_the_model_is_not_pulled():
     assert models_with(**{"/api/tags": tags()}).alternative() == MDEBERTA
+
+
+class BadJson(FakeResponse):
+    def json(self):
+        raise ValueError("Expecting value")
+
+
+@pytest.mark.parametrize(
+    "routes",
+    [
+        {"/api/tags": BadJson(None)},
+        {"/api/tags": FakeResponse(["not", "a", "dict"])},
+        {"/api/tags": FakeResponse({"models": "none"})},
+        {"/api/tags": FakeResponse({"models": ["x"]})},
+        {"/api/tags": tags(OLLAMA_MODEL), "/api/generate": BadJson(None)},
+        {"/api/tags": tags(OLLAMA_MODEL), "/api/generate": FakeResponse([1])},
+        {"/api/tags": tags(OLLAMA_MODEL), "/api/generate": FakeResponse({"response": 3})},
+        {"/api/tags": tags(OLLAMA_MODEL), "/api/generate": FakeResponse({"response": "3", "logprobs": [{"top_logprobs": 5, "token": "3"}]})},
+        {"/api/tags": tags(OLLAMA_MODEL), "/api/generate": requests.Timeout("slow")},
+        {"/api/tags": tags(OLLAMA_MODEL), "/api/ps": BadJson(None)},
+        {"/api/tags": tags(OLLAMA_MODEL), "/api/ps": FakeResponse({"models": {"a": 1}})},
+        {"/api/tags": tags(OLLAMA_MODEL), "/api/ps": FakeResponse({"models": [{"name": OLLAMA_MODEL, "size_vram": "big"}]})},
+        {"/api/tags": tags(OLLAMA_MODEL), "/api/ps": FakeResponse({"models": [{"name": OLLAMA_MODEL, "size_vram": [1]}]})},
+        {"/api/tags": tags(OLLAMA_MODEL), "/api/ps": requests.ReadTimeout("slow")},
+    ],
+)
+def test_alternative_falls_back_on_any_failure_to_establish_the_llm(routes, caplog):
+    models = models_with(**routes)
+    with caplog.at_level(logging.WARNING):
+        assert models.alternative() == MDEBERTA
+    assert "Using mdeberta-xnli" in caplog.text
+
+
+def test_explicit_qwen_still_fails_on_a_malformed_body():
+    with pytest.raises(ModelUnavailable):
+        models_with(**{"/api/tags": BadJson(None)}).load(QWEN)
 
 
 @pytest.mark.parametrize("name", ["robertuito", MDEBERTA])
