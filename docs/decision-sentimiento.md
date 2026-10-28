@@ -2,6 +2,18 @@
 
 Registro de cómo se elige el modelo de sentimiento. Este documento se completa por etapas: hoy tiene la sección "Spike" (dependencias); el cierre con números (macro F1, matriz de confusión, modelo elegido, máquina usada) se agrega en la tarea 7.3.
 
+## Dataset congelado
+
+La fase 5 trabaja sobre un único `data/noticias_politica.parquet`, compartido entre los integrantes y sin volver a materializarse hasta cerrar la fase: rehacerlo cambia la muestra de etiquetado y deja las etiquetas desalineadas.
+
+- Filas: 9.261 (MisionesOnline 7.245, La Nación 1.020, Infobae 996), sin ids duplicados.
+- Período: 2023-12-10 09:03 a 2026-09-30 23:37 (hora argentina).
+- SHA-256: `ab5de8cbf09e7eee8418f4acf6653a2e90c38cc6f818b12ea42e45b585ebd7fc`
+
+Para comprobar la copia local: `sha256sum data/noticias_politica.parquet`.
+
+Limitación conocida: el 99 % de las notas de Infobae y La Nación cae en los días 4–5 y 19–20 de cada mes, porque los catálogos leen solo los sitemaps de los días 5 y 20. En la serie semanal, esos medios tienen datos en 77 de unas 147 semanas, y cada semana con datos refleja un solo día.
+
 ## Spike
 
 Hecho el 28/10/2026 con uv 0.11.6, Python 3.12.3 y pandas 3.1.0. Solo se tocaron PyPI, el índice CPU de PyTorch y Hugging Face; ningún pedido a los medios.
