@@ -1,5 +1,7 @@
 # Feature: news-politica
 
+> **Historical roadmap (frozen 2026-10-28).** Phases 1–4 are done. New work is tracked as OpenSpec changes under `openspec/changes/` (SDD, artifact store `openspec`; see `openspec/config.yaml`), and current behavior lives in `openspec/specs/`. Phases 5–6 below are kept as a reference for planning those changes; do not update this file.
+
 ## Objective
 Build a Dagster + uv pipeline that scrapes Política news from Infobae, La Nación and MisionesOnline since 2023-12-10, unifies them into one dataset, scores sentiment, and reports tone evolution per outlet over time. Full project definition: `docs/def.md`.
 
