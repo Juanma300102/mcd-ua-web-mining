@@ -1,4 +1,5 @@
-"""Sentiment assets: `sentimiento_noticias` scores every note of `noticias_politica`.
+"""Sentiment assets: `sentimiento_noticias` scores every note of `noticias_politica`;
+`evolucion_tono` aggregates those scores by week and outlet.
 
 The Dagster layer stays thin. The scoring logic is in `news_politica.sentiment`, and
 the models (torch, Ollama) are built on demand by the `sentiment_models` resource, so
@@ -11,6 +12,7 @@ from pydantic import field_validator
 
 from news_politica.sentiment.classifiers import ModelUnavailable, SentimentModels, UnknownModel
 from news_politica.sentiment.scoring import SCORE_COLUMNS, score_notes
+from news_politica.sentiment.tone import weekly_tone
 
 MODELO_FINAL = "robertuito"  # updated with the decision in docs/decision-sentimiento.md (task 7.3)
 
@@ -64,3 +66,22 @@ def sentimiento_noticias(
         "unparsed": unparsed,
     })
     return scores
+
+
+@dg.asset
+def evolucion_tono(
+    context,
+    sentimiento_noticias: pd.DataFrame,
+    noticias_politica: pd.DataFrame,
+) -> pd.DataFrame:
+    """Weekly tone per model and outlet: `n`, mean score with its 95 % interval, label shares, bajada coverage.
+
+    Live notes and unparsed notes are excluded; the weeks are ISO weeks in ART keyed by their Monday.
+    """
+    context.log.info(f"computing weekly tone from {len(sentimiento_noticias)} scored rows")
+    weekly = weekly_tone(sentimiento_noticias, noticias_politica)
+    models = weekly["modelo"].nunique()
+    outlets = weekly["medio"].nunique()
+    context.log.info(f"{len(weekly)} weekly rows ({models} models, {outlets} outlets)")
+    context.add_output_metadata({"rows": len(weekly)})
+    return weekly

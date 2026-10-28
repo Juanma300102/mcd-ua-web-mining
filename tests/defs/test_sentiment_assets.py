@@ -8,9 +8,10 @@ import pytest
 from upath import UPath
 
 from news_politica.defs.io import ParquetIOManager
-from news_politica.defs.sentiment import MODELO_FINAL, ScoringConfig, sentimiento_noticias
+from news_politica.defs.sentiment import MODELO_FINAL, ScoringConfig, evolucion_tono, sentimiento_noticias
 from news_politica.sentiment.classifiers import ModelUnavailable, SentimentModels
 from news_politica.sentiment.scoring import SCORE_COLUMNS
+from news_politica.sentiment.tone import WEEKLY_COLUMNS
 
 from .conftest import UPSTREAM, info_logs, metadata, store
 
@@ -179,6 +180,49 @@ def test_logs_start_progress_and_summary(tmp_path, client):
     assert [m.split()[1] for m in progress] == ["320/800", "640/800"]
     assert any("robertuito: 800 notes scored (0 neg, 0 neu, 800 pos, 0 unparsed)" in m for m in logs)
     assert "800 rows scored" in logs[-1]
+
+
+def tone_inputs(tmp_path):
+    """Stored `noticias_politica` and `sentimiento_noticias` for 4 regular and 3 live notes of one outlet."""
+    published = pd.to_datetime(["2024-03-05 12:00", "2024-03-05 13:00", "2024-03-06 12:00", "2024-03-12 12:00"] + ["2024-03-05 14:00"] * 3, utc=True)
+    notes = make_notes(["a"] * 7).assign(fecha_publicacion=published, es_en_vivo=[False] * 4 + [True] * 3)
+    scores = pd.DataFrame({
+        "id": notes["id"], "modelo": "robertuito", "fuente_texto": "bajada",
+        "prob_pos": 0.0, "prob_neu": 0.0, "prob_neg": 0.0,
+        "label": ["pos", "neg", "neu", "pos", "pos", "pos", "pos"], "score": [0.5, -0.5, 0.0, 0.4, 0.9, 0.9, 0.9],
+    })
+    store(tmp_path, "noticias_politica", notes)
+    store(tmp_path, "sentimiento_noticias", scores)
+
+
+def run_tone(tmp_path, client, instance=None):
+    resources = {"io_manager": ParquetIOManager(base_path=UPath(tmp_path)), "client": client,
+                 "sentiment_models": FakeModels()}
+    return dg.materialize([*WITH_SENTIMENT, evolucion_tono], selection=[evolucion_tono], resources=resources,
+                          instance=instance, raise_on_error=False)
+
+
+def test_evolucion_tono_columns_and_live_exclusion(tmp_path, client):
+    tone_inputs(tmp_path)
+    result = run_tone(tmp_path, client)
+    assert result.success
+    weekly = result.output_for_node("evolucion_tono")
+    assert list(weekly.columns) == WEEKLY_COLUMNS
+    first, second = weekly.to_dict("records")  # weeks of 2024-03-04 and 2024-03-11
+    assert (first["n"], second["n"]) == (3, 1)  # the 3 live notes of the first week are not counted
+    assert first["score_medio"] == pytest.approx(0.0) and math.isnan(second["ic_inf"])
+    assert metadata(result, "evolucion_tono") == {"rows": 2}
+    assert (tmp_path / "evolucion_tono.parquet").exists()
+
+
+def test_evolucion_tono_logs_start_and_summary(tmp_path, client):
+    tone_inputs(tmp_path)
+    with dg.DagsterInstance.ephemeral() as instance:
+        result = run_tone(tmp_path, client, instance)
+        assert result.success
+        logs = info_logs(instance, result)
+    assert "computing weekly tone from 7 scored rows" in logs[0]
+    assert "2 weekly rows (1 models, 1 outlets)" in logs[-1]
 
 
 def test_definitions_load_without_torch():

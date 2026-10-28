@@ -23,7 +23,7 @@ def _hash_key(salt: str, note_id: str) -> str:
     return hashlib.sha1((salt + str(note_id)).encode()).hexdigest()
 
 
-def _as_bool(series: pd.Series) -> pd.Series:
+def as_bool(series: pd.Series) -> pd.Series:
     """Coerce `es_en_vivo` to booleans: NaN is False and odd strings are rejected."""
     values = []
     for value in series:
@@ -65,7 +65,7 @@ def labeling_sample(
     duplicated = notes["id"].astype(str).duplicated()
     if duplicated.any():
         raise ValueError(f"duplicated note ids: {notes.loc[duplicated, 'id'].head(3).tolist()}")
-    eligible = notes[~_as_bool(notes["es_en_vivo"]) & notes["titulo"].fillna("").str.strip().ne("")]
+    eligible = notes[~as_bool(notes["es_en_vivo"]) & notes["titulo"].fillna("").str.strip().ne("")]
     parts = []
     for medio in medios:
         pool = eligible[eligible["medio"] == medio]
