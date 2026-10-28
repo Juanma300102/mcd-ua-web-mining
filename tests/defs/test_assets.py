@@ -1,5 +1,4 @@
 import json
-import logging
 from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -22,6 +21,7 @@ from news_politica.sources.misionesonline import fetch_month, month_url
 from news_politica.sources.models import CatalogEntry, RawDoc
 
 from ..sources.conftest import FakeRaw, fixture_text
+from .conftest import info_logs
 
 DAGSTER_YAML = Path(__file__).parents[2] / "src/news_politica/dagster_home/dagster.yaml"
 ALL = [catalogo_infobae, catalogo_lanacion, raw_infobae, raw_lanacion, raw_misionesonline, noticias_politica]
@@ -38,12 +38,6 @@ def run(tmp_path, client, selection, partition_key=None, instance=None):
     resources = {"io_manager": ParquetIOManager(base_path=UPath(tmp_path)), "client": client}
     return dg.materialize(ALL, selection=selection, resources=resources, partition_key=partition_key,
                           instance=instance, raise_on_error=False)
-
-
-def info_logs(instance, result):
-    """The INFO messages the assets logged, without Dagster's own events."""
-    return [entry.user_message for entry in instance.all_logs(result.run_id)
-            if entry.dagster_event is None and entry.level == logging.INFO]
 
 
 def store(tmp_path, name, frame, partition=None):

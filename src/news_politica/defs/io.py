@@ -1,4 +1,4 @@
-"""Parquet storage under data/ for every asset, and the HTTP client resource."""
+"""Parquet storage under data/ for every asset, and the resources: HTTP client and sentiment models."""
 
 import os
 from pathlib import Path
@@ -7,6 +7,7 @@ import dagster as dg
 import pandas as pd
 from upath import UPath
 
+from news_politica.sentiment.classifiers import SentimentModels
 from news_politica.sources.http import PoliteClient
 
 DATA_DIR = Path(os.environ.get("DATA_DIR", Path(__file__).parents[3] / "data"))
@@ -31,4 +32,5 @@ def resources():
     return dg.Definitions(resources={
         "io_manager": ParquetIOManager(base_path=UPath(DATA_DIR)),
         "client": PoliteClient(),
+        "sentiment_models": SentimentModels(),  # builds classifiers on demand; no torch import here
     })
