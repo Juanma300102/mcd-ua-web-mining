@@ -87,7 +87,7 @@ def test_catalog_reports_failed_days(tmp_path, client, session, monkeypatch):
     session.routes[INFOBAE.sitemap_url(day)] = FakeRaw(200, fixture_text("infobae", "sitemap.xml"))
     session.routes[INFOBAE.sitemap_url(day + timedelta(days=1))] = FakeRaw(500)
     monkeypatch.setattr(assets, "sampled_catalog",
-                        lambda client, outlet: build_catalog(client, outlet, start=day, end=day + timedelta(days=1)))
+                        lambda client, outlet, log=None: build_catalog(client, outlet, start=day, end=day + timedelta(days=1)))
     result = run(tmp_path, client, [catalogo_infobae])
     assert result.success
     assert metadata(result, "catalogo_infobae") == {"entries": 4, "failed_days": "2023-12-11", "dropped": 0}
