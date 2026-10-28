@@ -9,6 +9,8 @@ from news_politica.sentiment.classifiers import (
     MDEBERTA,
     OLLAMA_ATTEMPTS,
     OLLAMA_MODEL,
+    OLLAMA_PROBE_TIMEOUT,
+    OLLAMA_TIMEOUT,
     QWEN,
     MdebertaClassifier,
     ModelUnavailable,
@@ -174,14 +176,23 @@ def test_unparseable_answer_gives_nan_probabilities(answer):
 
 
 def test_transient_errors_are_retried_with_backoff_then_raise():
-    for transient in (requests.ConnectionError("refused"), requests.Timeout("slow"), FakeResponse({}, 503),
-                      FakeResponse({}, 429)):
+    for transient in (requests.ConnectionError("refused"), requests.ConnectTimeout("no route"),
+                      FakeResponse({}, 503), FakeResponse({}, 429)):
         sleeps = Sleeps()
         classifier = classifier_for(transient, sleeps)
         with pytest.raises(ModelUnavailable, match=f"gave up after {OLLAMA_ATTEMPTS} attempts"):
             classifier.predict(["x"])
         assert len(classifier.session.calls) == OLLAMA_ATTEMPTS
         assert sleeps == [0.5, 1.0]  # no sleep after the last attempt
+
+
+@pytest.mark.parametrize("timeout", [requests.ReadTimeout("slow"), requests.Timeout("slow")])
+def test_a_read_timeout_is_not_retried(timeout):
+    sleeps = Sleeps()
+    classifier = classifier_for(timeout, sleeps)
+    with pytest.raises(ModelUnavailable, match="timed out"):
+        classifier.predict(["x"])
+    assert len(classifier.session.calls) == 1 and sleeps == []  # no 3 x 120 s amplification
 
 
 def test_connection_error_message_says_how_to_start_ollama():
@@ -192,7 +203,7 @@ def test_connection_error_message_says_how_to_start_ollama():
 def test_a_transient_error_followed_by_an_answer_succeeds():
     sleeps = Sleeps()
     ok = generated("3", top(**{"3": -0.1}))
-    classifier = classifier_for([requests.ReadTimeout("slow"), FakeResponse({}, 502), ok], sleeps)
+    classifier = classifier_for([requests.ConnectionError("refused"), FakeResponse({}, 502), ok], sleeps)
     assert classifier.predict(["x"])[0][0] == 1.0
     assert len(classifier.session.calls) == 3 and sleeps == [0.5, 1.0]
 
@@ -223,14 +234,30 @@ def test_bad_bodies_are_not_retried(response):
     assert len(classifier.session.calls) == 1 and sleeps == []
 
 
-def test_the_availability_probes_share_the_retry_policy():
-    models = models_with(**{"/api/tags": [FakeResponse({}, 503), tags(OLLAMA_MODEL)]})
-    assert isinstance(models.load(QWEN), OllamaClassifier)
-    assert models.sleep == [0.5]
-    down = models_with(**{"/api/tags": requests.ConnectionError("refused")})
-    with pytest.raises(ModelUnavailable, match="not reachable"):
-        down.load(QWEN)
-    assert down.sleep == [0.5, 1.0]
+@pytest.mark.parametrize(
+    "failure", [FakeResponse({}, 503), FakeResponse({}, 429), requests.ConnectionError("refused"),
+                requests.ReadTimeout("hung")],
+)
+def test_the_availability_probes_are_not_retried_and_use_a_short_timeout(failure):
+    models = models_with(**{"/api/tags": failure})
+    with pytest.raises(ModelUnavailable):
+        models.load(QWEN)
+    (call,) = models.session.calls  # a single attempt
+    assert models.sleep == [] and call[2]["timeout"] == OLLAMA_PROBE_TIMEOUT <= 5
+
+
+def test_alternative_falls_back_after_one_quick_probe_when_ollama_is_down_or_hung(caplog):
+    for failure in (requests.ConnectionError("refused"), requests.ReadTimeout("hung")):
+        models = models_with(**{"/api/tags": failure})
+        with caplog.at_level(logging.WARNING):
+            assert models.alternative() == MDEBERTA
+        assert len(models.session.calls) == 1 and models.sleep == []
+
+
+def test_generation_keeps_the_long_timeout():
+    classifier = classifier_for(generated("3"))
+    classifier.predict(["x"])
+    assert classifier.session.calls[0][2]["timeout"] == OLLAMA_TIMEOUT
 
 
 def test_a_malformed_answer_for_one_note_is_nan_not_a_run_failure():

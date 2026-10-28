@@ -44,8 +44,8 @@ DIGIT_TO_PROBS: dict[str, Probs] = {"1": (0.0, 0.0, 1.0), "2": (0.0, 1.0, 0.0), 
 DIGIT_INDEX = {"1": 2, "2": 1, "3": 0}  # position of each digit's class in (pos, neu, neg)
 
 OLLAMA_TIMEOUT = 120
-OLLAMA_PROBE_TIMEOUT = 10
-OLLAMA_ATTEMPTS = 3  # tries per request when the failure is transient
+OLLAMA_PROBE_TIMEOUT = 3  # seconds; the availability probes must answer fast or alternative() falls back
+OLLAMA_ATTEMPTS = 3  # tries per generation request when the failure is transient
 OLLAMA_BACKOFF_S = 0.5  # sleep before the 2nd try; doubles before each later one
 OLLAMA_OPTIONS = {"temperature": 0, "seed": 42, "num_predict": 2}
 OLLAMA_PULL_HINT = f"run `ollama pull {OLLAMA_MODEL}`"
@@ -92,21 +92,29 @@ def _finite_number(value) -> float | None:
 
 
 def _call_ollama(
-    send: Callable[[], requests.Response], where: str, sleep: Callable[[float], None], hint: str = ""
+    send: Callable[[], requests.Response],
+    where: str,
+    sleep: Callable[[float], None],
+    hint: str = "",
+    attempts: int = OLLAMA_ATTEMPTS,
 ) -> requests.Response:
     """Run one Ollama request under the error policy shared by every call to the server.
 
-    Transient failures (timeouts, connection errors, HTTP 429 and 5xx) are retried up to
-    `OLLAMA_ATTEMPTS` times with a doubling backoff, then raise `ModelUnavailable`. Anything else
-    (other 4xx, other transport errors) raises `ModelUnavailable` at once: retrying cannot fix it.
-    Bodies are checked by the callers, and a bad body is never retried.
+    Transient failures (connection errors, HTTP 429 and 5xx) are retried up to `attempts` times
+    with a doubling backoff, then raise `ModelUnavailable`. A read timeout is not transient: the
+    server accepted the request and is hung or overloaded, so retrying would only multiply the wait
+    by `attempts`; it raises at once. So does anything else (other 4xx, other transport errors).
+    Bodies are checked by the callers, and a bad body is never retried. The availability probes
+    pass `attempts=1`: they must answer fast or the caller falls back.
     """
     reason = ""
-    for attempt in range(OLLAMA_ATTEMPTS):
+    for attempt in range(attempts):
         try:
             response = send()
-        except (requests.Timeout, requests.ConnectionError) as exc:
+        except requests.ConnectionError as exc:  # includes ConnectTimeout: the server never answered
             reason = f"Ollama is not reachable {where}; run `ollama serve` ({exc})"
+        except requests.Timeout as exc:  # a read timeout
+            raise ModelUnavailable(f"Ollama timed out {where} ({exc})") from exc
         except requests.RequestException as exc:
             raise ModelUnavailable(f"Ollama request failed {where} ({exc})") from exc
         else:
@@ -116,9 +124,9 @@ def _call_ollama(
             reason = f"Ollama answered HTTP {code} {where}{hint}"
             if code != 429 and code < 500:
                 raise ModelUnavailable(reason)
-        if attempt < OLLAMA_ATTEMPTS - 1:
+        if attempt < attempts - 1:
             sleep(OLLAMA_BACKOFF_S * 2**attempt)
-    raise ModelUnavailable(f"{reason} (gave up after {OLLAMA_ATTEMPTS} attempts)")
+    raise ModelUnavailable(f"{reason} (gave up after {attempts} attempt{'s' if attempts != 1 else ''})")
 
 
 class Classifier(Protocol):
@@ -166,9 +174,9 @@ class OllamaClassifier:
             self.sleep,
             hint=f"; {OLLAMA_PULL_HINT} if the model is missing",
         )
-        body = _json_object(response, f"at {self.url}/api/generate")
+        body = _json_object(response, where)
         if not isinstance(body.get("response"), str):
-            raise ModelUnavailable(f"Ollama answered without a `response` text at {self.url}/api/generate")
+            raise ModelUnavailable(f"Ollama answered without a `response` text {where}")
         # Only transport/server-level failures raise above. From here on a single odd answer is
         # that note's problem: `parse` returns NaN probabilities and the note counts as unparsed.
         return self.parse(body)
@@ -329,9 +337,12 @@ class SentimentModels:
     def _get(self, path: str) -> dict:
         where = f"for {path} at {self.ollama_url}"
         response = _call_ollama(
-            lambda: self.session.get(f"{self.ollama_url}{path}", timeout=OLLAMA_PROBE_TIMEOUT), where, self.sleep
+            lambda: self.session.get(f"{self.ollama_url}{path}", timeout=OLLAMA_PROBE_TIMEOUT),
+            where,
+            self.sleep,
+            attempts=1,
         )
-        return _json_object(response, f"for {path} at {self.ollama_url}")
+        return _json_object(response, where)
 
     def _models(self, path: str) -> list[dict]:
         models = self._get(path).get("models", [])

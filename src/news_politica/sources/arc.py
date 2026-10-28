@@ -17,6 +17,7 @@ from news_politica.sources.models import Article, Catalog, CatalogEntry, RawDoc
 from news_politica.sources.text import article_id, html_to_text, join_paragraphs, to_art
 
 START = date(2023, 12, 10)
+CUTOFF = date(2026, 10, 1)  # exclusive: the dataset ends 2026-09-30 23:59 ART (add-dagster-assets)
 SITEMAP_NS = {"s": "http://www.sitemaps.org/schemas/sitemap/0.9"}
 MARKER = "Fusion.globalContent="
 

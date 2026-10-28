@@ -12,7 +12,7 @@ from pydantic import field_validator
 
 from news_politica.sentiment.classifiers import ModelUnavailable, SentimentModels, UnknownModel
 from news_politica.sentiment.scoring import SCORE_COLUMNS, score_notes
-from news_politica.sentiment.tone import weekly_tone
+from news_politica.sentiment.tone import tone_exclusions, weekly_tone
 
 MODELO_FINAL = "robertuito"  # updated with the decision in docs/decision-sentimiento.md (task 7.3)
 
@@ -76,12 +76,15 @@ def evolucion_tono(
 ) -> pd.DataFrame:
     """Weekly tone per model and outlet: `n`, mean score with its 95 % interval, label shares, bajada coverage.
 
-    Live notes and unparsed notes are excluded; the weeks are ISO weeks in ART keyed by their Monday.
+    Live notes, unparsed notes, notes without a date and scores without a note are excluded and counted
+    in the summary line and the `excluidas` metadata; the weeks are ISO weeks in ART keyed by their Monday.
     """
     context.log.info(f"computing weekly tone from {len(sentimiento_noticias)} scored rows")
     weekly = weekly_tone(sentimiento_noticias, noticias_politica)
     models = weekly["modelo"].nunique()
     outlets = weekly["medio"].nunique()
-    context.log.info(f"{len(weekly)} weekly rows ({models} models, {outlets} outlets)")
-    context.add_output_metadata({"rows": len(weekly)})
+    dropped = tone_exclusions(sentimiento_noticias, noticias_politica)
+    skipped = ", ".join(f"{count} {reason}" for reason, count in dropped.items())
+    context.log.info(f"{len(weekly)} weekly rows ({models} models, {outlets} outlets); dropped {skipped}")
+    context.add_output_metadata({"rows": len(weekly), "excluidas": dg.MetadataValue.json(dropped)})
     return weekly

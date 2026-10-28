@@ -211,7 +211,10 @@ def test_evolucion_tono_columns_and_live_exclusion(tmp_path, client):
     first, second = weekly.to_dict("records")  # weeks of 2024-03-04 and 2024-03-11
     assert (first["n"], second["n"]) == (3, 1)  # the 3 live notes of the first week are not counted
     assert first["score_medio"] == pytest.approx(0.0) and math.isnan(second["ic_inf"])
-    assert metadata(result, "evolucion_tono") == {"rows": 2}
+    assert metadata(result, "evolucion_tono") == {
+        "rows": 2,
+        "excluidas": {"sin_nota": 0, "en_vivo": 3, "score_nan": 0, "sin_fecha": 0},
+    }
     assert (tmp_path / "evolucion_tono.parquet").exists()
 
 
@@ -222,7 +225,7 @@ def test_evolucion_tono_logs_start_and_summary(tmp_path, client):
         assert result.success
         logs = info_logs(instance, result)
     assert "computing weekly tone from 7 scored rows" in logs[0]
-    assert "2 weekly rows (1 models, 1 outlets)" in logs[-1]
+    assert "2 weekly rows (1 models, 1 outlets); dropped 0 sin_nota, 3 en_vivo, 0 score_nan, 0 sin_fecha" in logs[-1]
 
 
 def test_definitions_load_without_torch():

@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from scipy import stats
 
-from news_politica.sentiment.tone import N_MIN, WEEKLY_COLUMNS, compare_milestones, weekly_tone
+from news_politica.sentiment.tone import N_MIN, WEEKLY_COLUMNS, compare_milestones, tone_exclusions, weekly_tone
 from news_politica.sources.text import ART
 
 
@@ -94,6 +94,50 @@ def test_missing_columns_and_duplicate_note_ids_are_rejected():
         weekly_tone(scores.drop(columns="score"), notes)
     with pytest.raises(ValueError, match="duplicated note ids"):
         weekly_tone(scores, pd.concat([notes, notes]))
+
+
+def test_duplicated_id_modelo_score_rows_are_rejected():
+    scores, notes = make([("infobae", art(2024, 3, 5, 9), 0.1)])
+    twice = pd.concat([scores, scores])
+    with pytest.raises(ValueError, match=r"duplicated \(id, modelo\)"):
+        weekly_tone(twice, notes)
+    with pytest.raises(ValueError, match=r"duplicated \(id, modelo\)"):
+        compare_milestones(twice, notes, hitos(("H", "2024-06-01", "nacional")))
+    other_model = pd.concat([scores, scores.assign(modelo="otro")])
+    assert len(weekly_tone(other_model, notes)) == 2  # the same note under two models is fine
+
+
+def test_exclusions_count_each_dropped_row_once_by_first_matching_reason():
+    rows = [("infobae", art(2024, 3, 5, 9), 0.1)] * 2  # kept
+    rows += [("infobae", art(2024, 3, 5, 10), 0.1, True)] * 3  # live
+    rows += [("infobae", art(2024, 3, 5, 11), math.nan)] * 4  # unparsed
+    rows += [("infobae", art(2024, 3, 5, 12), 0.1)] * 5  # date removed below
+    scores, notes = make(rows)
+    notes.loc[notes.index[-5:], "fecha_publicacion"] = pd.NaT
+    orphan = scores.iloc[:1].assign(id="sin-nota-1")
+    scores = pd.concat([scores, orphan, orphan.assign(id="sin-nota-2")])
+    assert tone_exclusions(scores, notes) == {"sin_nota": 2, "en_vivo": 3, "score_nan": 4, "sin_fecha": 5}
+    assert weekly_tone(scores, notes)["n"].sum() == 2
+
+
+def test_exclusions_are_all_zero_for_clean_input():
+    scores, notes = make([("infobae", art(2024, 3, 5, 9), 0.1)])
+    assert tone_exclusions(scores, notes) == {"sin_nota": 0, "en_vivo": 0, "score_nan": 0, "sin_fecha": 0}
+
+
+def test_dataset_period_comes_from_the_scraping_definitions():
+    from news_politica.defs.assets import PERIOD_END, PERIOD_START
+    from news_politica.sentiment.tone import DATASET_END, DATASET_START
+
+    assert (DATASET_START, DATASET_END) == (PERIOD_START, PERIOD_END)
+
+
+def test_milestone_dates_are_normalized_to_midnight_art():
+    scores, notes = make(spread("infobae", art(2024, 5, 1), 1, 40, 0.0))
+    for written in ("2024-06-01", "2024-06-01 15:30", "2024-06-01T23:59:00-03:00", "2024-06-02T02:00:00+00:00"):
+        (row,) = compare_milestones(scores, notes, hitos(("H", written, "nacional"))).to_dict("records")
+        assert row["fecha"] == datetime(2024, 6, 1).date()
+        assert row["n_antes"] == 14 and row["dias_antes"] == 14  # same windows as the plain date
 
 
 def hitos(*rows):

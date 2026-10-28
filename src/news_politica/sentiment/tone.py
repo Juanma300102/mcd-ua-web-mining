@@ -16,13 +16,16 @@ import pandas as pd
 from scipy import stats
 
 from news_politica.sentiment.labeling import as_bool
+from news_politica.sources.arc import CUTOFF, START
 from news_politica.sources.text import ART
 
 N_MIN = 10  # fewest notes on a side of a milestone window to report its mean and share
 WINDOW_DAYS = 14
 CONFIDENCE = 0.95
-DATASET_START = datetime(2023, 12, 10, tzinfo=ART)
-DATASET_END = datetime(2026, 10, 1, tzinfo=ART)  # exclusive
+# Dataset period: 2023-12-10 (first sitemap day) to the 2026-09-30 cut-off, defined in
+# `sources.arc` and used by `defs/assets.py` (see docs/def.md). The end is exclusive.
+DATASET_START = datetime(START.year, START.month, START.day, tzinfo=ART)
+DATASET_END = datetime(CUTOFF.year, CUTOFF.month, CUTOFF.day, tzinfo=ART)
 
 WEEKLY_COLUMNS = [
     "modelo", "medio", "semana", "n", "score_medio", "ic_inf", "ic_sup",
@@ -35,8 +38,12 @@ MILESTONE_COLUMNS = [
 ]
 
 
-def _eligible(scores: pd.DataFrame, notes: pd.DataFrame) -> pd.DataFrame:
-    """Scores joined with outlet and ART publication time, without live notes and NaN scores."""
+def _eligible_with_drops(scores: pd.DataFrame, notes: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, int]]:
+    """Eligible scores plus how many score rows each rule dropped (first rule that applies wins).
+
+    Rules, in order: `sin_nota` (the id is not in `notes`), `en_vivo` (live note), `score_nan`
+    (unparsed model output) and `sin_fecha` (null publication date).
+    """
     for name, frame, needed in (
         ("scores", scores, ["id", "modelo", "fuente_texto", "label", "score"]),
         ("notes", notes, ["id", "medio", "fecha_publicacion", "es_en_vivo"]),
@@ -44,13 +51,34 @@ def _eligible(scores: pd.DataFrame, notes: pd.DataFrame) -> pd.DataFrame:
         missing = [c for c in needed if c not in frame.columns]
         if missing:
             raise ValueError(f"{name} lacks the columns {missing}")
+    if scores.duplicated(["id", "modelo"]).any():
+        dup = scores.loc[scores.duplicated(["id", "modelo"]), ["id", "modelo"]].head(3)
+        raise ValueError(f"duplicated (id, modelo) score rows: {list(dup.itertuples(index=False, name=None))}")
     if notes["id"].duplicated().any():
         raise ValueError(f"duplicated note ids: {notes.loc[notes['id'].duplicated(), 'id'].head(3).tolist()}")
     info = notes[["id", "medio", "fecha_publicacion"]].assign(en_vivo=as_bool(notes["es_en_vivo"]))
-    joined = scores[["id", "modelo", "fuente_texto", "label", "score"]].merge(info, on="id", how="inner")
-    joined = joined[~joined["en_vivo"] & joined["score"].notna()].copy()
+    joined = scores[["id", "modelo", "fuente_texto", "label", "score"]].merge(info, on="id", how="left", indicator=True)
+    dropped = {"sin_nota": int((joined["_merge"] == "left_only").sum())}
+    joined = joined[joined["_merge"] == "both"].drop(columns="_merge")
+    joined["en_vivo"] = joined["en_vivo"].astype(bool)  # the left merge made it object
+    dropped["en_vivo"] = int(joined["en_vivo"].sum())
+    joined = joined[~joined["en_vivo"]]
+    dropped["score_nan"] = int(joined["score"].isna().sum())
+    joined = joined[joined["score"].notna()].copy()
     joined["momento"] = pd.to_datetime(joined["fecha_publicacion"], utc=True).dt.tz_convert(ART)
-    return joined.drop(columns=["fecha_publicacion", "en_vivo"])
+    dropped["sin_fecha"] = int(joined["momento"].isna().sum())
+    joined = joined[joined["momento"].notna()]
+    return joined.drop(columns=["fecha_publicacion", "en_vivo"]), dropped
+
+
+def _eligible(scores: pd.DataFrame, notes: pd.DataFrame) -> pd.DataFrame:
+    """Scores joined with outlet and ART publication time, without live notes, NaN scores or null dates."""
+    return _eligible_with_drops(scores, notes)[0]
+
+
+def tone_exclusions(scores: pd.DataFrame, notes: pd.DataFrame) -> dict[str, int]:
+    """Score rows that `weekly_tone` leaves out, by reason: `sin_nota`, `en_vivo`, `score_nan`, `sin_fecha`."""
+    return _eligible_with_drops(scores, notes)[1]
 
 
 def _half_width(sd: pd.Series, n: pd.Series) -> pd.Series:
@@ -96,7 +124,10 @@ def _milestone_date(value, hito: str) -> pd.Timestamp | None:
     if value is None or (isinstance(value, float) and math.isnan(value)) or str(value).strip() == "":
         return None
     try:
-        return pd.Timestamp(str(value).strip()).tz_localize(ART)
+        stamp = pd.Timestamp(str(value).strip())
+        if stamp.tzinfo is not None:
+            stamp = stamp.tz_convert(ART).tz_localize(None)
+        return stamp.normalize().tz_localize(ART)
     except ValueError as exc:
         raise ValueError(f"milestone {hito!r}: invalid date {value!r}") from exc
 

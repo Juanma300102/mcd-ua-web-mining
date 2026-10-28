@@ -8,7 +8,7 @@ import dagster as dg
 import pandas as pd
 
 from news_politica.sources import check_losses, parse
-from news_politica.sources.arc import START, build_catalog, fetch_story
+from news_politica.sources.arc import CUTOFF, START, build_catalog, fetch_story
 from news_politica.sources.http import Blocked, ParseError, PoliteClient, TooManyLosses
 from news_politica.sources.infobae import INFOBAE
 from news_politica.sources.lanacion import LANACION
@@ -20,7 +20,7 @@ from news_politica.sources.text import ART, article_id
 # Cut-off 2026-09-30 23:59 ART (add-dagster-assets): October 2026 is not complete before the delivery.
 MONTHS = dg.MonthlyPartitionsDefinition(start_date="2023-12-01", end_date="2026-10-01")
 PERIOD_START = datetime(START.year, START.month, START.day, tzinfo=ART)
-PERIOD_END = datetime(2026, 10, 1, tzinfo=ART)
+PERIOD_END = datetime(CUTOFF.year, CUTOFF.month, CUTOFF.day, tzinfo=ART)
 RETRY = dg.RetryPolicy(max_retries=2, delay=300)
 # Proof of concept: Arc notes fetched per month, chosen by URL hash so a re-run picks the same ones
 # (~35 min per outlet instead of ~14 h). None fetches every note. MisionesOnline is always complete.
