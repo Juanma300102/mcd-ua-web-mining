@@ -1,4 +1,5 @@
 import json
+import logging
 from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -33,10 +34,16 @@ def note_url(slug):
     return f"{INFOBAE.site}/politica/2024/03/01/{slug}/"
 
 
-def run(tmp_path, client, selection, partition_key=None):
+def run(tmp_path, client, selection, partition_key=None, instance=None):
     resources = {"io_manager": ParquetIOManager(base_path=UPath(tmp_path)), "client": client}
     return dg.materialize(ALL, selection=selection, resources=resources, partition_key=partition_key,
-                          raise_on_error=False)
+                          instance=instance, raise_on_error=False)
+
+
+def info_logs(instance, result):
+    """The INFO messages the assets logged, without Dagster's own events."""
+    return [entry.user_message for entry in instance.all_logs(result.run_id)
+            if entry.dagster_event is None and entry.level == logging.INFO]
 
 
 def store(tmp_path, name, frame, partition=None):
@@ -87,7 +94,7 @@ def test_catalog_reports_failed_days(tmp_path, client, session, monkeypatch):
     session.routes[INFOBAE.sitemap_url(day)] = FakeRaw(200, fixture_text("infobae", "sitemap.xml"))
     session.routes[INFOBAE.sitemap_url(day + timedelta(days=1))] = FakeRaw(500)
     monkeypatch.setattr(assets, "sampled_catalog",
-                        lambda client, outlet: build_catalog(client, outlet, start=day, end=day + timedelta(days=1)))
+                        lambda client, outlet, log=None: build_catalog(client, outlet, start=day, end=day + timedelta(days=1)))
     result = run(tmp_path, client, [catalogo_infobae])
     assert result.success
     assert metadata(result, "catalogo_infobae") == {"entries": 4, "failed_days": "2023-12-11", "dropped": 0}
@@ -164,6 +171,50 @@ def test_misionesonline_month(tmp_path, client, session):
     assert metadata(result, "raw_misionesonline") == {"notes": 4, "losses": 0}
 
 
+# Progress logs
+
+
+def test_arc_month_logs_its_progress(tmp_path, client, session):
+    days = [date(2024, 3, day) for day in range(1, 26)]
+    store_catalog(tmp_path, days)
+    page = FakeRaw(200, fixture_text("infobae", "page.html"))
+    for day in days:
+        session.routes[note_url(f"nota-{day}")] = page
+    with dg.DagsterInstance.ephemeral() as instance:
+        result = run(tmp_path, client, [raw_infobae], MARCH, instance)
+        assert result.success
+        logs = info_logs(instance, result)
+    [start, *progress, summary] = [m for m in logs if "infobae" in m or "notes stored" in m]
+    assert "fetching 25 of 25 listed notes" in start
+    assert [m.split()[-3] for m in progress] == ["10/25", "20/25"]
+    assert f"{MARCH}: 25 notes stored, 0 lost" in summary
+    assert not any("nota-" in m for m in logs)
+
+
+def test_catalog_logs_start_progress_and_summary(tmp_path, client, session, monkeypatch):
+    day = date(2023, 12, 10)
+    session.routes[INFOBAE.sitemap_url(day)] = FakeRaw(200, fixture_text("infobae", "sitemap.xml"))
+    monkeypatch.setattr(assets, "sampled_catalog",
+                        lambda client, outlet, log=None: build_catalog(client, outlet, start=day, end=day))
+    with dg.DagsterInstance.ephemeral() as instance:
+        result = run(tmp_path, client, [catalogo_infobae], instance=instance)
+        logs = info_logs(instance, result)
+    assert "reading sitemaps" in logs[0]
+    assert "catalog has 4 entries, 0 failed days, 0 dropped" in logs[-1]
+
+
+def test_sampled_catalog_logs_every_ten_sitemaps_and_the_last(client, session, monkeypatch):
+    monkeypatch.setattr(assets, "SITEMAP_DAYS", (5, 20))
+    end = date(2024, 5, 31)  # 11 sitemap days: 2023-12-20 plus the 5th and 20th of five months
+    for n in range((end - assets.START).days + 1):
+        session.routes[INFOBAE.sitemap_url(assets.START + timedelta(days=n))] = FakeRaw(
+            200, fixture_text("infobae", "sitemap.xml"))
+    messages = []
+    log = type("Log", (), {"info": staticmethod(messages.append)})
+    assets.sampled_catalog(client, INFOBAE, end=end, log=log)
+    assert [m.split()[1] for m in messages] == ["10/11", "11/11"]
+
+
 # Unified dataset
 
 
@@ -194,3 +245,15 @@ def test_noticias_politica_filters_dedupes_and_counts_errors(tmp_path, client, s
     assert frame["url"].is_unique and not frame["url"].str.contains("tarde").any()
     assert metadata(result, "noticias_politica") == {
         "rows": 5, "rows_per_medio": {"misionesonline": 4, "infobae": 1}, "parse_errors": 1}
+
+
+def test_dataset_logs_its_summary(tmp_path, client, session):
+    session.routes[month_url(date(2026, 1, 1), 1)] = FakeRaw(
+        200, fixture_text("misionesonline", "posts_page.json"), {"X-WP-TotalPages": "1"})
+    store(tmp_path, "raw_misionesonline", to_frame(fetch_month(client, date(2026, 1, 1)), RawDoc), "2026-01-01")
+    with dg.DagsterInstance.ephemeral() as instance:
+        result = run(tmp_path, client, [noticias_politica], instance=instance)
+        assert result.success
+        logs = info_logs(instance, result)
+    assert any("misionesonline: parsing 1 months" in m for m in logs)
+    assert any("4 rows (4 parsed, 0 parse errors)" in m for m in logs)

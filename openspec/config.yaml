@@ -1,20 +1,46 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Project: Python 3.12 (uv) Dagster 1.13.27 pipeline, package src/news_politica/.
+  Scrapes Argentine political news (Infobae, La Nacion, MisionesOnline) into a Parquet dataset;
+  next phases are sentiment analysis and a report. Definition: docs/def.md.
+  Stack: dagster, dagster-postgres, pandas, pyarrow, requests, beautifulsoup4, lxml; pytest.
+  Checks: `uv run pytest` (offline tests), `uv run dg check defs`.
+  Conventions: Conventional Commits; artifacts and code in English; team docs in Spanish under docs/;
+  data/ is gitignored; no Co-Authored-By/AI attribution in commits per user rules.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - Include a Non-goals section
+  specs:
+    - Use Given/When/Then scenarios
+  tasks:
+    - Keep tasks reviewable; group into work units that keep tests and docs with code
+  apply:
+    - Do not require TDD (strict_tdd is false); still run `uv run pytest` and `uv run dg check defs`
+  verify:
+    - Run `uv run pytest` and `uv run dg check defs` and report actual results
+
+# SDD settings (not consumed by the openspec CLI)
+sdd:
+  strict_tdd: false
+  artifact_store: openspec
+  delivery_strategy: single-pr
+  review_budget_lines: 400
+  testing:
+    projects:
+      - path: .
+        stack: python 3.12 / uv / dagster
+        test_command: uv run pytest
+        framework: pytest
+    workspace_test_command: uv run pytest
+    layers:
+      unit: pytest
+      integration: false
+      e2e: false
+    coverage: false
+    linter: false
+    type_checker: false
+    formatter: false
+    other_checks:
+      - uv run dg check defs

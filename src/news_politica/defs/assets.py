@@ -28,21 +28,26 @@ SAMPLE_PER_MONTH = 30
 # Proof of concept: the catalogs read these sitemap days of each month (~70 sitemaps, not ~1,050).
 # Two days list ~50 Política URLs per month, enough for the sample. None reads every day.
 SITEMAP_DAYS = (5, 20)
+# Progress lines are logged every LOG_EVERY sitemaps or notes, to keep the run log short.
+LOG_EVERY = 10
 
 
-def sampled_catalog(client, outlet, end=None):
+def sampled_catalog(client, outlet, end=None, log=None):
     """build_catalog over SITEMAP_DAYS of every month from START to end, merged and deduped by URL."""
     end = end or date.today()
     if SITEMAP_DAYS is None:
         return build_catalog(client, outlet, end=end)
     days = [START + timedelta(days=n) for n in range((end - START).days + 1)]
+    sitemap_days = [d for d in days if d.day in SITEMAP_DAYS]
     entries, failed, dropped, seen = [], [], 0, set()
-    for day in (d for d in days if d.day in SITEMAP_DAYS):
+    for done, day in enumerate(sitemap_days, start=1):
         part = build_catalog(client, outlet, start=day, end=day)
         entries += [e for e in part.entries if e.url not in seen]
         seen.update(e.url for e in part.entries)
         failed += part.failed_days
         dropped += part.dropped
+        if log and (done % LOG_EVERY == 0 or done == len(sitemap_days)):
+            log.info(f"{outlet.medio}: {done}/{len(sitemap_days)} sitemaps read (up to {day}), {len(entries)} entries")
     return Catalog(entries, failed, dropped)
 
 
@@ -74,6 +79,7 @@ def checked(context, docs, **metadata):
     with no_retry_when_blocked():
         losses = check_losses(docs)
     context.add_output_metadata({**metadata, "notes": len(docs), "losses": losses})
+    context.log.info(f"{context.partition_key}: {len(docs)} notes stored, {losses} lost")
     return to_frame(docs, RawDoc)
 
 
@@ -81,8 +87,11 @@ def arc_assets(outlet):
     @dg.asset(name=f"catalogo_{outlet.medio}", pool=outlet.medio, retry_policy=RETRY)
     def catalog(context, client: dg.ResourceParam[PoliteClient]) -> pd.DataFrame:
         """Política URLs of the SITEMAP_DAYS sitemaps of each month from 2023-12-10 to the scraping day."""
+        context.log.info(f"{outlet.medio}: reading sitemaps from {START} to today (days {SITEMAP_DAYS})")
         with no_retry_when_blocked():
-            result = sampled_catalog(client, outlet)
+            result = sampled_catalog(client, outlet, log=context.log)
+        context.log.info(f"{outlet.medio}: catalog has {len(result.entries)} entries, "
+                         f"{len(result.failed_days)} failed days, {result.dropped} dropped")
         context.add_output_metadata({
             "entries": len(result.entries),
             "failed_days": ", ".join(str(day) for day in result.failed_days) or "none",
@@ -98,8 +107,13 @@ def arc_assets(outlet):
         first, following = month_bounds(context.partition_key)
         listed = [url for url, day in zip(catalog["url"], catalog["url_date"]) if first <= day < following]
         urls = sorted(listed, key=article_id)[:SAMPLE_PER_MONTH]
+        context.log.info(f"{outlet.medio} {context.partition_key}: fetching {len(urls)} of {len(listed)} listed notes")
+        docs = []
         with no_retry_when_blocked():
-            docs = [fetch_story(client, outlet, url) for url in urls]
+            for done, url in enumerate(urls, start=1):
+                docs.append(fetch_story(client, outlet, url))
+                if done % LOG_EVERY == 0 and done < len(urls):
+                    context.log.info(f"{outlet.medio} {context.partition_key}: {done}/{len(urls)} notes fetched")
         return checked(context, docs, listed=len(listed))
 
     return catalog, raw
@@ -113,6 +127,7 @@ catalogo_lanacion, raw_lanacion = arc_assets(LANACION)
           pool=MISIONESONLINE, retry_policy=RETRY)
 def raw_misionesonline(context, client: dg.ResourceParam[PoliteClient]) -> pd.DataFrame:
     """Every Política post of the month from the WordPress REST API."""
+    context.log.info(f"{MISIONESONLINE} {context.partition_key}: fetching the month's posts")
     with no_retry_when_blocked():
         docs = fetch_month(client, date.fromisoformat(context.partition_key))
     return checked(context, docs)
@@ -126,7 +141,8 @@ RAW_INPUT = {"allow_missing_partitions": True}
 def noticias_politica(context, raw_infobae: dict, raw_lanacion: dict, raw_misionesonline: dict) -> pd.DataFrame:
     """The three outlets in the dataset schema, 2023-12-10 to the cut-off, one row per URL."""
     articles, parse_errors = [], 0
-    for months in (raw_infobae, raw_lanacion, raw_misionesonline):
+    for name, months in (("infobae", raw_infobae), ("lanacion", raw_lanacion), ("misionesonline", raw_misionesonline)):
+        context.log.info(f"{name}: parsing {len(months)} months")
         for frame in months.values():
             for doc in raw_docs(frame):
                 if doc.error:
@@ -138,6 +154,7 @@ def noticias_politica(context, raw_infobae: dict, raw_lanacion: dict, raw_mision
     frame = to_frame(articles, Article)
     in_period = (frame["fecha_publicacion"] >= PERIOD_START) & (frame["fecha_publicacion"] < PERIOD_END)
     frame = frame[in_period].drop_duplicates("url").reset_index(drop=True)
+    context.log.info(f"{len(frame)} rows ({len(articles)} parsed, {parse_errors} parse errors)")
     context.add_output_metadata({
         "rows": len(frame),
         "rows_per_medio": dg.MetadataValue.json(frame["medio"].value_counts().to_dict()),
