@@ -23,3 +23,20 @@ def test_note_with_neither_bajada_nor_body():
 def test_title_trailing_period_is_not_doubled():
     texto, _ = analysis_text("Milei vetó la ley.", "El Congreso insistirá", "")
     assert texto == "Milei vetó la ley. El Congreso insistirá"
+
+
+def test_terminal_punctuation_is_not_followed_by_extra_period():
+    for title in ("¿Vetará la ley?", "¡Vetó la ley!"):
+        texto, _ = analysis_text(title, "El Congreso insistirá", "")
+        assert texto == f"{title} El Congreso insistirá"
+
+
+def test_ellipsis_is_kept():
+    for title in ("Milei vetó la ley...", "Milei vetó la ley…"):
+        texto, _ = analysis_text(title, "El Congreso insistirá", "")
+        assert texto == f"{title} El Congreso insistirá"
+
+
+def test_single_period_title_gets_one_space():
+    assert analysis_text("Titulo.", "Bajada", "")[0] == "Titulo. Bajada"
+    assert analysis_text("Titulo", "Bajada", "")[0] == "Titulo. Bajada"

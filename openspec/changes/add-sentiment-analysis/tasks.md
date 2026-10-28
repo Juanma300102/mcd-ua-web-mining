@@ -72,6 +72,7 @@ Conventions for every code task: tests go in the same task or commit (TDD is off
 - [x] 3.6 Create `notebooks/05_sentimiento.ipynb` with the "Etiquetado" section only: load `noticias_politica`, build the sample, export the two sheets, and a cell for `read_labels` that writes `anotaciones/etiquetas.csv`. Check: the export cell runs against the real dataset and produces two files of 150 rows each with no shared id.
 - [ ] 3.7 **[HUMAN]** After C2 is available, generate the sheets and hand `data/etiquetado/anotador_a.csv` and `anotador_b.csv` to the two members. Decide which member is `a` and which is `b` (only the letters are committed).
 - [ ] 3.8 **[HUMAN]** Each member labels their 150 notes following `docs/guia-etiquetado.md` (about 1.7 h each). This is the critical path between the two work units; continue with sections 4, 5 and 8 meanwhile.
+- [x] 3.9 Review follow-ups on C2 (commit `fix(sentiment)`): `export_sheets` refuses to overwrite existing sheets unless `overwrite=True` and the notebook export/merge cells are independent; `analysis_text` keeps terminal punctuation and ellipses; `labeling_sample` rejects duplicate ids and coerces `es_en_vivo` safely; `read_labels` compares ids as strings, checks each sheet's ids against its annotator, ignores blank rows and names the sheet on missing columns. Tests added in `tests/sentiment/test_text.py` and `test_labeling.py`.
 
 ## 4. Classifiers and scoring (C3)
 

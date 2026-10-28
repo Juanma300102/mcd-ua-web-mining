@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 
+TERMINAL_PUNCTUATION = (".", "?", "!", "…")
+
+
 def _clean(value) -> str:
     return value.strip() if isinstance(value, str) else ""
 
@@ -19,7 +22,8 @@ def analysis_text(titulo: str, bajada: str, cuerpo: str) -> tuple[str, str]:
 
     The text is the title plus the bajada. When the bajada is empty it is the
     title plus the first non-empty paragraph of the body; when both are empty,
-    the title alone. A trailing period on the title is not doubled.
+    the title alone. A title that already ends in terminal punctuation
+    (`.`, `?`, `!`, `…`, `...`) gets no extra period and an ellipsis is kept.
     `fuente_texto` is `bajada`, `cuerpo` or `titulo` and records which field
     completed the title.
     """
@@ -31,4 +35,5 @@ def analysis_text(titulo: str, bajada: str, cuerpo: str) -> tuple[str, str]:
         return title, "titulo"
     if not title:
         return complement, source
-    return f"{title.rstrip('.').rstrip()}. {complement}", source
+    separator = " " if title.endswith(TERMINAL_PUNCTUATION) else ". "
+    return f"{title}{separator}{complement}", source

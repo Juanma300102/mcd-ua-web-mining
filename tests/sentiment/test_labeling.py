@@ -132,3 +132,103 @@ def test_read_labels_requires_every_sample_id(sample, tmp_path):
     fill(paths)
     with pytest.raises(ValueError, match="no label"):
         read_labels(paths[:1], sample)
+
+
+def test_export_sheets_does_not_overwrite_filled_sheets(sample, tmp_path):
+    paths = export_sheets(sample, tmp_path)
+    fill(paths)
+    with pytest.raises(FileExistsError, match="already exist"):
+        export_sheets(sample, tmp_path)
+    sheet = pd.read_csv(paths[0], dtype=str, keep_default_na=False, encoding="utf-8-sig")
+    assert (sheet["etiqueta"] == "neu").all()
+    export_sheets(sample, tmp_path, overwrite=True)
+    sheet = pd.read_csv(paths[0], dtype=str, keep_default_na=False, encoding="utf-8-sig")
+    assert (sheet["etiqueta"] == "").all()
+
+
+def test_export_sheets_refuses_when_only_one_sheet_exists(sample, tmp_path):
+    (tmp_path / "anotador_b.csv").write_text("id,texto,etiqueta\n", encoding="utf-8")
+    with pytest.raises(FileExistsError):
+        export_sheets(sample, tmp_path)
+    assert not (tmp_path / "anotador_a.csv").exists()
+
+
+def test_duplicate_note_ids_are_rejected(notes):
+    dup = pd.concat([notes, notes.head(1)], ignore_index=True)
+    with pytest.raises(ValueError, match="duplicated note ids"):
+        labeling_sample(dup, per_medio=PER_MEDIO)
+
+
+def test_es_en_vivo_nan_counts_as_not_live(notes):
+    notes["es_en_vivo"] = notes["es_en_vivo"].astype(object)
+    notes.loc[notes["id"].str.endswith("-00"), "es_en_vivo"] = float("nan")
+    notes.loc[notes["id"].str.endswith("-01"), "es_en_vivo"] = True
+    s = labeling_sample(notes, per_medio=PER_MEDIO)
+    assert not s["id"].str.endswith("-01").any()
+    assert len(s) == PER_MEDIO * len(MEDIOS)
+
+
+def test_es_en_vivo_boolean_strings_are_parsed_and_others_rejected(notes):
+    notes["es_en_vivo"] = notes["es_en_vivo"].astype(object)
+    notes.loc[notes["id"].str.endswith("-01"), "es_en_vivo"] = "True"
+    notes.loc[notes["id"].str.endswith("-02"), "es_en_vivo"] = "false"
+    s = labeling_sample(notes, per_medio=PER_MEDIO)
+    assert not s["id"].str.endswith("-01").any()
+    notes.loc[notes["id"].str.endswith("-03"), "es_en_vivo"] = "no"
+    with pytest.raises(ValueError, match="non-boolean"):
+        labeling_sample(notes, per_medio=PER_MEDIO)
+
+
+def test_read_labels_normalizes_whitespace_and_case(sample, tmp_path):
+    paths = export_sheets(sample, tmp_path)
+    fill(paths, " POS ")
+    labels = read_labels(paths, sample)
+    assert set(labels["etiqueta"]) == {"pos"}
+
+
+def test_read_labels_missing_column_names_the_sheet(sample, tmp_path):
+    paths = export_sheets(sample, tmp_path)
+    fill(paths)
+    sheet = pd.read_csv(paths[1], dtype=str, keep_default_na=False, encoding="utf-8-sig")
+    sheet.drop(columns="etiqueta").to_csv(paths[1], index=False, encoding="utf-8-sig")
+    with pytest.raises(ValueError, match=r"anotador_b.csv: missing columns \['etiqueta'\]"):
+        read_labels(paths, sample)
+
+
+def test_read_labels_ignores_trailing_blank_rows(sample, tmp_path):
+    paths = export_sheets(sample, tmp_path)
+    fill(paths)
+    with open(paths[0], "a", encoding="utf-8-sig") as f:
+        f.write(",,\n , ,\n")
+    labels = read_labels(paths, sample)
+    assert len(labels) == len(sample)
+
+
+def test_read_labels_rejects_row_with_label_but_no_id(sample, tmp_path):
+    paths = export_sheets(sample, tmp_path)
+    fill(paths)
+    with open(paths[0], "a", encoding="utf-8-sig") as f:
+        f.write(",,neu\n")
+    with pytest.raises(ValueError, match="without id"):
+        read_labels(paths, sample)
+
+
+def test_read_labels_detects_swapped_sheets(sample, tmp_path):
+    paths = export_sheets(sample, tmp_path)
+    fill(paths)
+    a, b = (p.read_bytes() for p in paths)
+    paths[0].write_bytes(b)
+    paths[1].write_bytes(a)
+    with pytest.raises(ValueError, match="other annotator"):
+        read_labels(paths, sample)
+
+
+def test_read_labels_compares_ids_as_strings(tmp_path):
+    notes = make_notes()
+    notes["id"] = [str(i) for i in range(len(notes))]
+    s = labeling_sample(notes, per_medio=PER_MEDIO)
+    s["id"] = s["id"].astype(int)
+    paths = export_sheets(s, tmp_path)
+    fill(paths)
+    labels = read_labels(paths, s)
+    assert len(labels) == len(s)
