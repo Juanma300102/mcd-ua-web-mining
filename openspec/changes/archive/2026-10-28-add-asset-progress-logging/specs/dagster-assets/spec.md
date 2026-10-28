@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Long-running assets log their progress
-Every catalog, raw and dataset asset SHALL log at INFO a start line, a progress line every `LOG_EVERY` (10) sitemaps or notes, and a summary with the same counts as its metadata. Assets SHALL NOT log per request, nor below INFO.
+Every catalog, raw and dataset asset SHALL log at INFO a start line and a summary with the same counts as its metadata. An asset that loops over sitemaps or notes itself (the catalogs and the Arc raw assets) SHALL also log a progress line every `LOG_EVERY` (10) of them; `raw_misionesonline` paginates inside its source client and logs only the start and summary. Assets SHALL NOT log per request, nor below INFO.
 
 #### Scenario: Arc month with 25 notes
 - **WHEN** `raw_infobae` is materialized for a month that lists 25 notes
