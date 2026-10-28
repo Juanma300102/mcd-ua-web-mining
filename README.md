@@ -61,7 +61,7 @@ ollama pull qwen2.5:7b-instruct
 export OLLAMA_HOST=http://localhost:11434   # optional; this is the default
 ```
 
-`SentimentModels.alternative()` picks `qwen2.5-7b` only when Ollama is reachable, the model is pulled and `GET /api/ps` reports `size_vram > 0` (the model runs on the GPU). Otherwise it logs a warning and falls back to `mdeberta-xnli`, because the LLM on CPU is too slow for the whole dataset. Naming `qwen2.5-7b` explicitly never falls back: if Ollama is down the run fails with the fix. A generation that times out is not retried; connection errors and HTTP 429/5xx are retried up to 3 times.
+`SentimentModels.alternative()` picks `qwen2.5-7b` only when Ollama is reachable, the model is pulled and `GET /api/ps` reports `size_vram > 0` (the model runs on the GPU). Otherwise it logs a warning and falls back to `mdeberta-xnli`, because the LLM on CPU is too slow for the whole dataset. Naming `qwen2.5-7b` explicitly never falls back: if Ollama is down the run fails with the fix. A generation that times out is not retried; for generation, connection errors and HTTP 429/5xx get up to 3 attempts in total (2 retries). The availability checks (`/api/tags`, `/api/ps`) make a single attempt with a short timeout.
 
 ### Draw the labeling sample
 
