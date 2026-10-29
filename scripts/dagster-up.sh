@@ -64,7 +64,9 @@ if ! docker compose exec -e PGPASSWORD="$POSTGRES_PASSWORD" postgres \
   exit 1
 fi
 
-uv sync
+# --inexact installs what the default groups need but never removes extra packages, so an
+# optional group installed by hand (`uv sync --group sentiment`) survives every start.
+uv sync --inexact
 
 echo "Checking the connection from the host (as Dagster will)..."
 if ! uv run python -c "
