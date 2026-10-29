@@ -103,4 +103,8 @@ Se compararon 20 textos (título más bajada, 10 de Infobae y 10 de La Nación, 
 
 ### 1.4 Ollama: logprobs y GPU
 
-Pendiente. Tarea humana en la máquina con GPU (RTX 4060): `ollama pull qwen2.5:7b-instruct`, pedido a `POST /api/generate` con `logprobs: true, top_logprobs: 5, num_predict: 2` y `GET /api/ps` con `size_vram > 0`. Si faltan los logprobs se aplica la salida one-hot del diseño. Hay que registrar acá la versión de Ollama y los dos resultados.
+Hecho el 29/10/2026 en la máquina con GPU (NVIDIA GeForce RTX 4060 Laptop, 8 GB, WSL2), con Ollama 0.24.0 en el servicio `ollama` de `docker-compose.yaml` (perfil `ollama`, GPU reservada) y el modelo `qwen2.5:7b-instruct` (4,7 GB).
+
+- **Logprobs:** `POST /api/generate` con `logprobs: true`, `top_logprobs: 3`, `num_predict: 2`, `temperature: 0` y `seed: 42` devuelve `logprobs`, y el primer token generado es el dígito de la respuesta, con los tres dígitos entre sus `top_logprobs`. Se usa el camino de probabilidades del diseño; la salida one-hot queda solo como respaldo.
+- **GPU:** `GET /api/ps` informa `size_vram` = `size` = 4,92 GB: el modelo corre entero en la GPU.
+- **Prueba con el código del proyecto:** `SentimentModels.alternative()` eligió `qwen2.5-7b` sin configuración extra. Sobre los tres ejemplos de la guía de etiquetado devolvió (pos, neu, neg): suba de la pobreza → neg 1,00; ley aprobada con amplio apoyo → pos 0,94; decreto publicado en el Boletín Oficial → neu 1,00.
