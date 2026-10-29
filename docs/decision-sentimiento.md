@@ -1,6 +1,6 @@
 # Decisión de análisis de sentimiento (fase 5)
 
-Registro de cómo se elige el modelo de sentimiento. Este documento se completa por etapas: hoy tiene la sección "Spike" (dependencias); el cierre con números (macro F1, matriz de confusión, modelo elegido, máquina usada) se agrega en la tarea 7.3.
+Registro de cómo se elige el modelo de sentimiento. El documento tiene tres partes: el etiquetado de la muestra, el spike de dependencias y la evaluación con la decisión del modelo (al final).
 
 ## Dataset congelado
 
@@ -108,3 +108,82 @@ Hecho el 29/10/2026 en la máquina con GPU (NVIDIA GeForce RTX 4060 Laptop, 8 GB
 - **Logprobs:** `POST /api/generate` con `logprobs: true`, `top_logprobs: 3`, `num_predict: 2`, `temperature: 0` y `seed: 42` devuelve `logprobs`, y el primer token generado es el dígito de la respuesta, con los tres dígitos entre sus `top_logprobs`. Se usa el camino de probabilidades del diseño; la salida one-hot queda solo como respaldo.
 - **GPU:** `GET /api/ps` informa `size_vram` = `size` = 4,92 GB: el modelo corre entero en la GPU.
 - **Prueba con el código del proyecto:** `SentimentModels.alternative()` eligió `qwen2.5-7b` sin configuración extra. Sobre los tres ejemplos de la guía de etiquetado devolvió (pos, neu, neg): suba de la pobreza → neg 1,00; ley aprobada con amplio apoyo → pos 0,94; decreto publicado en el Boletín Oficial → neu 1,00.
+
+## Evaluación y decisión
+
+Las métricas salen del notebook `notebooks/05_sentimiento.ipynb` (sección "Evaluación"). No se volvió a puntuar la muestra: se evalúa desde `data/sentimiento_noticias.parquet`, que tiene los tres modelos sobre las 9.261 notas, y se filtra a las 300 notas etiquetadas. Se excluyen las notas `descartar` (0 en esta muestra). Todas las cifras miden concordancia con las etiquetas de Claude Opus 5.5 (ver "Etiquetado"), no con una lectura humana.
+
+### Máquina y modelos
+
+- **Máquina:** Linux sobre WSL2, NVIDIA GeForce RTX 4060 Laptop de 8 GB, Ollama 0.24.0 en el servicio `ollama` de `docker-compose.yaml`.
+- **Alternativa elegida por el código:** `SentimentModels.alternative()` eligió `qwen2.5-7b` (Ollama alcanzable, modelo descargado, `size_vram > 0`).
+- **`mdeberta-xnli`:** se corrió aparte, a mano, en la misma máquina y en CPU, como el respaldo que `alternative()` usaría sin GPU. Se incluye para comparar los tres.
+- Los tres modelos puntuaron las 9.261 notas, sin etiquetas faltantes.
+
+### Métricas por modelo
+
+| Modelo | n | Exactitud | F1 macro | F1 pos | F1 neu | F1 neg |
+|---|---|---|---|---|---|---|
+| **robertuito** | 300 | **0,703** | **0,686** | **0,623** | 0,676 | **0,757** |
+| mdeberta-xnli | 300 | 0,603 | 0,579 | 0,493 | 0,500 | 0,744 |
+| qwen2.5-7b | 300 | 0,580 | 0,549 | 0,576 | 0,659 | 0,412 |
+
+### Matrices de confusión
+
+Filas: etiqueta. Columnas: predicción del modelo (no hubo salidas sin interpretar).
+
+| robertuito | neg | neu | pos |
+|---|---|---|---|
+| neg | 95 | 39 | 0 |
+| neu | 21 | 92 | 8 |
+| pos | 1 | 20 | 24 |
+
+| mdeberta-xnli | neg | neu | pos |
+|---|---|---|---|
+| neg | 96 | 20 | 18 |
+| neu | 25 | 49 | 47 |
+| pos | 3 | 6 | 36 |
+
+| qwen2.5-7b | neg | neu | pos |
+|---|---|---|---|
+| neg | 35 | 97 | 2 |
+| neu | 1 | 120 | 0 |
+| pos | 0 | 26 | 19 |
+
+### Por medio (F1 macro, exactitud entre paréntesis; 100 notas por medio)
+
+| Modelo | Infobae | La Nación | MisionesOnline |
+|---|---|---|---|
+| **robertuito** | **0,776** (0,79) | **0,618** (0,64) | **0,672** (0,68) |
+| mdeberta-xnli | 0,541 (0,58) | 0,614 (0,68) | 0,562 (0,55) |
+| qwen2.5-7b | 0,527 (0,60) | 0,532 (0,49) | 0,600 (0,65) |
+
+### Con y sin bajada
+
+El texto de análisis es la bajada para 274 de las 300 notas y el primer párrafo del cuerpo para 26 (ninguna cayó en el título solo). Con n = 26, el grupo "cuerpo" tiene mucho ruido.
+
+| Modelo | Fuente | n | Exactitud | F1 macro |
+|---|---|---|---|---|
+| robertuito | bajada | 274 | 0,719 | 0,697 |
+| robertuito | cuerpo | 26 | 0,538 | 0,550 |
+| mdeberta-xnli | bajada | 274 | 0,602 | 0,575 |
+| mdeberta-xnli | cuerpo | 26 | 0,615 | 0,612 |
+| qwen2.5-7b | bajada | 274 | 0,573 | 0,543 |
+| qwen2.5-7b | cuerpo | 26 | 0,654 | 0,619 |
+
+### Decisión: `robertuito`
+
+Se elige **robertuito** (`MODELO_FINAL = "robertuito"` en `src/news_politica/defs/sentiment.py`):
+
+- Tiene el mejor F1 macro (0,686) y la mejor exactitud (0,703) en el total y el mejor F1 macro en cada uno de los tres medios (en La Nación `mdeberta-xnli` queda casi empatado: 0,614 contra 0,618).
+- Los otros dos tienen sesgos sistemáticos. `qwen2.5-7b` tiende a `neu`: predice neutro en 243 de 300 notas de la muestra (7.426 de 9.261 en el corpus) y manda 97 de las 134 notas `neg` a `neu`, por eso su F1 de `neg` es 0,412. `mdeberta-xnli` tiende a `pos`: 101 de 300 predicciones (4.220 de 9.261 en el corpus) y 47 de las 121 notas `neu` pasan a `pos`, lo que hunde su F1 de `neu` (0,500).
+- No necesita Ollama ni GPU: corre en CPU con el grupo `sentiment`.
+
+La diferencia con la alternativa que `alternative()` eligió es de 0,137 de F1 macro, mucho más que el ruido esperable con 300 notas.
+
+### Advertencias
+
+- **Cambio de dominio.** robertuito se entrenó con tweets en español; se usa sobre titulares y bajadas de prensa. Que rinda mejor que los otros dos en esta muestra no garantiza que lo haga bien en otros textos. Su error principal es pasar a `neu` notas que la etiqueta marca como `neg` (39 de 134) o `pos` (20 de 45), es decir, tiende a subestimar el tono.
+- **Deriva por la bajada.** La bajada no está en todas las notas: cuando falta, el texto de análisis pasa a ser el primer párrafo del cuerpo, un texto distinto. En la muestra robertuito rinde peor sobre "cuerpo" (F1 macro 0,550 contra 0,697), aunque con 26 notas no es concluyente. En las series semanales, `prop_bajada` permite ver si un cambio de tono coincide con un cambio en la cobertura de la bajada.
+- **Etiquetas "silver".** Las etiquetas las generó un modelo, no personas, y no hay control humano ni acuerdo entre anotadores. Todas las métricas son concordancia con Claude Opus 5.5 y el informe debe declararlo (ver "Etiquetado").
+- **Muestra chica.** 300 notas, 100 por medio; las diferencias entre medios (por ejemplo, el mejor desempeño en Infobae) no se deben leer como finas.
