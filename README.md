@@ -75,7 +75,7 @@ uv sync --group notebooks --group sentiment
 uv run --group notebooks jupyter lab notebooks/
 ```
 
-Draw it only from the complete, frozen dataset that the team shares. The sample depends on the note ids present, so a partial `data/noticias_politica.parquet` gives a different sample; the notebook fails if an outlet has fewer eligible notes than `PER_MEDIO`. The sheets (`data/etiquetado/anotador_{a,b}.csv`) contain scraped text and stay out of git, and `export_sheets` refuses to overwrite sheets that already exist. After both members fill them in, the merge cell validates them and writes `anotaciones/etiquetas.csv` (`id, anotador, etiqueta`, no text), the only labeling file that is committed. Commit the notebook without outputs.
+Draw it only from the complete, frozen dataset that the team shares. The sample depends on the note ids present, so a partial `data/noticias_politica.parquet` gives a different sample; the notebook fails if an outlet has fewer eligible notes than `PER_MEDIO`. The sheets (`data/etiquetado/anotador_{a,b}.csv`) contain scraped text and stay out of git, and `export_sheets` refuses to overwrite sheets that already exist. After both members fill them in, the merge cell validates them and writes `anotaciones/etiquetas.csv` (`id, anotador, etiqueta`, no text), the only labeling file that is committed. The notebook is committed with its outputs (metrics, tables and charts); before committing, check that no cell prints note text.
 
 ### Materialize the assets
 
