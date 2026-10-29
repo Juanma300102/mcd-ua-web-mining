@@ -53,13 +53,14 @@ On Linux and Windows the group takes torch from the CPU index (`pytorch-cpu` in 
 
 ### Ollama (optional, GPU alternative)
 
-The alternative model, `qwen2.5-7b`, runs in [Ollama](https://ollama.com) and is reached over HTTP, so it adds no Python package:
+The alternative model, `qwen2.5-7b`, runs in [Ollama](https://ollama.com) and is reached over HTTP, so it adds no Python package. On a machine with an NVIDIA GPU, run it from Docker Compose:
 
 ```bash
-ollama serve                       # leave it running
-ollama pull qwen2.5:7b-instruct
-export OLLAMA_HOST=http://localhost:11434   # optional; this is the default
+docker compose --profile ollama up -d --wait                      # Ollama on 127.0.0.1:11434, GPU attached
+docker compose exec ollama ollama pull qwen2.5:7b-instruct        # ~4.7 GB, kept in a named volume
 ```
+
+The `ollama` service is behind a Compose profile, so a plain `docker compose up` (and `scripts/dagster-up.sh`) starts only Postgres and never pulls the Ollama image. Its GPU reservation fails on machines without an NVIDIA GPU; there, skip this section: the code uses `mdeberta-xnli` on CPU instead. The host port can be changed with `OLLAMA_PUBLISH_PORT` (then set `OLLAMA_HOST=http://localhost:<port>`; `http://localhost:11434` is the default). Stop it with `docker compose --profile ollama stop ollama`.
 
 `SentimentModels.alternative()` picks `qwen2.5-7b` only when Ollama is reachable, the model is pulled and `GET /api/ps` reports `size_vram > 0` (the model runs on the GPU). Otherwise it logs a warning and falls back to `mdeberta-xnli`, because the LLM on CPU is too slow for the whole dataset. Naming `qwen2.5-7b` explicitly never falls back: if Ollama is down the run fails with the fix. A generation that times out is not retried; for generation, connection errors and HTTP 429/5xx get up to 3 attempts in total (2 retries). The availability checks (`/api/tags`, `/api/ps`) make a single attempt with a short timeout.
 
