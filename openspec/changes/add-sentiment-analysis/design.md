@@ -108,7 +108,7 @@ The model answers with a digit rather than a word: digits are single tokens and 
 
 ### 10. Milestones and before/after comparison
 
-- **File** `anotaciones/hitos.csv`: `hito, fecha, alcance, fuente`. `fecha` is the first ART day on which coverage of the event can appear (for example the announcement day), `alcance` is `nacional|misiones`, and `fuente` is a URL. Initial rows: DNU 70/2023, the Senate approval of Ley Bases (June 2024), the 2025-10-26 legislative elections, and a Misiones placeholder. The team verifies dates against `fuente` before commit. The Misiones placeholder row has an empty `fecha` until the team names the event, and `compare_milestones` leaves it out of the table.
+- **File** `anotaciones/hitos.csv`: `hito, fecha, alcance, fuente`. `fecha` is the first ART day on which coverage of the event can appear (for example the announcement day), `alcance` is `nacional|misiones`, and `fuente` is a URL. Initial rows: DNU 70/2023, the Senate approval of Ley Bases (June 2024), and the 2025-10-26 legislative elections. The team verifies dates against `fuente` before commit. The Misiones placeholder row was dropped on 2026-10-29 (future work in `docs/def.md`); `alcance=misiones` stays supported so the row can be added later.
 - **Windows**: before = `[fecha − 14 d, fecha)`, after = `[fecha, fecha + 14 d)`, at 00:00 ART and clipped to the dataset period `[2023-12-10, 2026-10-01)`. `dias_antes` / `dias_despues` report the clipped length, and `truncada` is true when either side is shorter than 14 days (DNU: before ≈ 11 days).
 - **Output** of `compare_milestones(scores, notes, milestones)`, per `(modelo, hito, medio)`, for every outlet regardless of `alcance` (the notebook filters): `n_antes, n_despues, score_antes, score_despues, diferencia, ic_inf, ic_sup` (Welch t interval of the difference), `prop_neg_antes, prop_neg_despues, insuficiente` (either side below `N_MIN`), and `truncada`. Live notes are excluded. The comparison is descriptive, with no test statistic beyond the interval.
 
@@ -218,5 +218,5 @@ No migration required. The change only adds code, docs, a dependency group and P
 
 - [ ] Does the installed Ollama version return `logprobs` / `top_logprobs` on `/api/generate`, and does `/api/ps` report `size_vram`? (Checked in the spike; the one-hot fallback keeps the contract either way.)
 - [ ] Is pysentimiento's preprocessing material for news text? (The spike's 20-text comparison decides whether the transformers path is acceptable.)
-- [ ] Exact milestone dates and the Misiones event (team decision, verified against sources before commit).
+- [ ] Exact milestone dates (team decision, verified against sources before commit). The Misiones event was dropped as future work.
 - [ ] Annotator identities for `a` and `b` (team decision; only the letters are committed).

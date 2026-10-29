@@ -19,7 +19,7 @@
 **Work unit 2: tone over time and milestones**
 
 - `evolucion_tono`: weekly per outlet (all three outlets), with `n`, mean score, its confidence interval and the share of each label. Live notes excluded.
-- A versioned milestones file: DNU 70/2023, the Senate approval of Ley Bases (June 2024), the October 2025 legislative elections and one Misiones event (placeholder until the team names it). Dates are checked against sources before commit.
+- A versioned milestones file: DNU 70/2023, the Senate approval of Ley Bases (June 2024), and the October 2025 legislative elections (a Misiones milestone was dropped on 2026-10-29 and left as future work in `docs/def.md`). Dates are checked against sources before commit.
 - Before/after comparison: 2-week windows on each side, mean score and negative share, `n` per side, and a window marked "insufficient" below a minimum `n`. The DNU "before" window is truncated by the 2023-12-10 dataset start and is reported as such.
 - `notebooks/05_sentimiento.ipynb`: weekly charts with a 4-week rolling mean and the milestones marked, plus the before/after table.
 - `docs/decision-sentimiento.md` (Spanish): which model was chosen and why, with the evaluation numbers.

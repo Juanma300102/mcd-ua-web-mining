@@ -237,8 +237,7 @@ def test_committed_milestones_file_parses_and_claims_no_verified_date():
 
     table = pd.read_csv(Path(__file__).parents[2] / "anotaciones/hitos.csv", dtype=str, keep_default_na=False)
     assert list(table.columns) == ["hito", "fecha", "alcance", "fuente", "verificado"]
-    assert len(table) == 4 and set(table["alcance"]) == {"nacional", "misiones"}
+    assert len(table) == 3 and set(table["alcance"]) == {"nacional"}
     assert set(table["verificado"]) == {"false"}  # task 8.1 (human) flips these after checking the sources
-    assert table.loc[table["alcance"] == "misiones", "fecha"].item() == ""
     scores, notes = make(spread("infobae", art(2023, 12, 10), 1, 5, 0.2))
     compare_milestones(scores, notes, table)  # the file is readable by compare_milestones

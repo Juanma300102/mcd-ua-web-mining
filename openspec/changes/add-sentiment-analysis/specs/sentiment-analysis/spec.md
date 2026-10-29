@@ -95,7 +95,7 @@ The evaluation SHALL compute accuracy and macro F1 for every model on the labele
 - **THEN** its row has `n` 1 and no confidence interval
 
 ### Requirement: Milestones are compared with equal windows before and after
-A versioned milestones file SHALL list each milestone with a name and date: DNU 70/2023, the Senate approval of Ley Bases (June 2024), the October 2025 legislative elections and one Misiones event. The comparison SHALL use the 2 weeks before and the 2 weeks after each milestone, per outlet, and report mean score, negative share and `n` for each side. A side with `n` below the minimum SHALL be marked "insufficient" and report no mean or share. A window cut by the dataset start (2023-12-10) SHALL be reported as truncated.
+A versioned milestones file SHALL list each milestone with a name and date: DNU 70/2023, the Senate approval of Ley Bases (June 2024), and the October 2025 legislative elections. All three are national and compared in every outlet; a provincial Misiones milestone is future work outside this project. The comparison SHALL use the 2 weeks before and the 2 weeks after each milestone, per outlet, and report mean score, negative share and `n` for each side. A side with `n` below the minimum SHALL be marked "insufficient" and report no mean or share. A window cut by the dataset start (2023-12-10) SHALL be reported as truncated.
 
 #### Scenario: Enough notes on both sides
 - **WHEN** an outlet has more than the minimum `n` in both windows of a milestone

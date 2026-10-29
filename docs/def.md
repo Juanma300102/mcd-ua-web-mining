@@ -32,7 +32,7 @@ El proyecto construye un dataset de noticias de política argentina publicadas d
 **Pregunta principal:** ¿cómo cambió el sentimiento de las noticias de política desde diciembre de 2023, y difiere entre un medio nacional digital (Infobae), un diario nacional tradicional (La Nación) y un medio provincial (MisionesOnline)?  
 **Preguntas secundarias:**
 
-* ¿Hay quiebres de tono alrededor de hitos políticos (DNU 70/2023, Ley Bases, elecciones legislativas de octubre de 2025, al menos un hito de Misiones)?  
+* ¿Hay quiebres de tono alrededor de hitos políticos (DNU 70/2023, Ley Bases, elecciones legislativas de octubre de 2025)? Son hitos nacionales y se comparan en los tres medios: MisionesOnline aporta la mirada de un medio provincial sobre la política nacional.  
 * ¿El medio provincial cubre la política con un tono distinto al de los nacionales?
 
 **Alcance:** sección Política de cada medio, del 10/12/2023 a una fecha de corte fija del scraping. Se trabaja con título, bajada y cuerpo de cada nota.  
@@ -148,3 +148,7 @@ Seis fases en orden; la 2 y la 3 se pueden repartir entre los dos integrantes.
 * **Fecha de corte (decidido).** 30/09/2026 23:59, hora argentina, por fecha de publicación. Se adelantó del 31/10 el 27/10/2026: la entrega es antes de que termine octubre y el backfill tarda unas 14 horas.  
 * **Texto de análisis (decidido).** Título \+ bajada, con el primer párrafo del cuerpo como respaldo (ver "Estado y decisiones de la fase 5").  
 * **A decidir:** qué modelo de sentimiento usar (depende de la evaluación sobre las notas etiquetadas) y dónde se guarda el dataset (Parquet local o tabla en el mismo Postgres).
+
+## Mejoras futuras (fuera del alcance del proyecto)
+
+* **Hito provincial de Misiones.** Comparar el tono de MisionesOnline antes y después de un evento del gobierno provincial (por ejemplo, las elecciones legislativas provinciales de junio de 2025), con una fecha verificada contra una fuente. `anotaciones/hitos.csv` y `compare_milestones` ya admiten `alcance=misiones`: basta con agregar la fila.
