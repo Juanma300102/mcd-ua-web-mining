@@ -3,11 +3,11 @@
   "createdOnFiles": { "v": 1, "at": "2026-10-29T20:08:03Z" },
   "lists": "css",
   "title": "Tono de la política — presentación",
-  "order": ["portada", "medios", "datos", "pipeline", "tiempo", "comparacion", "modelos", "hitos", "provincial", "tecnologia", "assets", "ml", "limites", "cierre", "preguntas"],
+  "order": ["portada", "medios", "datos", "pipeline", "tecnologia", "procesamiento", "assets", "ml", "tiempo", "comparacion", "modelos", "hitos", "provincial", "limites", "cierre", "preguntas"],
   "sections": {
     "s1": { "description": "La pregunta, los tres medios y qué leímos.", "start": "portada" },
-    "s2": { "description": "Cuatro hallazgos, uno por pregunta.", "start": "tiempo" },
-    "s3": { "description": "Cómo se hizo: tecnologías, Dagster y modelos.", "start": "tecnologia" },
+    "s2": { "description": "Cómo se hizo: el pipeline, qué hace cada tecnología, los assets de Dagster y los modelos.", "start": "pipeline" },
+    "s3": { "description": "Cuatro hallazgos, uno por pregunta.", "start": "tiempo" },
     "s4": { "description": "Límites, conclusiones y preguntas.", "start": "limites" }
   },
   "faces": {

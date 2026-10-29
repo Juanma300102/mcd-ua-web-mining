@@ -1,0 +1,33 @@
+<section id="procesamiento" data-transition="fade" style="background:#eef1f5;color:#121a24;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'IBM Plex Mono', 'Courier New', monospace;font-size:24px;color:#1d5c8f;letter-spacing:2px">CÓMO SE HIZO · 2 DE 2 · MODELOS Y ANÁLISIS</p>
+<h2 style="font-family:'Newsreader', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1">Del texto al puntaje: qué hace cada herramienta</h2>
+<p style="font-size:28px;color:#4a5563;line-height:1.4">Los tres pasos siguientes leen cada nota, resumen el tono y arman el informe. Todo corre en una computadora común; solo un modelo necesitó placa de video. Abajo, lo que sostiene todo el recorrido.</p>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px">
+<div style="display:flex;flex-direction:column;gap:12px;background:#fdfdfd;border:1px solid #dde2e8;border-top:6px solid #1d5c8f;border-radius:12px;padding:24px 28px">
+<h3 style="font-size:32px;font-weight:600">4 · Puntuar el tono</h3>
+<p style="font-size:24px;line-height:1.4;color:#4a5563"><b style="color:#1d5c8f">PyTorch</b> hace las cuentas de las redes neuronales.</p>
+<p style="font-size:24px;line-height:1.4;color:#4a5563"><b style="color:#1d5c8f">Transformers</b> (Hugging Face) baja los modelos ya entrenados.</p>
+<p style="font-size:24px;line-height:1.4;color:#4a5563"><b style="color:#1d5c8f">pysentimiento</b> prepara el texto para robertuito.</p>
+<p style="font-size:24px;line-height:1.4;color:#4a5563"><b style="color:#1d5c8f">Ollama</b> corre Qwen en la GPU, dentro de Docker.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#fdfdfd;border:1px solid #dde2e8;border-top:6px solid #1d5c8f;border-radius:12px;padding:24px 28px">
+<h3 style="font-size:32px;font-weight:600">5 · Resumir</h3>
+<p style="font-size:24px;line-height:1.4;color:#4a5563"><b style="color:#1d5c8f">pandas</b> agrupa por medio y por semana o mes y arma las ventanas de 2 semanas de cada hito.</p>
+<p style="font-size:24px;line-height:1.4;color:#4a5563"><b style="color:#1d5c8f">SciPy</b> calcula los márgenes de error y si un cambio es claro (test de Welch).</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#fdfdfd;border:1px solid #dde2e8;border-top:6px solid #1d5c8f;border-radius:12px;padding:24px 28px">
+<h3 style="font-size:32px;font-weight:600">6 · Contarlo</h3>
+<p style="font-size:24px;line-height:1.4;color:#4a5563"><b style="color:#1d5c8f">build_report.py</b> recalcula cada cifra del informe y la guarda en la página.</p>
+<p style="font-size:24px;line-height:1.4;color:#4a5563"><b style="color:#1d5c8f">HTML + SVG</b> dibujan los gráficos al abrirla, en cualquier pantalla.</p>
+</div>
+</div>
+<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+<p style="font-size:24px;color:#1d5c8f;background:#e4eef7;border-radius:999px;padding:6px 18px"><b>uv</b>: versiones fijas</p>
+<p style="font-size:24px;color:#1d5c8f;background:#e4eef7;border-radius:999px;padding:6px 18px"><b>Docker + Postgres</b>: historial</p>
+<p style="font-size:24px;color:#1d5c8f;background:#e4eef7;border-radius:999px;padding:6px 18px"><b>pytest</b>: 296 pruebas</p>
+<p style="font-size:24px;color:#1d5c8f;background:#e4eef7;border-radius:999px;padding:6px 18px"><b>OpenSpec</b>: cambios con propuesta</p>
+</div>
+<aside>La segunda mitad del proceso. Para puntuar el tono, PyTorch es el motor que hace las cuentas de las redes neuronales, Transformers de Hugging Face descarga los modelos ya entrenados y pysentimiento prepara el texto para robertuito; el modelo de lenguaje grande corre con Ollama en la placa de video. Para resumir, pandas agrupa por medio y por semana o mes y arma las ventanas alrededor de cada hito, y SciPy calcula los márgenes de error y decide si un cambio es claro. Al final, un script recalcula cada cifra del informe y la página dibuja los gráficos. Por debajo de todo: uv fija las versiones para que cualquiera reproduzca el entorno, Postgres en Docker guarda el historial de Dagster, pytest corre 296 pruebas sin salir a internet y cada cambio pasó por una propuesta en OpenSpec.</aside>
+</section>

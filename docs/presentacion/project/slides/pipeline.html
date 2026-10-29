@@ -4,30 +4,31 @@
 <h2 style="font-family:'Newsreader', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1">Una línea de montaje automática</h2>
 </div>
 <div style="display:flex;gap:48px">
-<div style="display:flex;flex-direction:column;gap:20px">
-<img src="/_blob/9529299d0f6e60140399e0efd245e8b3" alt="Mapa de assets en Dagster: catálogos, descargas por medio, noticias_politica, sentimiento_noticias y evolucion_tono; los pasos de datos en verde y los dos de sentimiento en gris" style="width:940px;height:454px;object-fit:contain;background:#fdfdfd;border:1px solid #dde2e8;border-radius:12px">
-<img src="/_blob/e9594f55b276145d43faf3d2df0759c3" alt="Particiones de raw_misionesonline: barra verde completa de diciembre de 2023 a septiembre de 2026, 34 materializadas, 0 fallidas, 0 faltantes" style="width:940px;height:205px;object-fit:contain;background:#fdfdfd;border:1px solid #dde2e8;border-radius:12px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<img src="/_blob/9529299d0f6e60140399e0efd245e8b3" alt="Mapa de assets en Dagster: catálogos, descargas por medio, noticias_politica, sentimiento_noticias y evolucion_tono; los pasos de datos en verde y los dos de sentimiento en gris" style="width:860px;height:415px;object-fit:contain;background:#fdfdfd;border:1px solid #dde2e8;border-radius:12px">
+<img src="/_blob/e9594f55b276145d43faf3d2df0759c3" alt="Particiones de raw_misionesonline: barra verde completa de diciembre de 2023 a septiembre de 2026, 34 materializadas, 0 fallidas, 0 faltantes" style="width:860px;height:188px;object-fit:contain;background:#fdfdfd;border:1px solid #dde2e8;border-radius:12px">
 </div>
-<div style="flex:1;display:flex;flex-direction:column;gap:26px">
-<div style="display:flex;gap:18px;align-items:start">
-<p style="font-size:26px;font-weight:600;color:#fdfdfd;background:#1d5c8f;border-radius:999px;padding:4px 16px">1</p>
-<p style="font-size:28px;line-height:1.35"><b>Encontrar</b> las notas de Política en los índices de cada sitio</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:22px">
+<p style="font-size:26px;color:#4a5563;line-height:1.4">Dagster ejecuta cada paso en orden y registra qué salió bien. Cada recuadro del mapa es un paso:</p>
+<div style="display:flex;gap:16px;align-items:start">
+<p style="font-size:24px;font-weight:600;color:#fdfdfd;background:#1d5c8f;border-radius:999px;padding:2px 14px">1</p>
+<p style="font-size:26px;line-height:1.35"><b>Encontrar</b> las notas en los sitemaps y en la API de WordPress</p>
 </div>
-<div style="display:flex;gap:18px;align-items:start">
-<p style="font-size:26px;font-weight:600;color:#fdfdfd;background:#1d5c8f;border-radius:999px;padding:4px 16px">2</p>
-<p style="font-size:28px;line-height:1.35"><b>Bajarlas</b> mes por mes, una cada 2 segundos</p>
+<div style="display:flex;gap:16px;align-items:start">
+<p style="font-size:24px;font-weight:600;color:#fdfdfd;background:#1d5c8f;border-radius:999px;padding:2px 14px">2</p>
+<p style="font-size:26px;line-height:1.35"><b>Bajarlas</b> mes por mes, un pedido cada 2 segundos</p>
 </div>
-<div style="display:flex;gap:18px;align-items:start">
-<p style="font-size:26px;font-weight:600;color:#fdfdfd;background:#1d5c8f;border-radius:999px;padding:4px 16px">3</p>
-<p style="font-size:28px;line-height:1.35"><b>Unirlas</b> en una sola tabla, sin repetidas</p>
+<div style="display:flex;gap:16px;align-items:start">
+<p style="font-size:24px;font-weight:600;color:#fdfdfd;background:#1d5c8f;border-radius:999px;padding:2px 14px">3</p>
+<p style="font-size:26px;line-height:1.35"><b>Unirlas</b> en una tabla con el mismo formato</p>
 </div>
-<div style="display:flex;gap:18px;align-items:start">
-<p style="font-size:26px;font-weight:600;color:#fdfdfd;background:#1d5c8f;border-radius:999px;padding:4px 16px">4</p>
-<p style="font-size:28px;line-height:1.35"><b>Puntuar</b> cada nota y resumir el tono</p>
+<div style="display:flex;gap:16px;align-items:start">
+<p style="font-size:24px;font-weight:600;color:#fdfdfd;background:#1d5c8f;border-radius:999px;padding:2px 14px">4</p>
+<p style="font-size:26px;line-height:1.35"><b>Puntuar</b> cada nota y resumir el tono por semana</p>
 </div>
-<p style="font-size:26px;color:#4a5563;line-height:1.4;border-top:2px solid #dde2e8;padding-top:20px">34 de 34 meses en verde: <b>0 fallas</b>, 0 desafíos anti-bot. En gris, lo que corrió en la otra máquina, con placa de video.</p>
+<p style="font-size:24px;color:#4a5563;line-height:1.4;border-top:2px solid #dde2e8;padding-top:16px">Abajo: 34 de 34 meses en verde, <b>0 fallas</b>. En gris, lo que corrió en la otra máquina, con placa de video.</p>
 </div>
 </div>
-<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#737d8b">Capturas de la interfaz de Dagster</p>
-<aside>Bajar nueve mil notas a mano no es posible, así que armamos una línea de montaje con Dagster. Cada recuadro del mapa es un paso, y las líneas muestran qué alimenta a qué. Son cuatro tramos: encontrar las notas en los índices que los sitios publican para los buscadores, bajarlas mes por mes con un pedido cada dos segundos, unirlas en una sola tabla y puntuar el tono. Abajo se ve un medio completo: los 34 meses descargados, sin fallas. Los dos pasos grises son los de sentimiento: corrieron en la computadora de mi compañero, que tiene la placa de video que necesitaba uno de los modelos, y los resultados viajaron como archivos.</aside>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#737d8b">Capturas de la interfaz de Dagster · el detalle de cada paso, en las tres diapositivas siguientes</p>
+<aside>Bajar nueve mil notas a mano no es posible, así que armamos una línea de montaje con Dagster, que ejecuta cada paso en orden y registra qué salió bien. Cada recuadro del mapa es un paso, y las líneas muestran qué alimenta a qué. Son cuatro tramos: encontrar las notas en los índices que los sitios publican para los buscadores, bajarlas mes por mes con un pedido cada dos segundos, unirlas en una sola tabla y puntuar el tono. Abajo se ve un medio completo: los 34 meses descargados, sin fallas. Los dos pasos grises son los de sentimiento: corrieron en la computadora de mi compañero, que tiene la placa de video que necesitaba uno de los modelos, y los resultados viajaron como archivos. En las tres diapositivas siguientes vemos qué tecnología actúa en cada paso.</aside>
 </section>
