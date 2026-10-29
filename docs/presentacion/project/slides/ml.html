@@ -1,0 +1,32 @@
+<section id="ml" data-transition="fade" style="background:#eef1f5;color:#121a24;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'IBM Plex Mono', 'Courier New', monospace;font-size:24px;color:#1d5c8f;letter-spacing:2px">CÓMO SE HIZO · MACHINE LEARNING</p>
+<h2 style="font-family:'Newsreader', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1">El modelo más chico y especializado le ganó al más grande</h2>
+</div>
+<div style="display:flex;gap:28px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#fdfdfd;border:4px solid #1d5c8f;border-radius:14px;padding:30px 32px">
+<p style="font-size:24px;font-weight:600;color:#fdfdfd;background:#1d5c8f;border-radius:999px;padding:4px 16px">Elegido</p>
+<p style="font-size:96px;font-weight:600;color:#1d5c8f;line-height:1">70 %</p>
+<h3 style="font-size:36px;font-weight:600">robertuito</h3>
+<p style="font-size:24px;color:#4a5563;line-height:1.4">Red neuronal entrenada para sentimiento en español (tuits), con pysentimiento</p>
+<p style="font-size:24px;color:#737d8b">CPU · F1 macro 0,69</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#fdfdfd;border:1px solid #dde2e8;border-radius:14px;padding:30px 32px">
+<p style="font-size:24px;color:#737d8b;padding:4px 0">Zero-shot</p>
+<p style="font-size:96px;font-weight:600;color:#4a5563;line-height:1">60 %</p>
+<h3 style="font-size:36px;font-weight:600">mDeBERTa XNLI</h3>
+<p style="font-size:24px;color:#4a5563;line-height:1.4">Multilingüe, no entrenado para sentimiento: ¿es cierto «el tono es negativo»?</p>
+<p style="font-size:24px;color:#737d8b">CPU · F1 macro 0,58</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#fdfdfd;border:1px solid #dde2e8;border-radius:14px;padding:30px 32px">
+<p style="font-size:24px;color:#737d8b;padding:4px 0">Modelo de lenguaje</p>
+<p style="font-size:96px;font-weight:600;color:#4a5563;line-height:1">58 %</p>
+<h3 style="font-size:36px;font-weight:600">Qwen2.5 7B</h3>
+<p style="font-size:24px;color:#4a5563;line-height:1.4">Corre en la propia computadora: lee la nota y responde 1, 2 o 3</p>
+<p style="font-size:24px;color:#737d8b">GPU RTX 4060 · Ollama · F1 0,55</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;background:#e4eef7;border-left:6px solid #1d5c8f;border-radius:0 12px 12px 0;padding:20px 30px">Qwen respondió «neutro» en el <b>80 %</b> de las notas: el modelo grande no se animaba a juzgar el tono.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#737d8b">Acierto sobre 300 notas clasificadas de antemano, 100 por medio · PyTorch + Hugging Face Transformers</p>
+<aside>Probamos tres modelos que leen el tono de formas muy distintas y medimos cuánto acertaban sobre 300 notas ya clasificadas, cien por medio. robertuito, una red entrenada específicamente para sentimiento en español con tuits, acertó en el 70 % y fue el elegido; además corre en un procesador común. mDeBERTa es un modelo multilingüe que no fue entrenado para sentimiento: le preguntamos si es verdad la frase "el tono de esta noticia es negativo", y acertó el 60 %. Y Qwen, un modelo de lenguaje grande que corre en la placa de video con Ollama, acertó el 58 %: respondía "neutro" casi siempre, en ocho de cada diez notas. Lo especializado le ganó a lo grande.</aside>
+</section>

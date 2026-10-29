@@ -1,0 +1,30 @@
+<section id="assets" data-transition="fade" style="background:#eef1f5;color:#121a24;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'IBM Plex Mono', 'Courier New', monospace;font-size:24px;color:#1d5c8f;letter-spacing:2px">CÓMO SE HIZO · DAGSTER</p>
+<h2 style="font-family:'Newsreader', Georgia, serif;font-size:64px;font-weight:600;line-height:1.1">Dagster por dentro: ocho assets en cadena</h2>
+</div>
+<div style="display:flex;gap:14px;align-items:center">
+<p style="font-family:'IBM Plex Mono', 'Courier New', monospace;font-size:24px;background:#fdfdfd;border:1px solid #dde2e8;border-radius:8px;padding:8px 16px;white-space:nowrap">catalogo_* ×2</p>
+<x-shape kind="arrow-right" style="width:44px;height:24px;background:#9aa3ae"></x-shape>
+<p style="font-family:'IBM Plex Mono', 'Courier New', monospace;font-size:24px;background:#fdfdfd;border:1px solid #dde2e8;border-radius:8px;padding:8px 16px;white-space:nowrap">raw_* ×3</p>
+<x-shape kind="arrow-right" style="width:44px;height:24px;background:#9aa3ae"></x-shape>
+<p style="font-family:'IBM Plex Mono', 'Courier New', monospace;font-size:24px;background:#fdfdfd;border:1px solid #dde2e8;border-radius:8px;padding:8px 16px;white-space:nowrap">noticias_politica</p>
+<x-shape kind="arrow-right" style="width:44px;height:24px;background:#9aa3ae"></x-shape>
+<p style="font-family:'IBM Plex Mono', 'Courier New', monospace;font-size:24px;background:#fdfdfd;border:1px solid #dde2e8;border-radius:8px;padding:8px 16px;white-space:nowrap">sentimiento_noticias</p>
+<x-shape kind="arrow-right" style="width:44px;height:24px;background:#9aa3ae"></x-shape>
+<p style="font-family:'IBM Plex Mono', 'Courier New', monospace;font-size:24px;background:#fdfdfd;border:1px solid #dde2e8;border-radius:8px;padding:8px 16px;white-space:nowrap">evolucion_tono</p>
+</div>
+<table style="font-size:24px;color:#121a24;background:#fdfdfd;border:1px solid #dde2e8;border-radius:12px">
+<tr><th style="width:27%;color:#737d8b">Asset</th><th style="width:53%;color:#737d8b">Qué hace</th><th style="width:20%;color:#737d8b">Cómo corre</th></tr>
+<tr><td style="font-family:'IBM Plex Mono', 'Courier New', monospace;color:#1d5c8f">catalogo_infobae</td><td>Lista las notas de Política de los sitemaps (días 5 y 20)</td><td style="color:#4a5563">Una vez</td></tr>
+<tr><td style="font-family:'IBM Plex Mono', 'Courier New', monospace;color:#1d5c8f">catalogo_lanacion</td><td>Lista las notas de Política de todos los sitemaps diarios</td><td style="color:#4a5563">Una vez</td></tr>
+<tr><td style="font-family:'IBM Plex Mono', 'Courier New', monospace;color:#1d5c8f">raw_infobae</td><td>Baja la ficha JSON de 30 notas por mes</td><td style="color:#4a5563">34 meses, de a uno</td></tr>
+<tr><td style="font-family:'IBM Plex Mono', 'Courier New', monospace;color:#1d5c8f">raw_lanacion</td><td>Baja la ficha JSON de 30 notas por mes</td><td style="color:#4a5563">34 meses, de a uno</td></tr>
+<tr><td style="font-family:'IBM Plex Mono', 'Courier New', monospace;color:#1d5c8f">raw_misionesonline</td><td>Pide a la API de WordPress todas las notas del mes</td><td style="color:#4a5563">34 meses, de a uno</td></tr>
+<tr><td style="font-family:'IBM Plex Mono', 'Courier New', monospace;color:#1d5c8f">noticias_politica</td><td>Une los tres medios en una tabla y elimina repetidas</td><td style="color:#4a5563">Una tabla</td></tr>
+<tr><td style="font-family:'IBM Plex Mono', 'Courier New', monospace;color:#1d5c8f">sentimiento_noticias</td><td>Puntúa título y bajada: una fila por nota y modelo</td><td style="color:#4a5563">Se eligen modelos</td></tr>
+<tr><td style="font-family:'IBM Plex Mono', 'Courier New', monospace;color:#1d5c8f">evolucion_tono</td><td>Resume el tono por semana y medio, sin notas en vivo</td><td style="color:#4a5563">Una tabla</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#737d8b">Cada asset guarda su resultado en Parquet; Postgres guarda el historial de ejecuciones</p>
+<aside>En Dagster, un asset es un dato que el pipeline produce y guarda, por ejemplo una tabla. Cada uno sabe de qué otros se alimenta, y así Dagster arma el mapa que vimos y sabe en qué orden ejecutarlos. Son ocho. Los dos catálogos arman la lista de notas de Infobae y La Nación a partir de los sitemaps. Los tres raw bajan las notas, partidos en 34 meses: si un mes falla se repite solo ese, y hay un solo pedido a la vez por medio. MisionesOnline no necesita catálogo porque su API ya filtra por fecha. noticias_politica une todo en el dataset. sentimiento_noticias le pone el puntaje a cada nota, con uno o más modelos. Y evolucion_tono resume el tono por semana.</aside>
+</section>
