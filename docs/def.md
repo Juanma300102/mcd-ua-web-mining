@@ -111,7 +111,7 @@ Propuesta: arrancar con pysentimiento (modelo en español, salida positivo, neut
 
 ### Estado y decisiones de la fase 5
 
-El código de la fase 5 está terminado y probado sin datos reales (cambio OpenSpec `add-sentiment-analysis`). Falta lo que depende de personas o de la máquina con GPU: la evaluación de los modelos, la elección del modelo final y la materialización de los assets (el detalle está en `docs/decision-sentimiento.md`). Decisiones tomadas:
+La fase 5 está cerrada (cambio OpenSpec `add-sentiment-analysis`, archivado). Se evaluaron los tres modelos sobre la muestra etiquetada, se eligió `robertuito` y los dos assets (`sentimiento_noticias` con los tres modelos y `evolucion_tono`) se materializaron en la máquina con GPU; los Parquet se comparten entre los integrantes como archivos. El detalle está en `docs/decision-sentimiento.md`. Decisiones tomadas:
 
 * **Etiquetado.** Las 300 notas las etiquetó Claude Opus 5.5 (`claude-opus-5-5`, 2026-10-29) siguiendo `docs/guia-etiquetado.md`, en lugar de los integrantes. Son etiquetas "silver", sin control humano: la accuracy y el F1 macro miden concordancia con Claude, no con una lectura humana, y el informe debe decirlo (detalle en `docs/decision-sentimiento.md`).
 * **Texto de análisis.** Título más bajada. Si no hay bajada se usa el primer párrafo del cuerpo, y si tampoco hay cuerpo, solo el título. Cada fila guarda de dónde salió (`fuente_texto`: `bajada`, `cuerpo` o `titulo`), porque la cobertura de bajada cambia con el tiempo y puede mover el tono sin que cambie el contenido. El cuerpo completo queda fuera de la versión base.
@@ -132,8 +132,8 @@ Seis fases en orden; la 2 y la 3 se pueden repartir entre los dos integrantes.
    4. Nota de decisión: rate limit, duración estimada del backfill, fecha de corte, plan B para MisionesOnline, qué hacer con las notas de agencia y con las notas "en vivo".  
 3. **Clientes de scraping (hecha, cambio OpenSpec `add-scraping-clients`).** Un cliente HTTP compartido (rate limit, reintentos y User-Agent identificable), los modelos comunes (entrada de catálogo, documento crudo y nota) y un módulo por medio en sources/. Tests con respuestas guardadas y texto recortado.  
 4. **Assets de Dagster.** raw\_\* particionados por mes, noticias\_politica con limpieza y deduplicado, y un backfill de assets desde 12/2023 hasta la fecha de corte. Cierra con el EDA del dataset (volumen por medio y semana, largo de notas, proporción con bajada), que alimenta las decisiones de la fase 5.  
-5. **Sentimiento (en curso, cambio OpenSpec `add-sentiment-analysis`; código listo, falta el etiquetado y la materialización).** Guía de etiquetado y muestra etiquetada, baseline y modelo alternativo, elegir uno y materializar sentimiento\_noticias y evolucion\_tono con la comparación antes y después de cada hito.  
-6. **Informe.** Gráficos de evolución con hitos, tabla antes y después de cada hito, comparación provincial vs nacional, conclusiones y limitaciones.
+5. **Sentimiento (hecha, cambio OpenSpec `add-sentiment-analysis`).** Guía de etiquetado y muestra etiquetada, baseline y modelo alternativo, elegir uno y materializar sentimiento\_noticias y evolucion\_tono con la comparación antes y después de cada hito.  
+6. **Informe (hecha, cambio OpenSpec `add-final-report`; [`docs/informe.html`](informe.html)).** Gráficos de evolución con hitos, tabla antes y después de cada hito, comparación provincial vs nacional, conclusiones y limitaciones.
 
 ## Riesgos y decisiones abiertas
 
@@ -147,7 +147,8 @@ Seis fases en orden; la 2 y la 3 se pueden repartir entre los dos integrantes.
 * **Sentimiento no es postura.** Una nota negativa puede serlo hacia la oposición. El informe debe aclarar qué mide el modelo.  
 * **Fecha de corte (decidido).** 30/09/2026 23:59, hora argentina, por fecha de publicación. Se adelantó del 31/10 el 27/10/2026: la entrega es antes de que termine octubre y el backfill tarda unas 14 horas.  
 * **Texto de análisis (decidido).** Título \+ bajada, con el primer párrafo del cuerpo como respaldo (ver "Estado y decisiones de la fase 5").  
-* **A decidir:** qué modelo de sentimiento usar (depende de la evaluación sobre las notas etiquetadas) y dónde se guarda el dataset (Parquet local o tabla en el mismo Postgres).
+* **Modelo de sentimiento (decidido).** `robertuito`, por F1 macro sobre las 300 notas etiquetadas (ver `docs/decision-sentimiento.md`).  
+* **A decidir:** dónde se guarda el dataset (Parquet local o tabla en el mismo Postgres).
 
 ## Mejoras futuras (fuera del alcance del proyecto)
 

@@ -12,7 +12,7 @@ La fase 5 trabaja sobre un único `data/noticias_politica.parquet`, compartido e
 
 Para comprobar la copia local: `sha256sum data/noticias_politica.parquet`.
 
-Limitación conocida: el 99 % de las notas de Infobae y La Nación cae en los días 4–5 y 19–20 de cada mes, porque los catálogos leen solo los sitemaps de los días 5 y 20. En la serie semanal, esos medios tienen datos en 77 de unas 147 semanas, y cada semana con datos refleja un solo día.
+Limitación conocida: el 99 % de las notas de Infobae cae en los días 4–5 y 19–20 de cada mes, porque su catálogo lee solo los sitemaps de los días 5 y 20. En la serie semanal, Infobae tiene datos en 77 de unas 147 semanas, y cada semana con datos refleja un solo día. La Nación no tiene ese problema: su catálogo se armó completo y la muestra de 30 notas por mes cae en todos los días del mes (datos en 147 semanas, como MisionesOnline con 148).
 
 ## Etiquetado
 
