@@ -29,6 +29,7 @@ sentiment = [
 notebooks = [
     "ipykernel>=7.4.0",
     "jupyterlab>=4.6.4",
+    "matplotlib>=3.10",
     "nbconvert>=7.17.2",
 ]
 
