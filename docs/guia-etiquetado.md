@@ -1,5 +1,7 @@
 # Guía de etiquetado de sentimiento
 
+> **Nota.** En este proyecto la guía la aplicó Claude Opus 5.5 en lugar de los integrantes del equipo (ver la sección "Etiquetado" de `docs/decision-sentimiento.md`). La guía no cambia: sigue siendo el criterio de etiquetado. Donde dice "cada integrante" o "una persona", leer "el etiquetador".
+
 Cada integrante etiqueta 150 notas políticas (unas 1,7 horas). Las etiquetas sirven para elegir el modelo de sentimiento (ver `docs/decision-sentimiento.md`), así que importa más la consistencia que la velocidad.
 
 ## Qué se etiqueta

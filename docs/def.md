@@ -103,20 +103,21 @@ El asset de sentimiento agrega las probabilidades de cada clase (positivo, neutr
 
 ## Análisis de sentimiento
 
-Propuesta: arrancar con pysentimiento (modelo en español, salida positivo, neutral o negativo) como baseline, y compararlo contra un modelo multilingüe o un LLM en modo zero-shot sobre una muestra etiquetada a mano.
+Propuesta: arrancar con pysentimiento (modelo en español, salida positivo, neutral o negativo) como baseline, y compararlo contra un modelo multilingüe o un LLM en modo zero-shot sobre una muestra de notas etiquetadas (ver Validación).
 
 * **Unidad de análisis:** título \+ bajada como señal principal, porque los modelos tipo BERT cortan en 512 tokens. El cuerpo se analiza por párrafos y se promedia, como variante.  
-* **Validación:** escribir una guía corta de etiquetado (qué cuenta como positivo, neutral o negativo, con ejemplos), etiquetar a mano unas 300 notas (100 por medio) y reportar accuracy y F1 macro de cada modelo.  
+* **Validación:** escribir una guía corta de etiquetado (qué cuenta como positivo, neutral o negativo, con ejemplos), etiquetar unas 300 notas (100 por medio) y reportar accuracy y F1 macro de cada modelo. Decisión: las etiquetas las generó Claude Opus 5.5 siguiendo la guía, sin revisión humana; las métricas miden concordancia con Claude, no con una lectura humana.  
 * **Agregación:** score medio y proporción de notas negativas por medio y por semana, con los hitos políticos marcados en el gráfico. Los hitos y sus fechas van en un archivo versionado, y para cada uno se comparan las 2 semanas anteriores con las 2 posteriores.
 
 ### Estado y decisiones de la fase 5
 
-El código de la fase 5 está terminado y probado sin datos reales (cambio OpenSpec `add-sentiment-analysis`). Falta lo que depende de personas o de la máquina con GPU: el etiquetado manual de las 300 notas, la evaluación de los modelos, la elección del modelo final y la materialización de los assets (el detalle está en `docs/decision-sentimiento.md`). Decisiones tomadas:
+El código de la fase 5 está terminado y probado sin datos reales (cambio OpenSpec `add-sentiment-analysis`). Falta lo que depende de personas o de la máquina con GPU: la evaluación de los modelos, la elección del modelo final y la materialización de los assets (el detalle está en `docs/decision-sentimiento.md`). Decisiones tomadas:
 
+* **Etiquetado.** Las 300 notas las etiquetó Claude Opus 5.5 (`claude-opus-5-5`, 2026-10-29) siguiendo `docs/guia-etiquetado.md`, en lugar de los integrantes. Son etiquetas "silver", sin control humano: la accuracy y el F1 macro miden concordancia con Claude, no con una lectura humana, y el informe debe decirlo (detalle en `docs/decision-sentimiento.md`).
 * **Texto de análisis.** Título más bajada. Si no hay bajada se usa el primer párrafo del cuerpo, y si tampoco hay cuerpo, solo el título. Cada fila guarda de dónde salió (`fuente_texto`: `bajada`, `cuerpo` o `titulo`), porque la cobertura de bajada cambia con el tiempo y puede mover el tono sin que cambie el contenido. El cuerpo completo queda fuera de la versión base.
 * **Modelos.** Baseline: `robertuito` (pysentimiento), que resolvió y predijo en el spike de dependencias. Alternativa: `qwen2.5-7b` en Ollama si corre en la GPU, y `mdeberta-xnli` (zero-shot) si no. La elección se hace por el hardware detectado, no por una variable de entorno. El modelo final se decide con el F1 macro sobre las notas etiquetadas.
 * **Score.** `prob_pos - prob_neg`, entre -1 y 1. Los scores de modelos distintos no comparten escala, así que todos los agregados se calculan por modelo.
-* **Muestra de validación.** 300 notas (100 por medio) elegidas por hash sobre el dataset completo y congelado, repartidas entre los dos anotadores, sin notas en vivo. Las planillas no se commitean; solo `anotaciones/etiquetas.csv`, sin texto.
+* **Muestra de validación.** 300 notas (100 por medio) elegidas por hash sobre el dataset completo y congelado, repartidas en dos planillas (`a` y `b`), sin notas en vivo. Las planillas no se commitean; solo `anotaciones/etiquetas.csv`, sin texto.
 * **Tono y hitos.** Semanas ISO en hora argentina, sin notas en vivo ni notas sin score. Cada hito compara 14 días antes con 14 días después (el día del hito cuenta como "después"), recortados al período del dataset; un lado con menos de 10 notas no informa media ni proporción. Los hitos y sus fuentes están en `anotaciones/hitos.csv`; sus fechas aún no están verificadas.
 
 ## Pasos de ejecución

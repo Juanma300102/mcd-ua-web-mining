@@ -14,6 +14,25 @@ Para comprobar la copia local: `sha256sum data/noticias_politica.parquet`.
 
 Limitación conocida: el 99 % de las notas de Infobae y La Nación cae en los días 4–5 y 19–20 de cada mes, porque los catálogos leen solo los sitemaps de los días 5 y 20. En la serie semanal, esos medios tienen datos en 77 de unas 147 semanas, y cada semana con datos refleja un solo día.
 
+## Etiquetado
+
+Las 300 notas de la muestra de validación no las etiquetaron los integrantes del equipo: las etiquetó un modelo de Anthropic, **Claude Opus 5.5** (`claude-opus-5-5`), dentro de una sesión de Claude Code, el 2026-10-29.
+
+- **Procedimiento.** El modelo leyó el texto de cada nota en `data/etiquetado/anotador_a.csv` y `anotador_b.csv` (el mismo texto que ven los modelos de sentimiento: título más bajada, o primer párrafo) y completó `etiqueta` siguiendo `docs/guia-etiquetado.md`: valencia del texto, no postura, con `pos`, `neu`, `neg` o `descartar`. Fue una sola pasada, sin código de API, sin más ingeniería de prompts que la guía y sin revisión humana de las etiquetas.
+- **Qué no vio.** Ni el medio de cada nota ni la salida de ningún modelo de sentimiento.
+- **Planillas.** La división `a`/`b` se conserva solo como nombre de archivo; ambas las etiquetó el mismo modelo. Se unieron con `read_labels` en `anotaciones/etiquetas.csv` (300 filas: `id, anotador, etiqueta`) y se validaron con `load_labels`.
+- **Resultado.** 134 `neg`, 121 `neu`, 45 `pos` y 0 `descartar`.
+
+| Grupo | neg | neu | pos |
+|---|---|---|---|
+| Infobae | 43 | 46 | 11 |
+| La Nación | 62 | 30 | 8 |
+| MisionesOnline | 29 | 45 | 26 |
+| Planilla a | 68 | 59 | 23 |
+| Planilla b | 66 | 62 | 22 |
+
+**Limitación.** Son etiquetas generadas por un modelo ("silver"), no verdad de terreno humana. La accuracy y el F1 macro de pysentimiento y del modelo alternativo miden, por lo tanto, **concordancia con Claude Opus 5.5**, no con una lectura humana. Claude no es uno de los modelos evaluados, así que no hay autoacuerdo. No hay control humano de las etiquetas y el acuerdo entre anotadores queda fuera del alcance. El informe debe declarar esta limitación.
+
 ## Spike
 
 Hecho el 28/10/2026 con uv 0.11.6, Python 3.12.3 y pandas 3.1.0. Solo se tocaron PyPI, el índice CPU de PyTorch y Hugging Face; ningún pedido a los medios.

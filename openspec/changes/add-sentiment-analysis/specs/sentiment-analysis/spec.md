@@ -46,7 +46,7 @@ The baseline model SHALL be the `pysentimiento/robertuito-sentiment-analysis` ch
 - **THEN** loading succeeds, and torch is imported only when a model is first used
 
 ### Requirement: The labeling sample is seeded, balanced and split without overlap
-The labeling sample SHALL hold 300 notes of `noticias_politica`, 100 per outlet, drawn with a fixed recorded seed from notes that are not live and have a non-empty title. It SHALL be split into two parts of 150 notes, one per team member, with no note in both. The committed labels file SHALL hold only `id` and label per note, with labels among positive, neutral, negative and discard; it SHALL NOT hold note text. Annotators SHALL see exactly the analysis text and nothing from the model output.
+The labeling sample SHALL hold 300 notes of `noticias_politica`, 100 per outlet, drawn with a fixed recorded seed from notes that are not live and have a non-empty title. It SHALL be split into two sheets of 150 notes, with no note in both. The sheets SHALL be labeled by an Anthropic model following `docs/guia-etiquetado.md`, not by the team members, and the model name and date SHALL be recorded in `docs/decision-sentimiento.md`. The committed labels file SHALL hold only `id` and label per note, with labels among positive, neutral, negative and discard; it SHALL NOT hold note text. The labeler SHALL see exactly the analysis text and nothing from the model output.
 
 #### Scenario: Balanced draw
 - **WHEN** the sample is built from the dataset with the recorded seed
@@ -57,7 +57,7 @@ The labeling sample SHALL hold 300 notes of `noticias_politica`, 100 per outlet,
 - **THEN** both runs return the same ids
 
 #### Scenario: Disjoint split
-- **WHEN** the sample is split between the two members
+- **WHEN** the sample is split into the two sheets
 - **THEN** each part has 150 notes and the two parts share no `id`
 
 #### Scenario: Committed labels carry no text
