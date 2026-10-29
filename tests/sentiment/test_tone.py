@@ -232,12 +232,12 @@ def test_live_notes_are_excluded_from_the_comparison():
     assert row["n_antes"] == 12 and row["score_antes"] == pytest.approx(0.2)
 
 
-def test_committed_milestones_file_parses_and_claims_no_verified_date():
+def test_committed_milestones_file_parses_and_every_date_is_verified():
     from pathlib import Path
 
     table = pd.read_csv(Path(__file__).parents[2] / "anotaciones/hitos.csv", dtype=str, keep_default_na=False)
     assert list(table.columns) == ["hito", "fecha", "alcance", "fuente", "verificado"]
     assert len(table) == 3 and set(table["alcance"]) == {"nacional"}
-    assert set(table["verificado"]) == {"false"}  # task 8.1 (human) flips these after checking the sources
+    assert set(table["verificado"]) == {"true"} and (table["fecha"] != "").all() and table["fuente"].str.startswith("https://").all()
     scores, notes = make(spread("infobae", art(2023, 12, 10), 1, 5, 0.2))
     compare_milestones(scores, notes, table)  # the file is readable by compare_milestones

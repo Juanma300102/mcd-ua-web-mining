@@ -118,7 +118,7 @@ El código de la fase 5 está terminado y probado sin datos reales (cambio OpenS
 * **Modelos.** Baseline: `robertuito` (pysentimiento), que resolvió y predijo en el spike de dependencias. Alternativa: `qwen2.5-7b` en Ollama si corre en la GPU, y `mdeberta-xnli` (zero-shot) si no. La elección se hace por el hardware detectado, no por una variable de entorno. El modelo final se decide con el F1 macro sobre las notas etiquetadas.
 * **Score.** `prob_pos - prob_neg`, entre -1 y 1. Los scores de modelos distintos no comparten escala, así que todos los agregados se calculan por modelo.
 * **Muestra de validación.** 300 notas (100 por medio) elegidas por hash sobre el dataset completo y congelado, repartidas en dos planillas (`a` y `b`), sin notas en vivo. Las planillas no se commitean; solo `anotaciones/etiquetas.csv`, sin texto.
-* **Tono y hitos.** Semanas ISO en hora argentina, sin notas en vivo ni notas sin score. Cada hito compara 14 días antes con 14 días después (el día del hito cuenta como "después"), recortados al período del dataset; un lado con menos de 10 notas no informa media ni proporción. Los hitos y sus fuentes están en `anotaciones/hitos.csv`; sus fechas aún no están verificadas.
+* **Tono y hitos.** Semanas ISO en hora argentina, sin notas en vivo ni notas sin score. Cada hito compara 14 días antes con 14 días después (el día del hito cuenta como "después"), recortados al período del dataset; un lado con menos de 10 notas no informa media ni proporción. Los hitos y sus fuentes están en `anotaciones/hitos.csv`, con las fechas verificadas contra su fuente: DNU 70/2023 el 20/12/2023 (día del anuncio; se publicó el 21), aprobación de la Ley Bases en el Senado el 12/06/2024 y elecciones legislativas el 26/10/2025.
 
 ## Pasos de ejecución
 
