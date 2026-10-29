@@ -1,0 +1,2696 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tono de la política</title>
+<meta name="description" content="Informe final de news-politica: cómo cambió el tono de las noticias de política en Infobae, La Nación y MisionesOnline desde diciembre de 2023.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: the visual system of docs/bitacora-fases.html (tokens, fonts, one colour per outlet), told as a story:
+   one chapter per question of docs/def.md, each with a heading that states its answer and one main chart. */
+:root {
+  --bg: #f6f7f9;
+  --surface: #fdfdfd;
+  --ink: #121a24;
+  --ink-2: #4a5563;
+  --muted: #737d8b;
+  --rule: #dde2e8;
+  --accent: #1d5c8f;
+  --accent-soft: #e4eef7;
+  --warn: #8a5a00;
+  --warn-soft: #fbf0d9;
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --s3: #1baf7a;
+  --s-est: #a3abb6;
+  --neg: #c4453c;
+  --neu: #b9c0ca;
+  --pos: #2f9e5b;
+  --grid: #e7e9ec;
+  --axis: #c3c8cf;
+  --f-display: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1318; --surface: #161b21; --ink: #e8ecf1; --ink-2: #b4bcc7; --muted: #8a93a0; --rule: #2a313a;
+    --accent: #7fb5e3; --accent-soft: #19293a; --warn: #f0b44c; --warn-soft: #2e2412;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s-est: #6b7480;
+    --neg: #e0675d; --neu: #4f5864; --pos: #4cbf7a; --grid: #232a32; --axis: #3a424c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1318; --surface: #161b21; --ink: #e8ecf1; --ink-2: #b4bcc7; --muted: #8a93a0; --rule: #2a313a;
+  --accent: #7fb5e3; --accent-soft: #19293a; --warn: #f0b44c; --warn-soft: #2e2412;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s-est: #6b7480;
+  --neg: #e0675d; --neu: #4f5864; --pos: #4cbf7a; --grid: #232a32; --axis: #3a424c;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--f-body); font-size: 16px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.page { max-width: 1120px; margin: 0 auto; padding-block: 40px 80px; display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 48px; }
+@media (max-width: 900px) { .page { grid-template-columns: minmax(0, 1fr); gap: 0; padding-block: 24px 64px; } .toc { display: none; } }
+
+.toc { position: sticky; top: calc(24px + env(safe-area-inset-top, 0px)); align-self: start; font-size: 13px; }
+.toc p { margin: 0 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-size: 11px; font-weight: 600; }
+.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.toc a { display: flex; gap: 8px; align-items: baseline; color: var(--ink-2); text-decoration: none; padding: 4px 8px; border-radius: 6px; }
+.toc a:hover, .toc a:focus-visible { background: var(--accent-soft); color: var(--ink); outline: none; }
+.toc .n { font-family: var(--f-mono); font-size: 11px; color: var(--muted); min-width: 1.6em; }
+
+main { min-width: 0; max-width: 820px; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; color: var(--muted); letter-spacing: .04em; margin: 0 0 12px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 600; text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(34px, 5.4vw, 52px); letter-spacing: -.01em; }
+h2 { font-size: clamp(26px, 3.6vw, 34px); }
+h3 { font-size: 20px; font-weight: 500; }
+p { margin: 0; max-width: 66ch; }
+.lede { font-size: 19px; color: var(--ink-2); margin-top: 18px; }
+code, .mono { font-family: var(--f-mono); font-size: .88em; }
+code { background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+a { color: var(--accent); }
+b.v, span.v { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+header.intro { padding-bottom: 36px; border-bottom: 1px solid var(--rule); display: grid; gap: 0; }
+.answers { list-style: none; margin: 28px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 720px) { .answers { grid-template-columns: minmax(0, 1fr); } }
+.answers li { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 14px; display: grid; gap: 4px; align-content: start; }
+.answers .q { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.answers .a { font-size: 15px; line-height: 1.45; }
+
+section.ch { padding-block: 56px 8px; display: grid; gap: 22px; scroll-margin-top: 16px; }
+.ch-head { display: grid; gap: 10px; }
+.ch-head .q { font-size: 14px; color: var(--muted); }
+.ch-head .q b { color: var(--ink-2); font-weight: 500; }
+.body { display: grid; gap: 14px; font-size: 17px; }
+.body p { max-width: 64ch; }
+.so-what { border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 8px 8px 0; padding: 12px 16px; display: grid; gap: 4px; }
+.so-what .k { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.so-what p { font-size: 16px; max-width: none; }
+.caution { border-left-color: var(--warn); background: var(--warn-soft); }
+.caution .k { color: var(--warn); }
+
+.outlets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 640px) { .outlets { grid-template-columns: minmax(0, 1fr); } }
+.outlet { border: 1px solid var(--rule); border-top: 4px solid var(--c); border-radius: 8px; background: var(--surface); padding: 12px 14px; display: grid; gap: 2px; }
+.outlet b { font-size: 16px; }
+.outlet span { font-size: 13.5px; color: var(--ink-2); line-height: 1.4; }
+
+/* Charts */
+figure { margin: 0; display: grid; gap: 10px; min-width: 0; }
+figcaption { display: grid; gap: 2px; }
+figcaption b { font-size: 15px; font-weight: 600; }
+figcaption span { font-size: 13.5px; color: var(--ink-2); max-width: 70ch; }
+.chart { position: relative; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 12px 8px; min-width: 0; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart svg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); padding: 0 4px 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.legend i.ring { background: transparent !important; border: 2px solid var(--c); }
+.legend i.line { width: 16px; height: 2px; border-radius: 1px; }
+.legend i.box { border-radius: 2px; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.12); min-width: 170px; z-index: 2; }
+.tip .h { color: var(--muted); margin-bottom: 4px; font-family: var(--f-mono); font-size: 11px; }
+.tip .r { display: grid; grid-template-columns: 12px auto 1fr; align-items: center; gap: 6px; }
+.tip .r i { width: 10px; height: 10px; border-radius: 50%; }
+.tip .r b { font-variant-numeric: tabular-nums; }
+.tip .r span { color: var(--ink-2); }
+details.data { font-size: 13px; }
+details.data summary { cursor: pointer; color: var(--accent); padding: 4px 0; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
+details.data .table-wrap { margin-top: 8px; max-height: 320px; overflow: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--rule); }
+th { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; background: var(--bg); position: sticky; top: 0; }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Stacked label shares */
+.stack { display: grid; gap: 12px; }
+.stack-row { display: grid; grid-template-columns: 9em minmax(0, 1fr); gap: 4px 14px; align-items: center; }
+@media (max-width: 520px) { .stack-row { grid-template-columns: minmax(0, 1fr); } }
+.stack-row .who { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.stack-row .who i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.bar3 { display: flex; height: 30px; border-radius: 6px; overflow: hidden; }
+.bar3 div { display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 0; overflow: hidden; white-space: nowrap; }
+.bar3 .neg { background: var(--neg); color: #fff; }
+.bar3 .neu { background: var(--neu); color: var(--ink); }
+.bar3 .pos { background: var(--pos); color: #fff; }
+
+/* Screenshots */
+.shot { margin: 0; display: grid; gap: 8px; }
+.shot img { width: 100%; height: auto; display: block; border: 1px solid var(--rule); border-radius: 8px; background: #fff; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 20px; counter-reset: s; }
+@media (max-width: 640px) { .steps { grid-template-columns: minmax(0, 1fr); } }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; font-size: 15px; line-height: 1.45; }
+.steps li::before { content: counter(s); width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--surface); font-size: 13px; font-weight: 600; display: grid; place-items: center; }
+.steps b { display: block; }
+
+.flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+@media (max-width: 760px) { .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.flow li { position: relative; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; align-content: start; }
+.flow li b { font-size: 14px; }
+.flow li span { font-size: 12px; color: var(--ink-2); line-height: 1.35; }
+@media (min-width: 761px) { .flow li:not(:last-child)::after { content: "→"; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; z-index: 1; } }
+.tech { display: grid; gap: 12px; padding-top: 8px; }
+.tech p.aside { font-size: 14px; color: var(--ink-2); }
+table.assets td { font-size: 14px; }
+table.assets td:first-child, table.assets code { white-space: nowrap; overflow-wrap: normal; }
+table.assets td:nth-child(2) { min-width: 240px; }
+table.assets td:nth-child(3), table.assets td:nth-child(4) { min-width: 140px; color: var(--ink-2); }
+.stages { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.stage { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; display: grid; gap: 12px; }
+.stage-head { display: flex; align-items: center; gap: 12px; }
+.stage-head .num { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--surface); display: grid; place-items: center; font-size: 14px; font-weight: 600; }
+.stage p { font-size: 15.5px; max-width: 70ch; }
+.stage p.aside { font-size: 14px; color: var(--ink-2); }
+.stage .table-wrap { background: var(--bg); }
+.roles { margin: 0; display: grid; grid-template-columns: minmax(9em, max-content) minmax(0, 1fr); gap: 8px 16px; font-size: 14.5px; }
+.roles dt { font-family: var(--f-mono); font-size: 12.5px; color: var(--accent); padding-top: 2px; }
+.roles dd { margin: 0; line-height: 1.5; }
+@media (max-width: 560px) { .roles { grid-template-columns: minmax(0, 1fr); gap: 2px; } .roles dd { margin-bottom: 8px; } }
+.tech table td { font-size: 14px; }
+ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 10px; font-size: 16px; max-width: 66ch; }
+ul.plain li::marker { color: var(--muted); }
+ol.final { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; counter-reset: f; }
+ol.final li { counter-increment: f; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; font-family: var(--f-display); font-size: 21px; line-height: 1.35; }
+ol.final li::before { content: counter(f); font-family: var(--f-mono); font-size: 13px; color: var(--muted); padding-top: 6px; }
+
+details.annex { margin-top: 56px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+details.annex > summary { cursor: pointer; padding: 16px 20px; font-family: var(--f-display); font-size: 22px; font-weight: 600; list-style-position: inside; }
+details.annex > summary span { display: block; font-family: var(--f-body); font-size: 13.5px; font-weight: 400; color: var(--ink-2); margin-top: 2px; padding-left: 1.2em; }
+.annex-body { padding: 4px 20px 24px; display: grid; gap: 22px; font-size: 15px; }
+.annex-body h3 { font-size: 18px; }
+.annex-body section { display: grid; gap: 8px; }
+.annex-body p, .annex-body li { max-width: 72ch; }
+.annex-body ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+
+footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
+noscript p { padding: 12px 16px; background: var(--warn-soft); border-radius: 8px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <nav class="toc" aria-label="Índice">
+    <p>Contenido</p>
+    <ol>
+      <li><a href="#inicio"><span class="n">·</span>La pregunta</a></li>
+      <li><a href="#lectura"><span class="n">·</span>Qué leímos</a></li>
+      <li><a href="#proceso"><span class="n">·</span>Cómo lo armamos</a></li>
+      <li><a href="#tiempo"><span class="n">1</span>En el tiempo</a></li>
+      <li><a href="#medios"><span class="n">2</span>Entre medios</a></li>
+      <li><a href="#hitos"><span class="n">3</span>Los hitos</a></li>
+      <li><a href="#provincial"><span class="n">4</span>Lo provincial</a></li>
+      <li><a href="#tecnologias"><span class="n">·</span>Tecnologías</a></li>
+      <li><a href="#limites"><span class="n">·</span>Lo que no dice</a></li>
+      <li><a href="#cierre"><span class="n">·</span>En tres frases</a></li>
+      <li><a href="#anexo"><span class="n">·</span>Anexo técnico</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <noscript><p>Este informe dibuja sus gráficos y completa sus cifras con JavaScript. Activalo para verlo completo.</p></noscript>
+
+    <!-- Hero -->
+    <header class="intro" id="inicio">
+      <p class="eyebrow">news-politica · informe final · <span data-v="periodo"></span></p>
+      <h1>¿Cambió el tono de las noticias de política desde que asumió Milei?</h1>
+      <p class="lede">Leímos <b class="v" data-v="notas"></b> notas de la sección Política de tres medios argentinos, desde el 10 de diciembre de 2023 hasta el 30 de septiembre de 2026.</p>
+
+      <figure style="margin-top:28px">
+        <figcaption>
+          <b>El tono promedio de cada medio en todo el período</b>
+          <span>Cada nota tiene un puntaje de tono entre −1 (muy negativa) y +1 (muy positiva); cero es neutro. Los tres medios quedan del lado negativo o en el centro; ninguno se acerca a lo positivo.</span>
+        </figcaption>
+        <div class="chart" id="c-hero"></div>
+      </figure>
+
+      <ul class="answers" aria-label="Respuestas cortas">
+        <li><span class="q">En el tiempo</span><span class="a">Casi no cambió: el clima fue negativo desde el principio y siguió así.</span></li>
+        <li><span class="q">Entre medios</span><span class="a">La Nación es la más negativa, Infobae la sigue de cerca y MisionesOnline queda cerca de neutro.</span></li>
+        <li><span class="q">Los hitos</span><span class="a">El DNU, la Ley Bases y las elecciones movieron poco el tono, y casi nunca en los tres medios a la vez.</span></li>
+      </ul>
+    </header>
+
+    <!-- Datos -->
+    <section class="ch" id="lectura">
+      <div class="ch-head">
+        <p class="eyebrow">Antes de empezar</p>
+        <h2>Tres medios, tres maneras de contar la política</h2>
+      </div>
+      <div class="body">
+        <p>Elegimos tres medios que representan tres formas de hacer periodismo, para ver si cuentan la política con el mismo tono.</p>
+      </div>
+      <div class="outlets">
+        <div class="outlet" style="--c: var(--s1)"><b>Infobae</b><span>Nacional, nacido digital. El sitio de noticias más leído del país.</span></div>
+        <div class="outlet" style="--c: var(--s2)"><b>La Nación</b><span>Nacional, diario tradicional fundado en 1870, hoy también digital.</span></div>
+        <div class="outlet" style="--c: var(--s3)"><b>MisionesOnline</b><span>Provincial, de Misiones. Mira la política nacional desde una provincia.</span></div>
+      </div>
+      <div class="body">
+        <p>De MisionesOnline leímos <b>todas</b> las notas de Política del período: <b class="v" data-v="mo_total"></b>. Infobae y La Nación publican muchas más, así que de cada uno tomamos una muestra pareja de unas 30 notas por mes (<b class="v" data-v="ib_total"></b> y <b class="v" data-v="ln_total"></b> en total). Por eso, en lo que sigue, los medios nacionales se miran mes a mes y no día a día.</p>
+      </div>
+      <figure>
+        <figcaption>
+          <b>Notas leídas por mes</b>
+          <span>MisionesOnline completo; Infobae y La Nación, muestra de unas 30 notas por mes.</span>
+        </figcaption>
+        <div class="chart" id="c-volume"></div>
+      </figure>
+      <div class="so-what caution">
+        <span class="k">Importante</span>
+        <p><b>Tono no es postura.</b> Una nota negativa puede criticar al gobierno, a la oposición o simplemente contar algo malo, como una protesta o una derrota en el Congreso. El puntaje mide el clima del texto, no de qué lado está el medio. "Más negativo" no quiere decir "más opositor".</p>
+      </div>
+    </section>
+
+    <!-- Proceso -->
+    <section class="ch" id="proceso">
+      <div class="ch-head">
+        <p class="eyebrow">Detrás de escena</p>
+        <h2>Una línea de montaje que convierte miles de páginas web en una tabla</h2>
+      </div>
+      <div class="body">
+        <p>Bajar nueve mil notas a mano no es posible, así que armamos una "línea de montaje" automática con Dagster, una herramienta que ejecuta cada paso en orden y registra qué salió bien y qué no. Cada recuadro de este mapa es un paso, y las líneas muestran qué paso alimenta a cuál.</p>
+      </div>
+      <ol class="steps">
+        <li><span><b>Encontrar las notas</b>Recorrimos los índices diarios que Infobae y La Nación publican para los buscadores, y nos quedamos con las de Política.</span></li>
+        <li><span><b>Bajarlas con cortesía</b>Una nota cada dos segundos, solo por las rutas que cada sitio permite, mes por mes.</span></li>
+        <li><span><b>Unirlas</b>Los tres medios en una sola tabla, con las mismas columnas y sin notas repetidas.</span></li>
+        <li><span><b>Ponerles nota</b>El modelo puntúa cada nota y después se resume el tono por semana.</span></li>
+      </ol>
+      <figure class="shot">
+        <img src="img/dagster-lineage.png" width="1140" height="550" loading="lazy"
+             alt="Mapa de pasos en Dagster: catalogo_infobae y catalogo_lanacion alimentan raw_infobae y raw_lanacion; con raw_misionesonline alimentan noticias_politica, que alimenta sentimiento_noticias y este a evolucion_tono. Los pasos de datos están en verde y los dos de sentimiento en gris.">
+        <figcaption><span>El mapa del proceso en Dagster. En verde, los pasos que corrieron en esta computadora: encontrar, bajar y unir las notas. Los dos últimos (el tono) aparecen grises porque corrieron en la computadora del otro integrante, que tiene la placa de video que necesita uno de los modelos; los resultados viajaron como archivos. Qué hace cada recuadro, uno por uno, está en <a href="#assets">Dagster por dentro</a>.</span></figcaption>
+      </figure>
+      <figure class="shot">
+        <img src="img/dagster-particiones.png" width="1332" height="290" loading="lazy"
+             alt="Vista de particiones de raw_misionesonline en Dagster: una barra verde completa de diciembre de 2023 a septiembre de 2026, con 34 particiones materializadas, 0 fallidas y 0 faltantes.">
+        <figcaption><span>Los 34 meses de MisionesOnline, cada uno descargado por separado: la barra entera está en verde, sin meses fallidos ni faltantes. Lo mismo pasó con Infobae y La Nación.</span></figcaption>
+      </figure>
+    </section>
+
+    <!-- Capítulo 1 -->
+    <section class="ch" id="tiempo">
+      <div class="ch-head">
+        <p class="eyebrow">Capítulo 1 · La pregunta principal</p>
+        <p class="q"><b>¿Cómo cambió el tono de las noticias de política desde diciembre de 2023?</b></p>
+        <h2>El tono casi no se movió en casi tres años</h2>
+      </div>
+      <div class="body">
+        <p>Mes a mes, cada medio se mueve dentro de una franja angosta. No hay una caída sostenida ni una recuperación: el clima de la cobertura política ya era negativo en diciembre de 2023 y sigue en el mismo lugar.</p>
+        <p id="t-firstlast"></p>
+      </div>
+      <figure>
+        <figcaption>
+          <b>Tono promedio por mes</b>
+          <span>La línea es el promedio de cada mes; la franja clara, el rango donde probablemente está el valor real. Las líneas verticales marcan los tres hitos del capítulo 3. Pasá el cursor (o usá las flechas) para ver cada mes.</span>
+        </figcaption>
+        <div class="chart" id="c-monthly"></div>
+        <details class="data"><summary>Ver los datos</summary><div class="table-wrap" id="t-monthly"></div></details>
+      </figure>
+      <div class="so-what">
+        <span class="k">¿Y esto qué significa?</span>
+        <p>En este período la cobertura política no "se puso" negativa en algún momento: fue negativa todo el tiempo. Lo que cambia de un mes a otro es chico comparado con la diferencia que hay entre un medio y otro, que es el tema del capítulo siguiente.</p>
+      </div>
+    </section>
+
+    <!-- Capítulo 2 -->
+    <section class="ch" id="medios">
+      <div class="ch-head">
+        <p class="eyebrow">Capítulo 2 · La pregunta principal</p>
+        <p class="q"><b>¿Difiere el tono entre un medio digital, uno tradicional y uno provincial?</b></p>
+        <h2>La Nación suena más negativa que Infobae, y MisionesOnline mucho menos que los dos</h2>
+      </div>
+      <div class="body">
+        <p>Casi la mitad de las notas de La Nación tienen tono negativo (<b class="v" data-v="ln_neg"></b>). En Infobae son <b class="v" data-v="ib_neg"></b> y en MisionesOnline, <b class="v" data-v="mo_neg"></b>. Las notas positivas son raras en los dos nacionales y bastante más frecuentes en el medio provincial (<b class="v" data-v="mo_pos"></b>).</p>
+      </div>
+      <figure>
+        <figcaption>
+          <b>Cómo se reparten las notas de cada medio</b>
+          <span>Rojo: negativas · gris: neutras · verde: positivas.</span>
+        </figcaption>
+        <div class="chart"><div class="stack" id="c-stack"></div></div>
+      </figure>
+      <div class="body">
+        <p><b>¿Y si el modelo se equivoca?</b> Para comprobarlo, puntuamos las mismas notas con otros dos modelos que funcionan de otra manera. Cada uno usa la escala a su modo (por eso los puntos no coinciden), pero <span id="t-robust"></span></p>
+      </div>
+      <figure>
+        <figcaption>
+          <b>El orden de los medios con tres modelos distintos</b>
+          <span>Cada fila es un modelo; cada punto, el tono promedio de un medio. El modelo usado en todo el informe es el de la primera fila.</span>
+        </figcaption>
+        <div class="chart" id="c-models"></div>
+      </figure>
+      <div class="so-what">
+        <span class="k">¿Y esto qué significa?</span>
+        <p>Entre los dos nacionales, el diario tradicional es algo más negativo que el digital. La diferencia grande no está entre lo digital y lo tradicional, sino entre lo nacional y lo provincial. El capítulo 4 muestra de dónde sale buena parte de esa diferencia.</p>
+      </div>
+    </section>
+
+    <!-- Capítulo 3 -->
+    <section class="ch" id="hitos">
+      <div class="ch-head">
+        <p class="eyebrow">Capítulo 3 · Pregunta secundaria</p>
+        <p class="q"><b>¿Hay quiebres de tono alrededor de los grandes hitos políticos?</b></p>
+        <h2>Los grandes momentos políticos movieron poco el tono</h2>
+      </div>
+      <div class="body">
+        <p>Para cada hito comparamos las dos semanas anteriores con las dos semanas posteriores, en cada medio. Si el hito hubiera cambiado el clima de la cobertura, el punto de "después" debería quedar lejos del de "antes".</p>
+        <p id="t-hitos"></p>
+      </div>
+      <figure>
+        <figcaption>
+          <b>Tono antes y después de cada hito</b>
+          <span>Círculo vacío: las dos semanas anteriores · círculo lleno: las dos posteriores. En color, solo los cambios claros; en gris, los que no se distinguen de las variaciones normales de una quincena a otra.</span>
+        </figcaption>
+        <div class="chart" id="c-hitos"></div>
+        <details class="data"><summary>Ver los datos</summary><div class="table-wrap" id="t-hitos-tabla"></div></details>
+      </figure>
+      <div class="so-what caution">
+        <span class="k">Con cautela</span>
+        <p id="t-hitos-caution"></p>
+      </div>
+    </section>
+
+    <!-- Capítulo 4 -->
+    <section class="ch" id="provincial">
+      <div class="ch-head">
+        <p class="eyebrow">Capítulo 4 · Pregunta secundaria</p>
+        <p class="q"><b>¿El medio provincial cubre la política con un tono distinto al de los nacionales?</b></p>
+        <h2>Sí, salvo cuando reproduce noticias de los medios nacionales: ahí suena como ellos</h2>
+      </div>
+      <div class="body">
+        <p>Algunas notas de MisionesOnline cierran con una línea como "Fuente: TN" o "Fuente: Infobae": son notas de otros medios que el sitio reproduce o reescribe. Son <b class="v" data-v="mo_rep_n"></b> de <b class="v" data-v="mo_total"></b> (<b class="v" data-v="mo_rep_pct"></b>).</p>
+        <p>Separadas del resto, esas notas tienen un tono de <b class="v" data-v="mo_rep"></b>, muy cerca de Infobae (<b class="v" data-v="ib_score"></b>) y La Nación (<b class="v" data-v="ln_score"></b>). Las notas que MisionesOnline escribe por su cuenta quedan en <b class="v" data-v="mo_own"></b>, prácticamente neutras.</p>
+      </div>
+      <figure>
+        <figcaption>
+          <b>MisionesOnline dividido en dos: lo propio y lo reproducido</b>
+          <span>Tono promedio. Círculo vacío: notas que MisionesOnline toma de otros medios. Cada fila es un modelo; los tres muestran el mismo salto.</span>
+        </figcaption>
+        <div class="chart" id="c-provincial"></div>
+      </figure>
+      <div class="so-what">
+        <span class="k">¿Y esto qué significa?</span>
+        <p>Buena parte de la diferencia entre lo provincial y lo nacional no está en dónde se escribe, sino en qué se escribe: cuando MisionesOnline cuenta la misma política que los medios nacionales, con sus palabras, el tono se parece al de ellos. Sus notas propias, más cercanas a la gestión y la vida local, tienen otro clima. Es una asociación, no una prueba: las notas reproducidas suelen tratar temas nacionales, que en todos los medios tienen peor clima.</p>
+      </div>
+    </section>
+
+    <!-- Tecnologías -->
+    <section class="ch" id="tecnologias">
+      <div class="ch-head">
+        <p class="eyebrow">Las herramientas</p>
+        <h2>Con qué lo hicimos: qué hace cada tecnología en cada paso</h2>
+      </div>
+      <div class="body">
+        <p>Todo el proyecto está hecho con herramientas de código abierto y corre en una computadora común; solo uno de los modelos que probamos necesitó una placa de video. Así viaja una noticia desde el sitio del medio hasta este informe, y estas son las piezas que actúan en cada tramo:</p>
+      </div>
+      <ol class="flow" aria-label="Recorrido de los datos">
+        <li><b>Encontrar</b><span>requests, lxml</span></li>
+        <li><b>Descargar</b><span>requests, Dagster</span></li>
+        <li><b>Limpiar y unir</b><span>BeautifulSoup, pandas</span></li>
+        <li><b>Puntuar</b><span>PyTorch, Transformers, Ollama</span></li>
+        <li><b>Resumir</b><span>pandas, SciPy</span></li>
+        <li><b>Contar</b><span>HTML, SVG</span></li>
+      </ol>
+
+      <ol class="stages">
+        <li class="stage">
+          <div class="stage-head"><span class="num">1</span><h3>Encontrar las notas de Política</h3></div>
+          <p>Antes de bajar nada hay que saber qué notas existen. Cada medio ofrece una puerta distinta, y usamos la más simple que el sitio permite:</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Medio</th><th>Cómo encontramos las notas</th></tr></thead>
+              <tbody>
+                <tr><td><b>Infobae</b></td><td>Su <i>sitemap</i> diario, el índice que publica para los buscadores, filtrado a las direcciones de <code>/politica/</code>. Para que la descarga fuera corta leímos los índices de los días 5 y 20 de cada mes.</td></tr>
+                <tr><td><b>La Nación</b></td><td>Lo mismo, con su sitemap de cada día del período.</td></tr>
+                <tr><td><b>MisionesOnline</b></td><td>La API pública de WordPress: se le piden directamente las notas de la categoría Política entre dos fechas.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <dl class="roles">
+            <dt>requests</dt><dd>Pide cada índice al sitio, como haría un navegador pero sin abrir la página.</dd>
+            <dt>lxml</dt><dd>Lee el índice (un archivo XML) y saca de ahí la dirección y la fecha de cada nota.</dd>
+            <dt>Dagster</dt><dd>Ejecuta este paso como <code>catalogo_infobae</code> y <code>catalogo_lanacion</code> y guarda la lista resultante.</dd>
+          </dl>
+        </li>
+
+        <li class="stage">
+          <div class="stage-head"><span class="num">2</span><h3>Descargar cada nota, con cortesía</h3></div>
+          <p>Con la lista en mano, se pide cada nota, mes por mes. Es el paso más largo y el que más cuidado necesita para no molestar a los sitios.</p>
+          <dl class="roles">
+            <dt>requests + cliente propio</dt><dd>Espera 2 segundos entre pedidos a un mismo sitio, reintenta los errores pasajeros esperando cada vez más (2, 8 y 32 segundos) y obedece cuando el sitio pide esperar.</dd>
+            <dt>robots.txt</dt><dd>Antes de cada pedido el cliente lee este archivo, donde cada sitio dice qué pueden leer los robots. Por eso no usamos la API interna de La Nación: la prohíbe.</dd>
+            <dt>Dagster</dt><dd>Divide la descarga en 34 partes, una por mes (<code>raw_infobae</code>, <code>raw_lanacion</code>, <code>raw_misionesonline</code>). Si un mes falla, se repite solo ese. Además deja un solo pedido a la vez por medio.</dd>
+            <dt>Postgres + Docker</dt><dd>Postgres, una base de datos que corre dentro de Docker, guarda el historial de Dagster: qué mes se bajó, cuándo y con qué resultado (la barra verde de la captura).</dd>
+          </dl>
+          <p class="aside">Si un sitio responde con un desafío anti-robots (le pasó a MisionesOnline por unas horas), el programa se detiene: nunca intenta pasarlo ni se disfraza de navegador.</p>
+        </li>
+
+        <li class="stage">
+          <div class="stage-head"><span class="num">3</span><h3>Sacar el texto y armar una sola tabla</h3></div>
+          <p>Cada medio entrega la nota en un formato distinto. Este paso los lleva a todos al mismo molde: título, bajada, cuerpo, autor, fecha y medio.</p>
+          <dl class="roles">
+            <dt>Python</dt><dd>En Infobae y La Nación, cada página trae escondida una ficha con los datos de la nota (el JSON de su sistema Arc XP); el programa la encuentra y la lee. En MisionesOnline la API ya entrega esos datos.</dd>
+            <dt>BeautifulSoup + lxml</dt><dd>Quitan las etiquetas HTML del cuerpo y dejan solo el texto.</dd>
+            <dt>pandas</dt><dd>Une los tres medios, elimina notas repetidas, pasa las fechas a hora argentina y marca las notas "en vivo" y las que MisionesOnline toma de otros medios.</dd>
+            <dt>Parquet</dt><dd>Guarda el resultado, <code>noticias_politica</code>, en un archivo de tabla comprimido y rápido de leer.</dd>
+          </dl>
+        </li>
+
+        <li class="stage">
+          <div class="stage-head"><span class="num">4</span><h3>Ponerle una nota de tono a cada noticia</h3></div>
+          <p>El modelo lee el título y la bajada de cada nota y estima si el texto es positivo, neutro o negativo. Probamos tres modelos que leen de formas distintas, y elegimos el que más coincidió con una muestra de <span class="v" data-v="etiquetadas"></span> notas clasificadas de antemano.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Modelo</th><th>Cómo lee el tono</th><th>Dónde corre</th><th class="num">Acierto</th></tr></thead>
+              <tbody>
+                <tr><td><b>robertuito</b> (elegido)</td><td>Una red neuronal entrenada específicamente para clasificar sentimiento en textos en español (tuits).</td><td>Procesador común</td><td class="num" data-v="acc_robertuito"></td></tr>
+                <tr><td><b>mDeBERTa XNLI</b></td><td>Un modelo multilingüe que no fue entrenado para sentimiento: se le pregunta si es cierta la frase "El tono de esta noticia es negativo" (y neutro, y positivo).</td><td>Procesador común</td><td class="num" data-v="acc_mdeberta-xnli"></td></tr>
+                <tr><td><b>Qwen2.5 7B</b></td><td>Un modelo de lenguaje grande, como un chatbot, que corre en la propia computadora: lee la nota y responde 1, 2 o 3.</td><td>Placa de video</td><td class="num" data-v="acc_qwen2.5-7b"></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <dl class="roles">
+            <dt>PyTorch</dt><dd>El motor que hace las cuentas de las redes neuronales de robertuito y mDeBERTa.</dd>
+            <dt>Hugging Face Transformers</dt><dd>Descarga los modelos ya entrenados y los conecta con PyTorch.</dd>
+            <dt>pysentimiento</dt><dd>Prepara el texto y llama a robertuito con los ajustes con que fue entrenado.</dd>
+            <dt>Ollama</dt><dd>Corre el modelo de lenguaje Qwen en la placa de video (una NVIDIA RTX 4060), dentro de Docker, y además de la respuesta devuelve qué tan seguro está de cada opción.</dd>
+            <dt>Dagster</dt><dd>Ejecuta este paso como <code>sentimiento_noticias</code>: una fila por nota y por modelo, con las tres probabilidades y la nota de tono.</dd>
+          </dl>
+          <p class="aside">El modelo más chico y especializado le ganó al más grande: el modelo de lenguaje tendía a responder "neutro" casi siempre.</p>
+        </li>
+
+        <li class="stage">
+          <div class="stage-head"><span class="num">5</span><h3>Resumir el tono en el tiempo y alrededor de los hitos</h3></div>
+          <p>Con nueve mil notas puntuadas, falta convertirlas en respuestas: promedios por semana y por mes, y la comparación de antes y después de cada hito.</p>
+          <dl class="roles">
+            <dt>pandas</dt><dd>Agrupa las notas por medio y por semana o mes, deja afuera las notas en vivo y arma las ventanas de dos semanas alrededor de cada hito.</dd>
+            <dt>SciPy</dt><dd>Calcula los márgenes de error: la franja clara del gráfico mensual y si un cambio en un hito es "claro" o no se distingue del ruido.</dd>
+            <dt>Dagster</dt><dd>Ejecuta este paso como <code>evolucion_tono</code>, la serie semanal por medio.</dd>
+          </dl>
+        </li>
+
+        <li class="stage">
+          <div class="stage-head"><span class="num">6</span><h3>Contarlo en esta página</h3></div>
+          <p>Un programa recalcula cada número de este informe desde las tablas guardadas, así que ninguna cifra está copiada a mano.</p>
+          <dl class="roles">
+            <dt>Python + pandas</dt><dd>El script <code>build_report.py</code> calcula todas las cifras y las guarda dentro de esta misma página.</dd>
+            <dt>HTML + JavaScript</dt><dd>Con esas cifras, la página dibuja cada gráfico (en SVG) al abrirse, en modo claro u oscuro y en cualquier pantalla.</dd>
+          </dl>
+        </li>
+      </ol>
+
+      <div class="tech" id="assets">
+        <h3>Dagster por dentro: qué hace cada asset</h3>
+        <p>En Dagster, un <b>asset</b> es un dato que el pipeline produce y guarda, por ejemplo una tabla. Cada asset sabe de qué otros assets se alimenta, y así Dagster arma el mapa de la captura de arriba y sabe en qué orden ejecutarlos. Estos son los ocho del proyecto, en el orden en que corren:</p>
+        <div class="table-wrap">
+          <table class="assets">
+            <thead><tr><th>Asset</th><th>Qué hace</th><th>Se alimenta de</th><th>Cómo corre</th></tr></thead>
+            <tbody>
+              <tr><td><code>catalogo_infobae</code></td><td>Recorre los sitemaps de Infobae desde el 10/12/2023 y arma la lista de direcciones de notas de Política, con la fecha de cada una.</td><td>El sitio de Infobae</td><td>Una sola vez. Lee los días 5 y 20 de cada mes para que tarde minutos y no horas.</td></tr>
+              <tr><td><code>catalogo_lanacion</code></td><td>Lo mismo para La Nación. Su lista se armó con los sitemaps de todos los días del período.</td><td>El sitio de La Nación</td><td>Una sola vez.</td></tr>
+              <tr><td><code>raw_infobae</code></td><td>Baja cada nota de la lista y guarda la ficha de la nota tal como viene del sitio (el JSON de Arc XP). Toma una muestra fija de 30 notas por mes.</td><td><code>catalogo_infobae</code></td><td>Partido en 34 meses, de a uno; un solo pedido a la vez a Infobae.</td></tr>
+              <tr><td><code>raw_lanacion</code></td><td>Lo mismo para La Nación, con la misma muestra de 30 notas por mes.</td><td><code>catalogo_lanacion</code></td><td>Partido en 34 meses; un solo pedido a la vez a La Nación.</td></tr>
+              <tr><td><code>raw_misionesonline</code></td><td>Pide a la API de WordPress todas las notas de Política del mes. No necesita catálogo porque la API ya filtra por fecha.</td><td>El sitio de MisionesOnline</td><td>Partido en 34 meses; un solo pedido a la vez.</td></tr>
+              <tr><td><code>noticias_politica</code></td><td>Lee las fichas de los tres medios, saca título, bajada, cuerpo, autor y fecha, las pone en el mismo formato, elimina repetidas y recorta al período. Es el dataset.</td><td>Los tres <code>raw_*</code></td><td>Una tabla única, sin tocar internet.</td></tr>
+              <tr><td><code>sentimiento_noticias</code></td><td>Le pasa el título y la bajada de cada nota a uno o más modelos y guarda una fila por nota y modelo, con las tres probabilidades y la nota de tono.</td><td><code>noticias_politica</code></td><td>Una tabla única; se elige qué modelos usar al ejecutarlo.</td></tr>
+              <tr><td><code>evolucion_tono</code></td><td>Resume el tono por semana y por medio: cantidad de notas, promedio, margen de error y qué parte fue negativa, neutra o positiva. Deja afuera las notas en vivo.</td><td><code>sentimiento_noticias</code> y <code>noticias_politica</code></td><td>Una tabla única, sin tocar internet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="aside">Todos guardan su resultado como archivos Parquet en la carpeta <code>data/</code>. Los <code>raw_*</code> guardan un archivo por mes, que es lo que muestra la barra de 34 particiones en verde.</p>
+      </div>
+
+      <div class="tech">
+        <h3>Y en todo el recorrido</h3>
+        <dl class="roles">
+          <dt>Python 3.12 + uv</dt><dd>Python es el lenguaje de todo el proyecto; uv fija la versión exacta de cada librería para que cualquiera reproduzca el mismo entorno con un comando.</dd>
+          <dt>Dagster (interfaz web)</dt><dd>Muestra el mapa de pasos, el estado de cada mes y los registros de cada ejecución.</dd>
+          <dt>pytest</dt><dd>Cientos de pruebas automáticas revisan los clientes, los cálculos y este informe con respuestas guardadas, sin salir a internet.</dd>
+          <dt>Git + OpenSpec</dt><dd>Cada cambio quedó registrado, con su propuesta, su diseño y sus requisitos escritos antes de programarlo.</dd>
+        </dl>
+      </div>
+    </section>
+
+    <!-- Límites -->
+    <section class="ch" id="limites">
+      <div class="ch-head">
+        <p class="eyebrow">Para leer con cuidado</p>
+        <h2>Lo que este informe no dice</h2>
+      </div>
+      <ul class="plain">
+        <li><b>No mide postura política.</b> Un tono negativo no es una opinión sobre el gobierno: puede ser una crítica a cualquiera o una mala noticia.</li>
+        <li><b>No son todas las notas de los medios nacionales.</b> De Infobae y La Nación se leyó una muestra de unas 30 notas por mes; MisionesOnline está completo. Las cifras mensuales de los nacionales tienen más margen de error.</li>
+        <li><b>El modelo aprendió con tuits.</b> El modelo elegido (robertuito) se entrenó con publicaciones de redes sociales en español, no con noticias. En una muestra de control acertó en 7 de cada 10 notas: sirve para comparar promedios, no para juzgar una nota suelta.</li>
+        <li><b>El texto que se lee cambia con el tiempo.</b> Desde 2025 MisionesOnline pone bajada en menos notas; cuando falta, el modelo lee el primer párrafo, que es otro tipo de texto.</li>
+        <li><b>Respetamos las reglas de cada sitio.</b> La Nación prohíbe a los robots su API interna, así que solo se usaron sus índices públicos y las páginas de cada nota, a un ritmo lento.</li>
+      </ul>
+    </section>
+
+    <!-- Cierre -->
+    <section class="ch" id="cierre">
+      <div class="ch-head">
+        <p class="eyebrow">Cierre</p>
+        <h2>En tres frases</h2>
+      </div>
+      <ol class="final">
+        <li><span>Desde diciembre de 2023, el tono de las noticias de política fue negativo y estable: casi tres años sin un quiebre.</span></li>
+        <li><span>El diario tradicional (La Nación) es algo más negativo que el digital (Infobae), y el provincial (MisionesOnline) está cerca de neutro, salvo cuando reproduce notas nacionales.</span></li>
+        <li><span>El DNU 70/2023, la Ley Bases y las elecciones de 2025 dejaron, como mucho, cambios chicos y en un solo medio a la vez.</span></li>
+      </ol>
+    </section>
+
+    <!-- Anexo técnico -->
+    <details class="annex" id="anexo">
+      <summary>Anexo técnico<span>Para quien quiera saber cómo se hizo, reproducirlo o discutir los números.</span></summary>
+      <div class="annex-body">
+        <section>
+          <h3>Datos y acceso</h3>
+          <ul>
+            <li>Infobae y La Nación (Arc XP): sitemaps diarios filtrados a <code>/politica/</code>; el texto sale del JSON de la nota embebido en el HTML (<code>Fusion.globalContent</code>). No se usa <code>/pf/api/</code>: el robots.txt de La Nación lo prohíbe para todos los user agents. MisionesOnline (WordPress): API REST pública, categoría 7.</li>
+            <li>Cortesía: una request cada 2 s por host, reintentos con backoff, User-Agent identificable, solo rutas permitidas por robots.txt; el cliente se detiene ante un desafío anti-bot.</li>
+            <li>Muestra de Arc: 30 notas por mes por el hash más bajo de la URL. El catálogo de Infobae lee solo los sitemaps de los días 5 y 20 (el 99 % de sus notas cae en los días 4–5 y 19–20); el de La Nación está completo.</li>
+            <li>Período: <span data-v="periodo_largo"></span>, <span data-v="meses"></span> meses, <span data-v="notas"></span> notas (<span data-v="en_vivo"></span> "en vivo", fuera de todos los promedios). Dataset congelado, SHA-256 en <code>docs/decision-sentimiento.md</code>.</li>
+          </ul>
+        </section>
+        <section>
+          <h3>Pipeline</h3>
+          <p>Python 3.12 con uv y Dagster 1.13 (Postgres en Docker solo para la metadata). Assets: <code>catalogo_infobae</code>, <code>catalogo_lanacion</code>, <code>raw_*</code> particionados por mes, <code>noticias_politica</code> (Parquet), <code>sentimiento_noticias</code> (una fila por nota y modelo) y <code>evolucion_tono</code> (semanal por modelo y medio). El informe no es un asset: se arma desde los Parquet con un script.</p>
+        </section>
+        <section>
+          <h3>Modelo de sentimiento</h3>
+          <p>Texto de análisis: título + bajada; sin bajada, título + primer párrafo del cuerpo. Puntaje: <code>prob_pos − prob_neg</code>. Se evaluaron tres modelos sobre <span data-v="etiquetadas"></span> notas etiquetadas (100 por medio, sin notas en vivo); se eligió <code data-v="modelo"></code> por F1 macro. Las etiquetas son "silver": las generó Claude Opus 5.5 sin revisión humana.</p>
+          <div class="table-wrap" id="t-eval"></div>
+          <p>Detalle (matrices de confusión, por medio y con o sin bajada) en <code>docs/decision-sentimiento.md</code>.</p>
+        </section>
+        <section>
+          <h3>Estadística</h3>
+          <ul>
+            <li>Serie mensual: mes calendario en hora argentina; intervalo t de Student del 95 % para la media (sin intervalo con una sola nota). La serie semanal del asset <code>evolucion_tono</code> no se usa en el relato porque Infobae tiene datos en solo 77 semanas.</li>
+            <li>Hitos (<code>anotaciones/hitos.csv</code>, fechas verificadas): ventanas de 14 días antes <code>[fecha − 14 d, fecha)</code> y después <code>[fecha, fecha + 14 d)</code>; el día del hito cuenta como "después". Diferencia de medias con intervalo de Welch del 95 %; un cambio es "claro" si el intervalo no incluye el cero. Con menos de 10 notas en un lado no se informa media. La ventana previa al DNU está recortada a 10 días porque el dataset empieza el 10/12/2023.</li>
+            <li>Notas reproducidas: <code>fuente_externa</code> no vacía (línea final "Fuente: X" en MisionesOnline).</li>
+          </ul>
+        </section>
+        <section>
+          <h3>Reproducir</h3>
+          <p>Con <code>data/sentimiento_noticias.parquet</code> y <code>data/noticias_politica.parquet</code> en su lugar: <code>uv run python scripts/build_report.py</code>. El script recalcula todas las cifras (<code>src/news_politica/report/aggregates.py</code>) y reemplaza solo el bloque de datos de esta página. Cambio OpenSpec: <code>add-final-report</code>.</p>
+        </section>
+      </div>
+    </details>
+
+    <footer>
+      <span>news-politica · Carlos Aular y Juan Martín Pedrozo · Maestría en Ciencia de Datos, Universidad Austral · Web Mining</span>
+      <span>Modelo del relato: <span data-v="modelo"></span>. Todas las cifras salen del bloque de datos de esta página, generado por <code>scripts/build_report.py</code>.</span>
+    </footer>
+  </main>
+</div>
+
+<script type="application/json" id="datos">
+{
+  "evaluacion": [
+    {
+      "accuracy": 0.603,
+      "macro_f1": 0.579,
+      "modelo": "mdeberta-xnli",
+      "n": 300
+    },
+    {
+      "accuracy": 0.58,
+      "macro_f1": 0.549,
+      "modelo": "qwen2.5-7b",
+      "n": 300
+    },
+    {
+      "accuracy": 0.703,
+      "macro_f1": 0.686,
+      "modelo": "robertuito",
+      "n": 300
+    }
+  ],
+  "hitos": [
+    {
+      "alcance": "nacional",
+      "claro": false,
+      "dias_antes": 10,
+      "dias_despues": 14,
+      "diferencia": null,
+      "fecha": "2023-12-20",
+      "hito": "DNU 70/2023",
+      "ic_inf": null,
+      "ic_sup": null,
+      "insuficiente": true,
+      "medio": "infobae",
+      "n_antes": 9,
+      "n_despues": 21,
+      "prop_neg_antes": null,
+      "prop_neg_despues": 0.429,
+      "score_antes": null,
+      "score_despues": -0.371,
+      "truncada": true
+    },
+    {
+      "alcance": "nacional",
+      "claro": false,
+      "dias_antes": 10,
+      "dias_despues": 14,
+      "diferencia": -0.21,
+      "fecha": "2023-12-20",
+      "hito": "DNU 70/2023",
+      "ic_inf": -0.493,
+      "ic_sup": 0.073,
+      "insuficiente": false,
+      "medio": "lanacion",
+      "n_antes": 13,
+      "n_despues": 18,
+      "prop_neg_antes": 0.231,
+      "prop_neg_despues": 0.333,
+      "score_antes": -0.127,
+      "score_despues": -0.337,
+      "truncada": true
+    },
+    {
+      "alcance": "nacional",
+      "claro": true,
+      "dias_antes": 10,
+      "dias_despues": 14,
+      "diferencia": -0.228,
+      "fecha": "2023-12-20",
+      "hito": "DNU 70/2023",
+      "ic_inf": -0.345,
+      "ic_sup": -0.11,
+      "insuficiente": false,
+      "medio": "misionesonline",
+      "n_antes": 128,
+      "n_despues": 94,
+      "prop_neg_antes": 0.125,
+      "prop_neg_despues": 0.245,
+      "score_antes": 0.116,
+      "score_despues": -0.112,
+      "truncada": true
+    },
+    {
+      "alcance": "nacional",
+      "claro": true,
+      "dias_antes": 14,
+      "dias_despues": 14,
+      "diferencia": 0.671,
+      "fecha": "2024-06-12",
+      "hito": "Aprobación de la Ley Bases en el Senado (junio de 2024)",
+      "ic_inf": 0.387,
+      "ic_sup": 0.954,
+      "insuficiente": false,
+      "medio": "infobae",
+      "n_antes": 16,
+      "n_despues": 12,
+      "prop_neg_antes": 0.812,
+      "prop_neg_despues": 0.167,
+      "score_antes": -0.691,
+      "score_despues": -0.02,
+      "truncada": false
+    },
+    {
+      "alcance": "nacional",
+      "claro": false,
+      "dias_antes": 14,
+      "dias_despues": 14,
+      "diferencia": 0.066,
+      "fecha": "2024-06-12",
+      "hito": "Aprobación de la Ley Bases en el Senado (junio de 2024)",
+      "ic_inf": -0.295,
+      "ic_sup": 0.428,
+      "insuficiente": false,
+      "medio": "lanacion",
+      "n_antes": 12,
+      "n_despues": 16,
+      "prop_neg_antes": 0.5,
+      "prop_neg_despues": 0.188,
+      "score_antes": -0.271,
+      "score_despues": -0.205,
+      "truncada": false
+    },
+    {
+      "alcance": "nacional",
+      "claro": false,
+      "dias_antes": 14,
+      "dias_despues": 14,
+      "diferencia": 0.067,
+      "fecha": "2024-06-12",
+      "hito": "Aprobación de la Ley Bases en el Senado (junio de 2024)",
+      "ic_inf": -0.071,
+      "ic_sup": 0.205,
+      "insuficiente": false,
+      "medio": "misionesonline",
+      "n_antes": 87,
+      "n_despues": 73,
+      "prop_neg_antes": 0.207,
+      "prop_neg_despues": 0.178,
+      "score_antes": -0.011,
+      "score_despues": 0.056,
+      "truncada": false
+    },
+    {
+      "alcance": "nacional",
+      "claro": false,
+      "dias_antes": 14,
+      "dias_despues": 14,
+      "diferencia": -0.072,
+      "fecha": "2025-10-26",
+      "hito": "Elecciones legislativas 2025",
+      "ic_inf": -0.436,
+      "ic_sup": 0.292,
+      "insuficiente": false,
+      "medio": "infobae",
+      "n_antes": 16,
+      "n_despues": 16,
+      "prop_neg_antes": 0.312,
+      "prop_neg_despues": 0.438,
+      "score_antes": -0.163,
+      "score_despues": -0.235,
+      "truncada": false
+    },
+    {
+      "alcance": "nacional",
+      "claro": false,
+      "dias_antes": 14,
+      "dias_despues": 14,
+      "diferencia": -0.029,
+      "fecha": "2025-10-26",
+      "hito": "Elecciones legislativas 2025",
+      "ic_inf": -0.33,
+      "ic_sup": 0.271,
+      "insuficiente": false,
+      "medio": "lanacion",
+      "n_antes": 11,
+      "n_despues": 20,
+      "prop_neg_antes": 0.273,
+      "prop_neg_despues": 0.3,
+      "score_antes": -0.09,
+      "score_despues": -0.12,
+      "truncada": false
+    },
+    {
+      "alcance": "nacional",
+      "claro": true,
+      "dias_antes": 14,
+      "dias_despues": 14,
+      "diferencia": 0.162,
+      "fecha": "2025-10-26",
+      "hito": "Elecciones legislativas 2025",
+      "ic_inf": 0.04,
+      "ic_sup": 0.284,
+      "insuficiente": false,
+      "medio": "misionesonline",
+      "n_antes": 97,
+      "n_despues": 136,
+      "prop_neg_antes": 0.227,
+      "prop_neg_despues": 0.154,
+      "score_antes": -0.047,
+      "score_despues": 0.115,
+      "truncada": false
+    }
+  ],
+  "mensual": [
+    {
+      "ic_inf": -0.46,
+      "ic_sup": -0.141,
+      "medio": "infobae",
+      "mes": "2023-12",
+      "n": 30,
+      "score": -0.3
+    },
+    {
+      "ic_inf": -0.495,
+      "ic_sup": -0.216,
+      "medio": "infobae",
+      "mes": "2024-01",
+      "n": 30,
+      "score": -0.355
+    },
+    {
+      "ic_inf": -0.403,
+      "ic_sup": -0.096,
+      "medio": "infobae",
+      "mes": "2024-02",
+      "n": 30,
+      "score": -0.25
+    },
+    {
+      "ic_inf": -0.529,
+      "ic_sup": -0.216,
+      "medio": "infobae",
+      "mes": "2024-03",
+      "n": 30,
+      "score": -0.373
+    },
+    {
+      "ic_inf": -0.439,
+      "ic_sup": -0.101,
+      "medio": "infobae",
+      "mes": "2024-04",
+      "n": 30,
+      "score": -0.27
+    },
+    {
+      "ic_inf": -0.512,
+      "ic_sup": -0.175,
+      "medio": "infobae",
+      "mes": "2024-05",
+      "n": 30,
+      "score": -0.343
+    },
+    {
+      "ic_inf": -0.58,
+      "ic_sup": -0.227,
+      "medio": "infobae",
+      "mes": "2024-06",
+      "n": 28,
+      "score": -0.403
+    },
+    {
+      "ic_inf": -0.461,
+      "ic_sup": -0.102,
+      "medio": "infobae",
+      "mes": "2024-07",
+      "n": 30,
+      "score": -0.281
+    },
+    {
+      "ic_inf": -0.537,
+      "ic_sup": -0.241,
+      "medio": "infobae",
+      "mes": "2024-08",
+      "n": 30,
+      "score": -0.389
+    },
+    {
+      "ic_inf": -0.492,
+      "ic_sup": -0.189,
+      "medio": "infobae",
+      "mes": "2024-09",
+      "n": 29,
+      "score": -0.34
+    },
+    {
+      "ic_inf": -0.507,
+      "ic_sup": -0.227,
+      "medio": "infobae",
+      "mes": "2024-10",
+      "n": 30,
+      "score": -0.367
+    },
+    {
+      "ic_inf": -0.31,
+      "ic_sup": 0.095,
+      "medio": "infobae",
+      "mes": "2024-11",
+      "n": 30,
+      "score": -0.107
+    },
+    {
+      "ic_inf": -0.344,
+      "ic_sup": -0.019,
+      "medio": "infobae",
+      "mes": "2024-12",
+      "n": 30,
+      "score": -0.182
+    },
+    {
+      "ic_inf": -0.445,
+      "ic_sup": -0.049,
+      "medio": "infobae",
+      "mes": "2025-01",
+      "n": 20,
+      "score": -0.247
+    },
+    {
+      "ic_inf": -0.491,
+      "ic_sup": -0.206,
+      "medio": "infobae",
+      "mes": "2025-02",
+      "n": 29,
+      "score": -0.349
+    },
+    {
+      "ic_inf": -0.397,
+      "ic_sup": -0.063,
+      "medio": "infobae",
+      "mes": "2025-03",
+      "n": 29,
+      "score": -0.23
+    },
+    {
+      "ic_inf": -0.6,
+      "ic_sup": -0.225,
+      "medio": "infobae",
+      "mes": "2025-04",
+      "n": 27,
+      "score": -0.413
+    },
+    {
+      "ic_inf": -0.328,
+      "ic_sup": -0.02,
+      "medio": "infobae",
+      "mes": "2025-05",
+      "n": 30,
+      "score": -0.174
+    },
+    {
+      "ic_inf": -0.498,
+      "ic_sup": -0.168,
+      "medio": "infobae",
+      "mes": "2025-06",
+      "n": 29,
+      "score": -0.333
+    },
+    {
+      "ic_inf": -0.503,
+      "ic_sup": -0.22,
+      "medio": "infobae",
+      "mes": "2025-07",
+      "n": 29,
+      "score": -0.362
+    },
+    {
+      "ic_inf": -0.438,
+      "ic_sup": -0.135,
+      "medio": "infobae",
+      "mes": "2025-08",
+      "n": 29,
+      "score": -0.287
+    },
+    {
+      "ic_inf": -0.488,
+      "ic_sup": -0.127,
+      "medio": "infobae",
+      "mes": "2025-09",
+      "n": 29,
+      "score": -0.308
+    },
+    {
+      "ic_inf": -0.4,
+      "ic_sup": -0.014,
+      "medio": "infobae",
+      "mes": "2025-10",
+      "n": 29,
+      "score": -0.207
+    },
+    {
+      "ic_inf": -0.444,
+      "ic_sup": -0.141,
+      "medio": "infobae",
+      "mes": "2025-11",
+      "n": 30,
+      "score": -0.292
+    },
+    {
+      "ic_inf": -0.417,
+      "ic_sup": -0.052,
+      "medio": "infobae",
+      "mes": "2025-12",
+      "n": 30,
+      "score": -0.235
+    },
+    {
+      "ic_inf": -0.41,
+      "ic_sup": -0.141,
+      "medio": "infobae",
+      "mes": "2026-01",
+      "n": 30,
+      "score": -0.275
+    },
+    {
+      "ic_inf": -0.377,
+      "ic_sup": 0.059,
+      "medio": "infobae",
+      "mes": "2026-02",
+      "n": 29,
+      "score": -0.159
+    },
+    {
+      "ic_inf": -0.189,
+      "ic_sup": 0.056,
+      "medio": "infobae",
+      "mes": "2026-03",
+      "n": 30,
+      "score": -0.066
+    },
+    {
+      "ic_inf": -0.401,
+      "ic_sup": 0.023,
+      "medio": "infobae",
+      "mes": "2026-04",
+      "n": 24,
+      "score": -0.189
+    },
+    {
+      "ic_inf": -0.492,
+      "ic_sup": -0.194,
+      "medio": "infobae",
+      "mes": "2026-05",
+      "n": 30,
+      "score": -0.343
+    },
+    {
+      "ic_inf": -0.6,
+      "ic_sup": -0.283,
+      "medio": "infobae",
+      "mes": "2026-06",
+      "n": 30,
+      "score": -0.441
+    },
+    {
+      "ic_inf": -0.387,
+      "ic_sup": -0.102,
+      "medio": "infobae",
+      "mes": "2026-07",
+      "n": 23,
+      "score": -0.244
+    },
+    {
+      "ic_inf": -0.489,
+      "ic_sup": -0.136,
+      "medio": "infobae",
+      "mes": "2026-08",
+      "n": 29,
+      "score": -0.313
+    },
+    {
+      "ic_inf": -0.349,
+      "ic_sup": -0.054,
+      "medio": "infobae",
+      "mes": "2026-09",
+      "n": 30,
+      "score": -0.202
+    },
+    {
+      "ic_inf": -0.367,
+      "ic_sup": -0.085,
+      "medio": "lanacion",
+      "mes": "2023-12",
+      "n": 30,
+      "score": -0.226
+    },
+    {
+      "ic_inf": -0.64,
+      "ic_sup": -0.278,
+      "medio": "lanacion",
+      "mes": "2024-01",
+      "n": 29,
+      "score": -0.459
+    },
+    {
+      "ic_inf": -0.567,
+      "ic_sup": -0.229,
+      "medio": "lanacion",
+      "mes": "2024-02",
+      "n": 30,
+      "score": -0.398
+    },
+    {
+      "ic_inf": -0.613,
+      "ic_sup": -0.29,
+      "medio": "lanacion",
+      "mes": "2024-03",
+      "n": 29,
+      "score": -0.452
+    },
+    {
+      "ic_inf": -0.55,
+      "ic_sup": -0.304,
+      "medio": "lanacion",
+      "mes": "2024-04",
+      "n": 29,
+      "score": -0.427
+    },
+    {
+      "ic_inf": -0.468,
+      "ic_sup": -0.15,
+      "medio": "lanacion",
+      "mes": "2024-05",
+      "n": 28,
+      "score": -0.309
+    },
+    {
+      "ic_inf": -0.332,
+      "ic_sup": -0.031,
+      "medio": "lanacion",
+      "mes": "2024-06",
+      "n": 29,
+      "score": -0.182
+    },
+    {
+      "ic_inf": -0.494,
+      "ic_sup": -0.192,
+      "medio": "lanacion",
+      "mes": "2024-07",
+      "n": 29,
+      "score": -0.343
+    },
+    {
+      "ic_inf": -0.607,
+      "ic_sup": -0.281,
+      "medio": "lanacion",
+      "mes": "2024-08",
+      "n": 28,
+      "score": -0.444
+    },
+    {
+      "ic_inf": -0.526,
+      "ic_sup": -0.184,
+      "medio": "lanacion",
+      "mes": "2024-09",
+      "n": 28,
+      "score": -0.355
+    },
+    {
+      "ic_inf": -0.677,
+      "ic_sup": -0.402,
+      "medio": "lanacion",
+      "mes": "2024-10",
+      "n": 30,
+      "score": -0.54
+    },
+    {
+      "ic_inf": -0.564,
+      "ic_sup": -0.303,
+      "medio": "lanacion",
+      "mes": "2024-11",
+      "n": 29,
+      "score": -0.433
+    },
+    {
+      "ic_inf": -0.419,
+      "ic_sup": -0.152,
+      "medio": "lanacion",
+      "mes": "2024-12",
+      "n": 30,
+      "score": -0.285
+    },
+    {
+      "ic_inf": -0.549,
+      "ic_sup": -0.189,
+      "medio": "lanacion",
+      "mes": "2025-01",
+      "n": 28,
+      "score": -0.369
+    },
+    {
+      "ic_inf": -0.626,
+      "ic_sup": -0.317,
+      "medio": "lanacion",
+      "mes": "2025-02",
+      "n": 28,
+      "score": -0.471
+    },
+    {
+      "ic_inf": -0.4,
+      "ic_sup": -0.077,
+      "medio": "lanacion",
+      "mes": "2025-03",
+      "n": 30,
+      "score": -0.239
+    },
+    {
+      "ic_inf": -0.472,
+      "ic_sup": -0.184,
+      "medio": "lanacion",
+      "mes": "2025-04",
+      "n": 29,
+      "score": -0.328
+    },
+    {
+      "ic_inf": -0.523,
+      "ic_sup": -0.171,
+      "medio": "lanacion",
+      "mes": "2025-05",
+      "n": 29,
+      "score": -0.347
+    },
+    {
+      "ic_inf": -0.469,
+      "ic_sup": -0.179,
+      "medio": "lanacion",
+      "mes": "2025-06",
+      "n": 30,
+      "score": -0.324
+    },
+    {
+      "ic_inf": -0.532,
+      "ic_sup": -0.226,
+      "medio": "lanacion",
+      "mes": "2025-07",
+      "n": 30,
+      "score": -0.379
+    },
+    {
+      "ic_inf": -0.484,
+      "ic_sup": -0.235,
+      "medio": "lanacion",
+      "mes": "2025-08",
+      "n": 30,
+      "score": -0.359
+    },
+    {
+      "ic_inf": -0.507,
+      "ic_sup": -0.191,
+      "medio": "lanacion",
+      "mes": "2025-09",
+      "n": 30,
+      "score": -0.349
+    },
+    {
+      "ic_inf": -0.254,
+      "ic_sup": 0.022,
+      "medio": "lanacion",
+      "mes": "2025-10",
+      "n": 30,
+      "score": -0.116
+    },
+    {
+      "ic_inf": -0.386,
+      "ic_sup": -0.063,
+      "medio": "lanacion",
+      "mes": "2025-11",
+      "n": 29,
+      "score": -0.225
+    },
+    {
+      "ic_inf": -0.519,
+      "ic_sup": -0.19,
+      "medio": "lanacion",
+      "mes": "2025-12",
+      "n": 30,
+      "score": -0.354
+    },
+    {
+      "ic_inf": -0.5,
+      "ic_sup": -0.187,
+      "medio": "lanacion",
+      "mes": "2026-01",
+      "n": 30,
+      "score": -0.343
+    },
+    {
+      "ic_inf": -0.476,
+      "ic_sup": -0.157,
+      "medio": "lanacion",
+      "mes": "2026-02",
+      "n": 29,
+      "score": -0.317
+    },
+    {
+      "ic_inf": -0.379,
+      "ic_sup": -0.114,
+      "medio": "lanacion",
+      "mes": "2026-03",
+      "n": 28,
+      "score": -0.246
+    },
+    {
+      "ic_inf": -0.525,
+      "ic_sup": -0.169,
+      "medio": "lanacion",
+      "mes": "2026-04",
+      "n": 26,
+      "score": -0.347
+    },
+    {
+      "ic_inf": -0.523,
+      "ic_sup": -0.228,
+      "medio": "lanacion",
+      "mes": "2026-05",
+      "n": 29,
+      "score": -0.375
+    },
+    {
+      "ic_inf": -0.62,
+      "ic_sup": -0.399,
+      "medio": "lanacion",
+      "mes": "2026-06",
+      "n": 29,
+      "score": -0.509
+    },
+    {
+      "ic_inf": -0.567,
+      "ic_sup": -0.263,
+      "medio": "lanacion",
+      "mes": "2026-07",
+      "n": 29,
+      "score": -0.415
+    },
+    {
+      "ic_inf": -0.444,
+      "ic_sup": -0.129,
+      "medio": "lanacion",
+      "mes": "2026-08",
+      "n": 30,
+      "score": -0.286
+    },
+    {
+      "ic_inf": -0.532,
+      "ic_sup": -0.263,
+      "medio": "lanacion",
+      "mes": "2026-09",
+      "n": 28,
+      "score": -0.397
+    },
+    {
+      "ic_inf": -0.043,
+      "ic_sup": 0.082,
+      "medio": "misionesonline",
+      "mes": "2023-12",
+      "n": 207,
+      "score": 0.02
+    },
+    {
+      "ic_inf": -0.217,
+      "ic_sup": -0.071,
+      "medio": "misionesonline",
+      "mes": "2024-01",
+      "n": 134,
+      "score": -0.144
+    },
+    {
+      "ic_inf": -0.257,
+      "ic_sup": -0.098,
+      "medio": "misionesonline",
+      "mes": "2024-02",
+      "n": 143,
+      "score": -0.178
+    },
+    {
+      "ic_inf": -0.254,
+      "ic_sup": -0.102,
+      "medio": "misionesonline",
+      "mes": "2024-03",
+      "n": 171,
+      "score": -0.178
+    },
+    {
+      "ic_inf": -0.137,
+      "ic_sup": 0.013,
+      "medio": "misionesonline",
+      "mes": "2024-04",
+      "n": 150,
+      "score": -0.062
+    },
+    {
+      "ic_inf": -0.131,
+      "ic_sup": 0.011,
+      "medio": "misionesonline",
+      "mes": "2024-05",
+      "n": 203,
+      "score": -0.06
+    },
+    {
+      "ic_inf": -0.042,
+      "ic_sup": 0.089,
+      "medio": "misionesonline",
+      "mes": "2024-06",
+      "n": 166,
+      "score": 0.023
+    },
+    {
+      "ic_inf": -0.013,
+      "ic_sup": 0.148,
+      "medio": "misionesonline",
+      "mes": "2024-07",
+      "n": 122,
+      "score": 0.067
+    },
+    {
+      "ic_inf": -0.244,
+      "ic_sup": -0.077,
+      "medio": "misionesonline",
+      "mes": "2024-08",
+      "n": 143,
+      "score": -0.16
+    },
+    {
+      "ic_inf": -0.087,
+      "ic_sup": 0.047,
+      "medio": "misionesonline",
+      "mes": "2024-09",
+      "n": 195,
+      "score": -0.02
+    },
+    {
+      "ic_inf": -0.048,
+      "ic_sup": 0.086,
+      "medio": "misionesonline",
+      "mes": "2024-10",
+      "n": 185,
+      "score": 0.019
+    },
+    {
+      "ic_inf": 0.004,
+      "ic_sup": 0.151,
+      "medio": "misionesonline",
+      "mes": "2024-11",
+      "n": 159,
+      "score": 0.078
+    },
+    {
+      "ic_inf": -0.062,
+      "ic_sup": 0.094,
+      "medio": "misionesonline",
+      "mes": "2024-12",
+      "n": 168,
+      "score": 0.016
+    },
+    {
+      "ic_inf": -0.119,
+      "ic_sup": 0.052,
+      "medio": "misionesonline",
+      "mes": "2025-01",
+      "n": 110,
+      "score": -0.034
+    },
+    {
+      "ic_inf": -0.249,
+      "ic_sup": -0.09,
+      "medio": "misionesonline",
+      "mes": "2025-02",
+      "n": 149,
+      "score": -0.17
+    },
+    {
+      "ic_inf": -0.021,
+      "ic_sup": 0.129,
+      "medio": "misionesonline",
+      "mes": "2025-03",
+      "n": 171,
+      "score": 0.054
+    },
+    {
+      "ic_inf": 0.152,
+      "ic_sup": 0.274,
+      "medio": "misionesonline",
+      "mes": "2025-04",
+      "n": 203,
+      "score": 0.213
+    },
+    {
+      "ic_inf": 0.076,
+      "ic_sup": 0.211,
+      "medio": "misionesonline",
+      "mes": "2025-05",
+      "n": 204,
+      "score": 0.144
+    },
+    {
+      "ic_inf": 0.089,
+      "ic_sup": 0.169,
+      "medio": "misionesonline",
+      "mes": "2025-06",
+      "n": 355,
+      "score": 0.129
+    },
+    {
+      "ic_inf": -0.018,
+      "ic_sup": 0.125,
+      "medio": "misionesonline",
+      "mes": "2025-07",
+      "n": 205,
+      "score": 0.053
+    },
+    {
+      "ic_inf": -0.102,
+      "ic_sup": 0.021,
+      "medio": "misionesonline",
+      "mes": "2025-08",
+      "n": 273,
+      "score": -0.041
+    },
+    {
+      "ic_inf": -0.113,
+      "ic_sup": 0.001,
+      "medio": "misionesonline",
+      "mes": "2025-09",
+      "n": 294,
+      "score": -0.056
+    },
+    {
+      "ic_inf": -0.021,
+      "ic_sup": 0.089,
+      "medio": "misionesonline",
+      "mes": "2025-10",
+      "n": 281,
+      "score": 0.034
+    },
+    {
+      "ic_inf": -0.128,
+      "ic_sup": 0.035,
+      "medio": "misionesonline",
+      "mes": "2025-11",
+      "n": 169,
+      "score": -0.046
+    },
+    {
+      "ic_inf": -0.104,
+      "ic_sup": 0.028,
+      "medio": "misionesonline",
+      "mes": "2025-12",
+      "n": 178,
+      "score": -0.038
+    },
+    {
+      "ic_inf": -0.16,
+      "ic_sup": 0.055,
+      "medio": "misionesonline",
+      "mes": "2026-01",
+      "n": 90,
+      "score": -0.052
+    },
+    {
+      "ic_inf": -0.207,
+      "ic_sup": -0.068,
+      "medio": "misionesonline",
+      "mes": "2026-02",
+      "n": 177,
+      "score": -0.137
+    },
+    {
+      "ic_inf": -0.252,
+      "ic_sup": -0.145,
+      "medio": "misionesonline",
+      "mes": "2026-03",
+      "n": 317,
+      "score": -0.199
+    },
+    {
+      "ic_inf": -0.169,
+      "ic_sup": -0.052,
+      "medio": "misionesonline",
+      "mes": "2026-04",
+      "n": 322,
+      "score": -0.11
+    },
+    {
+      "ic_inf": -0.106,
+      "ic_sup": 0.003,
+      "medio": "misionesonline",
+      "mes": "2026-05",
+      "n": 340,
+      "score": -0.051
+    },
+    {
+      "ic_inf": -0.061,
+      "ic_sup": 0.043,
+      "medio": "misionesonline",
+      "mes": "2026-06",
+      "n": 335,
+      "score": -0.009
+    },
+    {
+      "ic_inf": -0.019,
+      "ic_sup": 0.088,
+      "medio": "misionesonline",
+      "mes": "2026-07",
+      "n": 291,
+      "score": 0.035
+    },
+    {
+      "ic_inf": -0.073,
+      "ic_sup": 0.029,
+      "medio": "misionesonline",
+      "mes": "2026-08",
+      "n": 316,
+      "score": -0.022
+    },
+    {
+      "ic_inf": -0.122,
+      "ic_sup": -0.023,
+      "medio": "misionesonline",
+      "mes": "2026-09",
+      "n": 319,
+      "score": -0.073
+    }
+  ],
+  "modelo": "robertuito",
+  "periodo": {
+    "desde": "2023-12-10",
+    "hasta": "2026-09-30"
+  },
+  "por_modelo": [
+    {
+      "medio": "infobae",
+      "modelo": "mdeberta-xnli",
+      "n": 982,
+      "score": -0.149
+    },
+    {
+      "medio": "lanacion",
+      "modelo": "mdeberta-xnli",
+      "n": 989,
+      "score": -0.239
+    },
+    {
+      "medio": "misionesonline",
+      "modelo": "mdeberta-xnli",
+      "n": 7245,
+      "score": 0.177
+    },
+    {
+      "medio": "infobae",
+      "modelo": "qwen2.5-7b",
+      "n": 982,
+      "score": -0.073
+    },
+    {
+      "medio": "lanacion",
+      "modelo": "qwen2.5-7b",
+      "n": 989,
+      "score": -0.132
+    },
+    {
+      "medio": "misionesonline",
+      "modelo": "qwen2.5-7b",
+      "n": 7245,
+      "score": 0.039
+    },
+    {
+      "medio": "infobae",
+      "modelo": "robertuito",
+      "n": 982,
+      "score": -0.284
+    },
+    {
+      "medio": "lanacion",
+      "modelo": "robertuito",
+      "n": 989,
+      "score": -0.351
+    },
+    {
+      "medio": "misionesonline",
+      "modelo": "robertuito",
+      "n": 7245,
+      "score": -0.025
+    }
+  ],
+  "provincial": [
+    {
+      "grupo": "propias",
+      "modelo": "mdeberta-xnli",
+      "n": 6322,
+      "score": 0.212
+    },
+    {
+      "grupo": "reproducidas",
+      "modelo": "mdeberta-xnli",
+      "n": 923,
+      "score": -0.066
+    },
+    {
+      "grupo": "propias",
+      "modelo": "qwen2.5-7b",
+      "n": 6322,
+      "score": 0.055
+    },
+    {
+      "grupo": "reproducidas",
+      "modelo": "qwen2.5-7b",
+      "n": 923,
+      "score": -0.069
+    },
+    {
+      "grupo": "propias",
+      "modelo": "robertuito",
+      "n": 6322,
+      "score": 0.007
+    },
+    {
+      "grupo": "reproducidas",
+      "modelo": "robertuito",
+      "n": 923,
+      "score": -0.24
+    }
+  ],
+  "resumen": [
+    {
+      "medio": "infobae",
+      "n": 982,
+      "prop_neg": 0.401,
+      "prop_neu": 0.537,
+      "prop_pos": 0.062,
+      "score": -0.284
+    },
+    {
+      "medio": "lanacion",
+      "n": 989,
+      "prop_neg": 0.464,
+      "prop_neu": 0.499,
+      "prop_pos": 0.036,
+      "score": -0.351
+    },
+    {
+      "medio": "misionesonline",
+      "n": 7245,
+      "prop_neg": 0.246,
+      "prop_neu": 0.545,
+      "prop_pos": 0.209,
+      "score": -0.025
+    }
+  ],
+  "totales": {
+    "en_vivo": 45,
+    "etiquetadas": 300,
+    "meses": 34,
+    "notas": 9261,
+    "por_medio": {
+      "infobae": 996,
+      "lanacion": 1020,
+      "misionesonline": 7245
+    }
+  },
+  "volumen": [
+    {
+      "medio": "infobae",
+      "mes": "2023-12",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2024-01",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2024-02",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2024-03",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2024-04",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2024-05",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2024-06",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2024-07",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2024-08",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2024-09",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2024-10",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2024-11",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2024-12",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2025-01",
+      "n": 21
+    },
+    {
+      "medio": "infobae",
+      "mes": "2025-02",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2025-03",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2025-04",
+      "n": 28
+    },
+    {
+      "medio": "infobae",
+      "mes": "2025-05",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2025-06",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2025-07",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2025-08",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2025-09",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2025-10",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2025-11",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2025-12",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2026-01",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2026-02",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2026-03",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2026-04",
+      "n": 24
+    },
+    {
+      "medio": "infobae",
+      "mes": "2026-05",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2026-06",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2026-07",
+      "n": 23
+    },
+    {
+      "medio": "infobae",
+      "mes": "2026-08",
+      "n": 30
+    },
+    {
+      "medio": "infobae",
+      "mes": "2026-09",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2023-12",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2024-01",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2024-02",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2024-03",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2024-04",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2024-05",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2024-06",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2024-07",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2024-08",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2024-09",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2024-10",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2024-11",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2024-12",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2025-01",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2025-02",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2025-03",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2025-04",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2025-05",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2025-06",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2025-07",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2025-08",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2025-09",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2025-10",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2025-11",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2025-12",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2026-01",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2026-02",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2026-03",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2026-04",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2026-05",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2026-06",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2026-07",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2026-08",
+      "n": 30
+    },
+    {
+      "medio": "lanacion",
+      "mes": "2026-09",
+      "n": 30
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2023-12",
+      "n": 207
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2024-01",
+      "n": 134
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2024-02",
+      "n": 143
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2024-03",
+      "n": 171
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2024-04",
+      "n": 150
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2024-05",
+      "n": 203
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2024-06",
+      "n": 166
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2024-07",
+      "n": 122
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2024-08",
+      "n": 143
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2024-09",
+      "n": 195
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2024-10",
+      "n": 185
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2024-11",
+      "n": 159
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2024-12",
+      "n": 168
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2025-01",
+      "n": 110
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2025-02",
+      "n": 149
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2025-03",
+      "n": 171
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2025-04",
+      "n": 203
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2025-05",
+      "n": 204
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2025-06",
+      "n": 355
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2025-07",
+      "n": 205
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2025-08",
+      "n": 273
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2025-09",
+      "n": 294
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2025-10",
+      "n": 281
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2025-11",
+      "n": 169
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2025-12",
+      "n": 178
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2026-01",
+      "n": 90
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2026-02",
+      "n": 177
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2026-03",
+      "n": 317
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2026-04",
+      "n": 322
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2026-05",
+      "n": 340
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2026-06",
+      "n": 335
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2026-07",
+      "n": 291
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2026-08",
+      "n": 316
+    },
+    {
+      "medio": "misionesonline",
+      "mes": "2026-09",
+      "n": 319
+    }
+  ]
+}
+</script>
+<script>
+const D = JSON.parse(document.getElementById("datos").textContent);
+const MEDIOS = [
+  { key: "lanacion", name: "La Nación", color: "var(--s2)" },
+  { key: "infobae", name: "Infobae", color: "var(--s1)" },
+  { key: "misionesonline", name: "MisionesOnline", color: "var(--s3)" },
+];
+const MEDIO = Object.fromEntries(MEDIOS.map(m => [m.key, m]));
+const LABEL = { neg: "Negativa", neu: "Neutra", pos: "Positiva" };
+const HITO_CORTO = { "2023-12-20": "DNU 70/2023", "2024-06-12": "Ley Bases (Senado)", "2025-10-26": "Elecciones 2025" };
+const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const MESES_LARGOS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+
+const nf = new Intl.NumberFormat("es-AR");
+const sc = v => {
+  if (v == null) return "s/d";
+  const r = Math.round(v * 100) / 100;
+  return `${r < 0 ? "−" : r > 0 ? "+" : ""}${new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(r))}`;
+};
+const pct = v => `${Math.round(v * 100)} %`;
+const monthLabel = m => { const [y, mm] = m.split("-"); return `${MESES[+mm - 1]} ${y.slice(2)}`; };
+const monthLong = m => { const [y, mm] = m.split("-"); return `${MESES_LARGOS[+mm - 1]} de ${y}`; };
+const dateLong = d => { const [y, m, dd] = d.split("-"); return `${+dd} de ${MESES_LARGOS[+m - 1]} de ${y}`; };
+const hitoName = h => HITO_CORTO[h.fecha] || h.hito;
+
+const SVG = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, parent) {
+  const node = document.createElementNS(SVG, tag);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+  if (parent) parent.appendChild(node);
+  return node;
+}
+function text(parent, x, y, str, attrs = {}) {
+  const t = el("text", { x, y, "font-size": 11, fill: "var(--muted)", "font-family": "var(--f-body)", ...attrs }, parent);
+  t.textContent = str;
+  return t;
+}
+function legend(container, items) {
+  const lg = document.createElement("div");
+  lg.className = "legend";
+  for (const it of items) {
+    const span = document.createElement("span");
+    const i = document.createElement("i");
+    if (it.ring) { i.className = "ring"; i.style.setProperty("--c", it.color); } else i.style.background = it.color;
+    if (it.kind) i.classList.add(it.kind);
+    span.append(i, document.createTextNode(it.name));
+    lg.appendChild(span);
+  }
+  container.appendChild(lg);
+}
+function responsive(container, render) {
+  render();
+  let w = container.clientWidth;
+  new ResizeObserver(() => { if (Math.abs(container.clientWidth - w) > 2) { w = container.clientWidth; render(); } }).observe(container);
+}
+function dataTable(target, head, rows) {
+  const table = document.createElement("table");
+  const tr0 = table.createTHead().insertRow();
+  head.forEach((h, i) => { const th = document.createElement("th"); th.textContent = h; if (i) th.className = "num"; tr0.appendChild(th); });
+  const tb = table.createTBody();
+  for (const row of rows) {
+    const tr = tb.insertRow();
+    row.forEach((c, i) => { const td = tr.insertCell(); td.textContent = c; if (i) td.className = "num"; });
+  }
+  target.appendChild(table);
+}
+
+// Derived values used by the prose
+const R = Object.fromEntries(D.resumen.map(r => [r.medio, r]));
+const prov = Object.fromEntries(D.provincial.filter(r => r.modelo === D.modelo).map(r => [r.grupo, r]));
+const moTotal = D.totales.por_medio.misionesonline;
+const V = {
+  periodo: `${D.periodo.desde.slice(0, 4)}–${D.periodo.hasta.slice(0, 4)}`,
+  periodo_largo: `del ${dateLong(D.periodo.desde)} al ${dateLong(D.periodo.hasta)}`,
+  notas: nf.format(D.totales.notas),
+  meses: nf.format(D.totales.meses),
+  en_vivo: nf.format(D.totales.en_vivo),
+  etiquetadas: nf.format(D.totales.etiquetadas),
+  modelo: D.modelo,
+  mo_total: nf.format(moTotal),
+  ib_total: nf.format(D.totales.por_medio.infobae),
+  ln_total: nf.format(D.totales.por_medio.lanacion),
+  ln_neg: pct(R.lanacion.prop_neg), ib_neg: pct(R.infobae.prop_neg), mo_neg: pct(R.misionesonline.prop_neg),
+  mo_pos: pct(R.misionesonline.prop_pos),
+  ln_score: sc(R.lanacion.score), ib_score: sc(R.infobae.score),
+  mo_rep_n: nf.format(prov.reproducidas.n), mo_rep_pct: pct(prov.reproducidas.n / (prov.reproducidas.n + prov.propias.n)),
+  mo_rep: sc(prov.reproducidas.score), mo_own: sc(prov.propias.score),
+  ...Object.fromEntries(D.evaluacion.map(r => [`acc_${r.modelo}`, pct(r.accuracy)])),
+};
+document.querySelectorAll("[data-v]").forEach(n => { n.textContent = V[n.dataset.v] ?? ""; });
+
+// Dot rows on a horizontal tone axis: hero, models, provincial
+function dotRows(container, { rows, min, max, step, aria, labelW = 0, showValues = true }) {
+  function render() {
+    container.querySelector("svg")?.remove();
+    const W = Math.max(280, container.clientWidth - 24);
+    const narrow = W < 520;
+    const lw = narrow ? 0 : labelW;
+    const rowH = rows.length === 1 ? 92 : 58;
+    const m = { t: 10, r: 20, b: 26, l: 16 + lw };
+    const H = m.t + rows.length * rowH + (narrow && labelW ? rows.length * 24 : 0) + m.b;
+    const iw = W - m.l - m.r;
+    const x = v => m.l + ((v - min) / (max - min)) * iw;
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": aria }, container);
+    for (let v = min; v <= max + 1e-9; v += step) {
+      const zero = Math.abs(v) < 1e-9;
+      el("line", { x1: x(v), x2: x(v), y1: m.t, y2: H - m.b, stroke: zero ? "var(--axis)" : "var(--grid)", "stroke-width": zero ? 1.5 : 1 }, svg);
+      text(svg, x(v), H - 8, zero ? "0 neutro" : sc(v), { "text-anchor": "middle", "font-variant-numeric": "tabular-nums" });
+    }
+    rows.forEach((row, k) => {
+      const top = m.t + k * (rowH + (narrow && labelW ? 24 : 0));
+      const cy = top + (narrow && labelW ? 16 : 0) + rowH / 2 + (rows.length === 1 ? 8 : 4);
+      if (labelW) text(svg, narrow ? m.l : m.l - 14, narrow ? top + 12 : cy + 4, row.label,
+        { "text-anchor": narrow ? "start" : "end", fill: row.strong ? "var(--ink)" : "var(--ink-2)", "font-size": 12.5, "font-weight": row.strong ? 600 : 400 });
+      el("line", { x1: m.l, x2: W - m.r, y1: cy, y2: cy, stroke: "var(--rule)", "stroke-width": 1 }, svg);
+      // Labels go above the dot unless another label is too close there, then below, else they are left out.
+      const slots = { above: [], below: [] };
+      const gapPx = rows.length === 1 ? 110 : 44;
+      [...row.items].sort((a, b) => a.v - b.v).forEach(it => {
+        const cx = x(it.v);
+        const side = ["above", "below"].find(s => slots[s].every(p => Math.abs(p - cx) >= gapPx));
+        if (side) slots[side].push(cx);
+        el("circle", { cx, cy, r: rows.length === 1 ? 9 : 7, fill: it.ring ? "var(--surface)" : it.color, stroke: it.color, "stroke-width": it.ring ? 3 : 2 }, svg);
+        if (!side || !showValues) return;
+        const up = side === "above";
+        if (rows.length === 1) {
+          text(svg, cx, up ? cy - 18 : cy + 30, it.name, { "text-anchor": "middle", fill: "var(--ink)", "font-size": 13, "font-weight": 600 });
+          text(svg, cx, up ? cy - 33 : cy + 45, sc(it.v), { "text-anchor": "middle", fill: "var(--ink-2)", "font-size": 12, "font-variant-numeric": "tabular-nums" });
+        } else if (row.strong) {
+          text(svg, cx, up ? cy - 12 : cy + 22, sc(it.v), { "text-anchor": "middle", fill: "var(--ink-2)", "font-size": 11, "font-variant-numeric": "tabular-nums" });
+        }
+      });
+    });
+  }
+  responsive(container, render);
+}
+
+// Hero thermometer
+(() => {
+  const c = document.getElementById("c-hero");
+  dotRows(c, { min: -1, max: 1, step: 0.5, aria: "Tono promedio por medio en una escala de −1 a +1",
+    rows: [{ items: MEDIOS.map(m => ({ name: m.name, color: m.color, v: R[m.key].score })) }] });
+})();
+
+// Volume per month
+function lineChart(container, opts) {
+  const { labels, series, yMin, yMax, yStep, fmt = v => nf.format(v), height = 240, marks = [], bands = false, aria, tipExtra } = opts;
+  function render() {
+    container.querySelectorAll("svg, .tip, .legend").forEach(n => n.remove());
+    legend(container, series.map(s => ({ name: s.name, color: s.color, kind: "line" })));
+    const W = Math.max(280, container.clientWidth - 24), H = height;
+    const m = { t: marks.length ? 22 : 10, r: 14, b: 26, l: 46 };
+    const iw = W - m.l - m.r, ih = H - m.t - m.b;
+    const x = i => m.l + (labels.length === 1 ? iw / 2 : (i / (labels.length - 1)) * iw);
+    const y = v => m.t + ih - ((v - yMin) / (yMax - yMin)) * ih;
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", tabindex: 0, "aria-label": aria }, container);
+    for (let v = yMin; v <= yMax + 1e-9; v += yStep) {
+      const zero = Math.abs(v) < 1e-9;
+      el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: zero ? "var(--axis)" : "var(--grid)", "stroke-width": zero ? 1.5 : 1 }, svg);
+      text(svg, m.l - 8, y(v) + 4, fmt(v), { "text-anchor": "end", "font-variant-numeric": "tabular-nums" });
+    }
+    const every = W < 520 ? 12 : 6;
+    labels.forEach((lab, i) => { if (i % every === 0) text(svg, x(i), H - 6, monthLabel(lab), { "text-anchor": "middle" }); });
+    marks.forEach((mk, k) => {
+      el("line", { x1: x(mk.i), x2: x(mk.i), y1: m.t, y2: m.t + ih, stroke: "var(--ink-2)", "stroke-width": 1, "stroke-dasharray": "3 3" }, svg);
+      el("circle", { cx: x(mk.i), cy: m.t - 10, r: 8, fill: "var(--ink-2)" }, svg);
+      text(svg, x(mk.i), m.t - 6, String(k + 1), { "text-anchor": "middle", fill: "var(--surface)", "font-size": 10.5, "font-weight": 600 });
+    });
+    const path = pts => pts.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join("");
+    for (const s of series) {
+      if (bands) {
+        const ok = s.points.map((p, i) => [p, i]).filter(([p]) => p && p.lo != null && p.hi != null);
+        if (ok.length > 1) {
+          const top = ok.map(([p, i]) => [x(i), y(Math.min(yMax, p.hi))]);
+          const bot = ok.map(([p, i]) => [x(i), y(Math.max(yMin, p.lo))]).reverse();
+          el("path", { d: path(top) + path(bot).replace("M", "L") + "Z", fill: s.color, "fill-opacity": 0.12, stroke: "none" }, svg);
+        }
+      }
+      const pts = s.points.map((p, i) => p && p.v != null ? [x(i), y(p.v)] : null).filter(Boolean);
+      el("path", { d: path(pts), fill: "none", stroke: s.color, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+    }
+    const cross = el("line", { y1: m.t, y2: m.t + ih, stroke: "var(--axis)", "stroke-width": 1, visibility: "hidden" }, svg);
+    const dots = series.map(s => el("circle", { r: 4, fill: s.color, stroke: "var(--surface)", "stroke-width": 2, visibility: "hidden" }, svg));
+    const tip = document.createElement("div");
+    tip.className = "tip"; tip.hidden = true;
+    container.appendChild(tip);
+    let current = -1;
+    function show(i) {
+      current = i;
+      cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.setAttribute("visibility", "visible");
+      tip.replaceChildren();
+      const h = document.createElement("div"); h.className = "h"; h.textContent = monthLong(labels[i]); tip.appendChild(h);
+      series.forEach((s, k) => {
+        const p = s.points[i];
+        if (p && p.v != null) { dots[k].setAttribute("cx", x(i)); dots[k].setAttribute("cy", y(p.v)); dots[k].setAttribute("visibility", "visible"); }
+        else dots[k].setAttribute("visibility", "hidden");
+        const r = document.createElement("div"); r.className = "r";
+        const key = document.createElement("i"); key.style.background = s.color;
+        const b = document.createElement("b"); b.textContent = p && p.v != null ? fmt(p.v) : "s/d";
+        const n = document.createElement("span"); n.textContent = tipExtra && p ? `${s.name} · ${tipExtra(p)}` : s.name;
+        r.append(key, b, n); tip.appendChild(r);
+      });
+      tip.hidden = false;
+      const svgBox = svg.getBoundingClientRect(), box = container.getBoundingClientRect();
+      const px = svgBox.left - box.left + x(i) * (svgBox.width / W);
+      const left = px + 14 + tip.offsetWidth > box.width ? px - 14 - tip.offsetWidth : px + 14;
+      tip.style.left = `${Math.max(4, left)}px`; tip.style.top = `${svgBox.top - box.top + 8}px`;
+    }
+    function hide() { current = -1; cross.setAttribute("visibility", "hidden"); dots.forEach(d => d.setAttribute("visibility", "hidden")); tip.hidden = true; }
+    const hit = el("rect", { x: m.l - 6, y: m.t, width: iw + 12, height: ih, fill: "transparent" }, svg);
+    hit.addEventListener("pointermove", e => {
+      const r = svg.getBoundingClientRect();
+      const px = (e.clientX - r.left) * (W / r.width);
+      show(Math.max(0, Math.min(labels.length - 1, Math.round(((px - m.l) / iw) * (labels.length - 1)))));
+    });
+    hit.addEventListener("pointerleave", hide);
+    svg.addEventListener("keydown", e => {
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        const next = current < 0 ? (e.key === "ArrowRight" ? 0 : labels.length - 1) : current + (e.key === "ArrowRight" ? 1 : -1);
+        show(Math.max(0, Math.min(labels.length - 1, next)));
+      }
+      if (e.key === "Escape") hide();
+    });
+    svg.addEventListener("blur", hide);
+    if (marks.length) {
+      const lg = document.createElement("div"); lg.className = "legend";
+      lg.textContent = marks.map((mk, k) => `${k + 1}. ${mk.label}`).join("   ·   ");
+      container.appendChild(lg);
+    }
+  }
+  responsive(container, render);
+}
+
+(() => {
+  const months = [...new Set(D.volumen.map(r => r.mes))].sort();
+  const series = MEDIOS.map(md => {
+    const by = Object.fromEntries(D.volumen.filter(r => r.medio === md.key).map(r => [r.mes, r.n]));
+    return { name: md.name, color: md.color, points: months.map(mm => ({ v: by[mm] ?? null })) };
+  });
+  const top = Math.max(...D.volumen.map(r => r.n));
+  lineChart(document.getElementById("c-volume"), { labels: months, series, yMin: 0, yMax: Math.ceil(top / 100) * 100, yStep: 100, height: 220,
+    aria: "Notas leídas por mes y medio" });
+})();
+
+// Chapter 1: monthly tone
+(() => {
+  const rows = D.mensual;
+  const months = [...new Set(rows.map(r => r.mes))].sort();
+  const series = MEDIOS.map(md => {
+    const by = Object.fromEntries(rows.filter(r => r.medio === md.key).map(r => [r.mes, r]));
+    return { name: md.name, color: md.color, points: months.map(mm => by[mm] ? { v: by[mm].score, lo: by[mm].ic_inf, hi: by[mm].ic_sup, n: by[mm].n } : null) };
+  });
+  const hitos = [...new Map(D.hitos.map(h => [h.fecha, h])).values()].sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const marks = hitos.map(h => {
+    const [y, mo, d] = h.fecha.split("-").map(Number);
+    const idx = months.indexOf(`${y}-${String(mo).padStart(2, "0")}`);
+    return { i: idx + (d - 1) / new Date(y, mo, 0).getDate(), label: `${hitoName(h)} (${dateLong(h.fecha)})` };
+  }).filter(mk => mk.i >= 0);
+  lineChart(document.getElementById("c-monthly"), { labels: months, series, bands: true, marks, yMin: -0.8, yMax: 0.4, yStep: 0.2, fmt: sc, height: 300,
+    aria: "Tono promedio mensual por medio, de diciembre de 2023 a septiembre de 2026, con los hitos marcados",
+    tipExtra: p => `${nf.format(p.n)} notas` });
+  dataTable(document.getElementById("t-monthly"), ["Mes", ...MEDIOS.map(m => m.name)],
+    months.map((mm, i) => [monthLong(mm), ...series.map(s => s.points[i] ? `${sc(s.points[i].v)} (${s.points[i].n})` : "s/d")]));
+  const mean = a => a.reduce((s, v) => s + v, 0) / a.length;
+  const parts = MEDIOS.map(md => {
+    const pts = rows.filter(r => r.medio === md.key).sort((a, b) => a.mes.localeCompare(b.mes));
+    return `${md.name} pasó de ${sc(mean(pts.slice(0, 6).map(p => p.score)))} en sus primeros seis meses a ${sc(mean(pts.slice(-6).map(p => p.score)))} en los últimos seis`;
+  });
+  document.getElementById("t-firstlast").textContent = `${parts[0]}; ${parts[1]}; ${parts[2]}.`;
+})();
+
+// Chapter 2: label shares and the three models
+(() => {
+  const box = document.getElementById("c-stack");
+  for (const md of MEDIOS) {
+    const r = R[md.key];
+    const row = document.createElement("div"); row.className = "stack-row"; row.style.setProperty("--c", md.color);
+    const who = document.createElement("span"); who.className = "who";
+    who.append(document.createElement("i"), document.createTextNode(md.name));
+    const bar = document.createElement("div"); bar.className = "bar3"; bar.setAttribute("role", "img");
+    bar.setAttribute("aria-label", `${md.name}: ${pct(r.prop_neg)} negativas, ${pct(r.prop_neu)} neutras, ${pct(r.prop_pos)} positivas`);
+    for (const k of ["neg", "neu", "pos"]) {
+      const seg = document.createElement("div"); seg.className = k;
+      seg.style.width = `${r[`prop_${k}`] * 100}%`;
+      if (r[`prop_${k}`] >= 0.07) seg.textContent = pct(r[`prop_${k}`]);
+      seg.title = `${LABEL[k]}s: ${pct(r[`prop_${k}`])}`;
+      bar.appendChild(seg);
+    }
+    row.append(who, bar); box.appendChild(row);
+  }
+  const models = [...new Set(D.por_modelo.map(r => r.modelo))].sort((a, b) => (a === D.modelo ? -1 : b === D.modelo ? 1 : a.localeCompare(b)));
+  const rows = models.map(mo => ({
+    label: mo === D.modelo ? `${mo} (elegido)` : mo, strong: mo === D.modelo,
+    items: MEDIOS.map(md => ({ name: md.name, color: md.color, v: D.por_modelo.find(r => r.modelo === mo && r.medio === md.key).score })),
+  }));
+  const c = document.getElementById("c-models");
+  legend(c, MEDIOS.map(m => ({ name: m.name, color: m.color })));
+  dotRows(c, { rows, min: -0.5, max: 0.5, step: 0.25, labelW: 150, aria: "Tono promedio por medio según cada uno de los tres modelos" });
+  const order = mo => MEDIOS.map(md => md.key).sort((a, b) => D.por_modelo.find(r => r.modelo === mo && r.medio === a).score - D.por_modelo.find(r => r.modelo === mo && r.medio === b).score).join();
+  const same = models.every(mo => order(mo) === order(D.modelo));
+  document.getElementById("t-robust").textContent = same
+    ? "los tres ordenan a los medios exactamente igual: La Nación primero, después Infobae y MisionesOnline al final, siempre del lado más liviano."
+    : "no todos los modelos ordenan a los medios igual, así que la comparación entre los dos nacionales hay que tomarla con cautela.";
+})();
+
+// Chapter 3: milestones (dumbbells)
+(() => {
+  const c = document.getElementById("c-hitos");
+  const hitos = [...new Set(D.hitos.map(h => h.fecha))].sort();
+  legend(c, [{ name: "Antes (2 semanas)", color: "var(--ink-2)", ring: true }, { name: "Después (2 semanas)", color: "var(--ink-2)" },
+    { name: "Cambio claro (color del medio)", color: "var(--s3)", kind: "box" }, { name: "No se distingue", color: "var(--s-est)", kind: "box" }]);
+  function render() {
+    c.querySelector("svg")?.remove();
+    const W = Math.max(280, c.clientWidth - 24), narrow = W < 520;
+    const lw = narrow ? 0 : 130, rowH = 30, gap = 26, headH = 24;
+    const blockH = headH + MEDIOS.length * rowH + (narrow ? MEDIOS.length * 14 : 0);
+    const m = { t: 4, r: 70, b: 26, l: 12 + lw };
+    const H = m.t + hitos.length * (blockH + gap) - gap + m.b;
+    const min = -0.8, max = 0.4, iw = W - m.l - m.r, x = v => m.l + ((v - min) / (max - min)) * iw;
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": "Tono antes y después de cada hito, por medio" }, c);
+    for (let v = min; v <= max + 1e-9; v += 0.2) {
+      const zero = Math.abs(v) < 1e-9;
+      el("line", { x1: x(v), x2: x(v), y1: m.t, y2: H - m.b, stroke: zero ? "var(--axis)" : "var(--grid)", "stroke-width": zero ? 1.5 : 1 }, svg);
+      text(svg, x(v), H - 8, sc(v), { "text-anchor": "middle", "font-variant-numeric": "tabular-nums" });
+    }
+    hitos.forEach((fecha, k) => {
+      const top = m.t + k * (blockH + gap);
+      const first = D.hitos.find(h => h.fecha === fecha);
+      text(svg, 12, top + 15, `${hitoName(first)} · ${dateLong(fecha)}`, { fill: "var(--ink)", "font-size": 13.5, "font-weight": 600 });
+      MEDIOS.forEach((md, j) => {
+        const h = D.hitos.find(r => r.fecha === fecha && r.medio === md.key);
+        const rowTop = top + headH + j * (rowH + (narrow ? 14 : 0));
+        const cy = rowTop + (narrow ? 14 : 0) + rowH / 2;
+        const few = h && (h.score_antes == null || h.score_despues == null)
+          ? `pocas notas ${h.score_antes == null ? "antes" : "después"} (${h.score_antes == null ? h.n_antes : h.n_despues})` : "";
+        text(svg, narrow ? 12 : m.l - 12, narrow ? rowTop + 10 : cy + 4, narrow && few ? `${md.name} · ${few}` : md.name,
+          { "text-anchor": narrow ? "start" : "end", fill: "var(--ink-2)", "font-size": 12.5 });
+        if (!h) return;
+        const color = h.claro ? md.color : "var(--s-est)";
+        if (few) {
+          const known = h.score_antes ?? h.score_despues;
+          if (known != null) el("circle", { cx: x(known), cy, r: 6, fill: h.score_antes == null ? "var(--s-est)" : "var(--surface)", stroke: "var(--s-est)", "stroke-width": 2 }, svg);
+          if (!narrow) text(svg, W - m.r + 8, cy + 4, few, { "font-size": 11, fill: "var(--muted)", "font-style": "italic" });
+          return;
+        }
+        const x0 = x(h.score_antes), x1 = x(h.score_despues);
+        el("line", { x1: x0, x2: x1, y1: cy, y2: cy, stroke: color, "stroke-width": h.claro ? 3 : 2 }, svg);
+        el("circle", { cx: x0, cy, r: 6, fill: "var(--surface)", stroke: color, "stroke-width": 2 }, svg);
+        el("circle", { cx: x1, cy, r: 6, fill: color, stroke: color, "stroke-width": 2 }, svg);
+        text(svg, W - m.r + 8, cy + 4, sc(h.diferencia), { "font-size": 11.5, fill: h.claro ? "var(--ink)" : "var(--muted)", "font-weight": h.claro ? 600 : 400, "font-variant-numeric": "tabular-nums" });
+      });
+    });
+  }
+  responsive(c, render);
+  dataTable(document.getElementById("t-hitos-tabla"), ["Hito · medio", "Notas antes", "Notas después", "Antes", "Después", "Cambio", "¿Claro?"],
+    D.hitos.map(h => [`${hitoName(h)} · ${MEDIO[h.medio].name}`, h.n_antes, h.n_despues, sc(h.score_antes), sc(h.score_despues), sc(h.diferencia),
+      h.insuficiente ? "pocas notas" : h.claro ? "sí" : "no"]));
+  const claros = D.hitos.filter(h => h.claro);
+  const total = D.hitos.filter(h => !h.insuficiente).length;
+  const desc = h => `${hitoName(h)} en ${MEDIO[h.medio].name} (${h.diferencia > 0 ? "sube" : "baja"} ${sc(Math.abs(h.diferencia)).replace("+", "")})`;
+  const allThree = [...new Set(D.hitos.map(h => h.fecha))].some(f => D.hitos.filter(h => h.fecha === f && h.claro).length === MEDIOS.length);
+  document.getElementById("t-hitos").textContent = claros.length
+    ? `De ${total} comparaciones con suficientes notas, solo ${claros.length} muestran un cambio claro: ${claros.map(desc).join("; ")}. ${allThree ? "Un hito movió el tono de los tres medios a la vez" : "Ningún hito movió el tono de los tres medios a la vez"}, y en el gráfico del capítulo 1 no se ve ningún escalón sostenido después de ellos.`
+    : `Ninguna de las ${total} comparaciones con suficientes notas muestra un cambio claro.`;
+  const big = [...claros].sort((a, b) => Math.abs(b.diferencia) - Math.abs(a.diferencia))[0];
+  const dnu = D.hitos.find(h => h.insuficiente);
+  document.getElementById("t-hitos-caution").textContent =
+    (big ? `El salto más grande, ${hitoName(big)} en ${MEDIO[big.medio].name} (de ${sc(big.score_antes)} a ${sc(big.score_despues)}), se apoya en pocas notas: ${big.n_antes} antes y ${big.n_despues} después, porque de ese medio leímos una muestra. Es una pista, no una conclusión. ` : "")
+    + (dnu ? `Para el ${hitoName(dnu)} la comparación es más débil: el período empieza el 10 de diciembre, así que antes del anuncio hay solo diez días de notas.` : "");
+})();
+
+// Chapter 4: provincial split
+(() => {
+  const c = document.getElementById("c-provincial");
+  const mo = MEDIO.misionesonline;
+  legend(c, [MEDIO.lanacion, MEDIO.infobae].map(m => ({ name: m.name, color: m.color }))
+    .concat([{ name: "MisionesOnline, notas propias", color: mo.color }, { name: "MisionesOnline, notas reproducidas", color: mo.color, ring: true }]));
+  const models = [...new Set(D.provincial.map(r => r.modelo))].sort((a, b) => (a === D.modelo ? -1 : b === D.modelo ? 1 : a.localeCompare(b)));
+  const rows = models.map(m => {
+    const nat = k => D.por_modelo.find(r => r.modelo === m && r.medio === k).score;
+    const pv = g => D.provincial.find(r => r.modelo === m && r.grupo === g).score;
+    return { label: m === D.modelo ? `${m} (elegido)` : m, strong: m === D.modelo, items: [
+      { name: "La Nación", color: MEDIO.lanacion.color, v: nat("lanacion") },
+      { name: "Infobae", color: MEDIO.infobae.color, v: nat("infobae") },
+      { name: "propias", color: mo.color, v: pv("propias") },
+      { name: "reproducidas", color: mo.color, v: pv("reproducidas"), ring: true },
+    ] };
+  });
+  dotRows(c, { rows, min: -0.5, max: 0.5, step: 0.25, labelW: 150, aria: "Tono de La Nación, Infobae y MisionesOnline dividido en notas propias y reproducidas, para los tres modelos" });
+})();
+
+// Annex: model evaluation
+dataTable(document.getElementById("t-eval"), ["Modelo", "Notas", "Exactitud", "F1 macro"],
+  [...D.evaluacion].sort((a, b) => b.macro_f1 - a.macro_f1).map(r => [r.modelo === D.modelo ? `${r.modelo} (elegido)` : r.modelo, r.n,
+    new Intl.NumberFormat("es-AR", { minimumFractionDigits: 3 }).format(r.accuracy), new Intl.NumberFormat("es-AR", { minimumFractionDigits: 3 }).format(r.macro_f1)]));
+</script>
+</body>
+</html>

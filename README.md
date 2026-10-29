@@ -99,6 +99,16 @@ uv run dagster asset materialize -m news_politica.definitions --select evolucion
 
 Listing several models scores each one and writes one row per `(id, modelo)`. `evolucion_tono` leaves out live notes, unscored notes, scores without a note and notes without a date, and the run reports how many of each. The milestones used for the before and after comparison are in `anotaciones/hitos.csv`.
 
+## Report
+
+[`docs/informe.html`](docs/informe.html) is the final report (phase 6), in Spanish and written for a mixed audience: one chapter per question of `docs/def.md` and a collapsible technical annex. Its numbers live in one JSON block inside the page, computed by `src/news_politica/report/aggregates.py` from `data/sentimiento_noticias.parquet`, `data/noticias_politica.parquet`, `anotaciones/etiquetas.csv` and `anotaciones/hitos.csv`. To refresh them (only the data block changes):
+
+```bash
+uv run python scripts/build_report.py
+```
+
+The page loads its two Dagster screenshots from `docs/img/`, so open it from `docs/` (or serve that folder) rather than copying the HTML alone.
+
 ## Checks
 
 ```bash
@@ -140,11 +150,13 @@ src/news_politica/
   defs/                    # assets.py (catalogs, raw_* by month, noticias_politica), sentiment.py, io.py (Parquet, client, models)
   sources/                 # scraping clients: HTTP client, one module per outlet, parse()
   sentiment/               # analysis text, labeling, classifiers, scoring, evaluation, weekly tone
+  report/                  # aggregates behind docs/informe.html and its data block
+scripts/build_report.py    # fills the data block of docs/informe.html
 tests/
   fixtures/sources/        # trimmed responses from the phase 2 cache (build_fixtures.py)
 notebooks/                 # phase 2 source exploration (probe.py, arc.py, one notebook per outlet), 05 sentiment
 anotaciones/               # etiquetas.csv (human labels, no text), hitos.csv (political milestones)
-docs/                      # project definition, source and sentiment decisions, labeling guide, bitacora-fases.html (phases 1-4 report)
+docs/                      # project definition, source and sentiment decisions, labeling guide, bitacora-fases.html (phases 1-4 report), informe.html + img/ (final report)
 odd/tasks/                 # task tracking
 data/                      # Parquet output (gitignored)
 ```
