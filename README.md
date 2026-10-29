@@ -53,7 +53,9 @@ On Linux and Windows the group takes torch from the CPU index (`pytorch-cpu` in 
 
 ### Ollama (optional, GPU alternative)
 
-The alternative model, `qwen2.5-7b`, runs in [Ollama](https://ollama.com) and is reached over HTTP, so it adds no Python package. On a machine with an NVIDIA GPU, run it from Docker Compose:
+The alternative model, `qwen2.5-7b`, runs in [Ollama](https://ollama.com) and is reached over HTTP, so it adds no Python package. `scripts/dagster-up.sh` handles it: with the default `OLLAMA=auto` it starts the Ollama service and pulls the model (once, about 4.7 GB) when `nvidia-smi` finds an NVIDIA GPU, and skips it otherwise. `OLLAMA=on scripts/dagster-up.sh` requires it (stops on failure), and `OLLAMA=off` never starts it. In auto mode an Ollama failure only prints a warning: Dagster still starts and the code uses `mdeberta-xnli`.
+
+To run it by hand on a machine with an NVIDIA GPU:
 
 ```bash
 docker compose --profile ollama up -d --wait                      # Ollama on 127.0.0.1:11434, GPU attached
